@@ -1,0 +1,31 @@
+TODO: figure out whats up with glTexParameter and why its necessary
+      Frame buffers
+
+We should have a text region on the right, and the graph on the left, when you select certain things it'll pop up some text on the right.
+
+
+I want to start drawing passing in colors so we'll build up buffers, copy the data, and then draw with color as a vertex attrib
+
+
+Create a library for interactive math experiments
+
+Needs to require very little programming knowledge (but could be good testing ground for basic logic/control flow)
+
+Puzzle game: could be make the dot product < 0. Make it 0, etc. Make this face a diffrent way from this object (using dot product). 
+Move vectors into different spaces, like transforming the direction into normalized space. 
+Is this thing's coordinates in world or local space? 
+
+Set t value so the point reaches the destination. Write a calculation for t so that it arrives in 2 seconds
+Change the values of the easing function so the curves match
+
+
+Lerp
+Rotations
+Easing functions
+Dot product
+Cross Product
+Quaternions
+Geometry
+
+Importantly need to be able to solve equations like "I want this to arrive in n seconds, how do I do that" or "it moves this fast, what time will it arrive"
+  Basic algebraic equations like that

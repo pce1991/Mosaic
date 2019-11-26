@@ -1,0 +1,125 @@
+
+InputQueue AllocateInputQueue(int32 capacity, int32 deviceCount) {
+    InputQueue queue;
+
+    queue.count = 0;
+    queue.capacity = capacity;
+    queue.size = sizeof(InputEvent) * capacity;
+    queue.events = (InputEvent *)malloc(queue.size);
+    memset(queue.events, 0, queue.size);
+
+    queue.deviceCount = deviceCount;
+    queue.deviceStates = (InputDeviceState *)malloc(sizeof(InputDeviceState) * deviceCount);
+    
+    for (int i = 0; i < deviceCount; i++) {
+        InputDeviceState *deviceState = &queue.deviceStates[i];
+        
+        deviceState->framesHeld = (int32 *)malloc(sizeof(int32) * Input_Count);
+        deviceState->released = (bool *)malloc(sizeof(bool) * Input_Count);
+        deviceState->pressed = (bool *)malloc(sizeof(bool) * Input_Count);
+
+        memset(deviceState->framesHeld, -1, sizeof(int32) * Input_Count);
+        memset(deviceState->pressed, 0, sizeof(bool) * Input_Count);
+        memset(deviceState->released, 0, sizeof(bool) * Input_Count);
+    }
+
+    queue.charSize = 32;
+    queue.charCount = 0;
+    queue.inputChars = (char *)malloc(queue.charSize);
+    
+    return queue;
+}
+
+void PushInputPress(InputQueue *queue, Input input, int32 deviceID = 0) {
+    // @WARNING: this could go out of bounds of our input buffer
+    InputEvent e;
+    e.input = input;
+    e.release = false;
+    e.deviceID = deviceID;
+    queue->events[queue->count++] = e;
+}
+
+void PushInputRelease(InputQueue *queue, Input input, int32 deviceID = 0) {
+    InputEvent e;
+    e.input = input;
+    e.release = true;
+    e.deviceID = deviceID;
+    queue->events[queue->count++] = e;
+}
+
+void PushInputChar(InputQueue *queue, char c) {
+    queue->inputChars[queue->charCount++] = c;
+}
+
+bool InputPressed(InputQueue *queue, Input input, int32 deviceID = 0) {
+    return queue->deviceStates[deviceID].pressed[input];
+}
+
+bool InputReleased(InputQueue *queue, Input input, int32 deviceID = 0) {
+    return queue->deviceStates[deviceID].released[input];
+}
+
+bool InputHeld(InputQueue *queue, Input input, int32 deviceID = 0) {
+    return queue->deviceStates[deviceID].framesHeld[input] > 0;
+}
+
+void ClearInputQueue(InputQueue *queue) {
+    queue->count = 0;
+    memset(queue->events, 0, queue->size);
+
+    queue->charCount = 0;
+    memset(queue->inputChars, 0, queue->charSize);
+}
+
+void UpdateInput(InputQueue *queue) {
+
+    queue->mousePosNorm.x = queue->mousePos.x / (Game->screenWidth * 1.0f);
+    queue->mousePosNorm.y = queue->mousePos.y / (Game->screenHeight * 1.0f);
+
+    // @DESIGN: this is exactly the type of equation its very useful to know!
+    queue->mousePosNormSigned.x = (queue->mousePosNorm.x - 0.5f) * 2;
+    queue->mousePosNormSigned.y = (queue->mousePosNorm.y - 0.5f) * 2;
+
+    for (int d = 0; d < queue->deviceCount; d++) {
+        InputDeviceState *deviceState = &queue->deviceStates[d];
+        
+        for (int i = 0; i < Input_Count; i++) {
+            // @NOTE: until we get a release event we consider a key to be pressed
+            if (deviceState->framesHeld[i] >= 0) {
+                deviceState->framesHeld[i]++;
+
+                deviceState->released[i] = false;
+                deviceState->pressed[i] = false;
+            }
+        }
+    }
+    
+    for (int i = 0; i < queue->count; i++) {
+        InputEvent event = queue->events[i];
+        Input input = event.input;
+
+        //printf("event %d %d frames %d\n", i, event.release, queue->framesHeld[input]);
+
+        InputDeviceState *deviceState = &queue->deviceStates[event.deviceID];
+
+        if (event.release) {
+            deviceState->framesHeld[input] = -1;
+            deviceState->pressed[input] = false;
+            deviceState->released[input] = true;
+        }
+        else {
+            if (deviceState->framesHeld[input] < 0) {
+                //printf("pressed\n");
+                
+                deviceState->framesHeld[input] = 0;
+                deviceState->pressed[input] = true;
+                deviceState->released[input] = false;
+            }
+            else {
+                // @NOTE: we shouldnt even get a pressed event when the key is being held
+            }
+        }
+    }
+
+    ClearInputQueue(queue);
+}

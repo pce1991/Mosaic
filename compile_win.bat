@@ -1,0 +1,4 @@
+
+RMDIR /S /Q build\
+MKDIR build\
+cl /O0 /Zi /I lib src\windows.cpp /Febuild\game.exe user32.lib gdi32.lib ole32.lib lib\glew32s.lib opengl32.lib /link /incremental:no
