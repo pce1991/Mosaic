@@ -1743,385 +1743,6 @@ inline bool SegmentAABBIntersection(vec3 aabbMin, vec3 aabbMax, vec3 p0, vec3 p1
     return true;
 }
 
-bool TestAABBPlane(vec3 point, vec3 normal, vec3 min, vec3 max) {
-    real32 d = Dot(normal, point);
-     
-    vec3 center = (max + min) * 0.5f;
-
-    vec3 e = max - center;
-
-    r32 r = e.x * Abs(normal.x) + e.y * Abs(normal.y) + e.z * Abs(normal.z);
-
-    r32 s = Dot(normal, center) - d;
-
-    return Abs(s) <= r;
-}
-
-// Ericson pg 169-171
-bool TestTriangleAABB(vec3 a, vec3 b, vec3 c, vec3 min, vec3 max) {
-    vec3 center = (min + max) * 0.5f;
-    r32 e0 = (max.x - min.x) * 0.5f;
-    r32 e1 = (max.y - min.y) * 0.5f;
-    r32 e2 = (max.z - min.z) * 0.5f;
-
-    a = a - center;
-    b = b - center;
-    c = c - center;
-
-    vec3 f0 = b - a, f1 = c - b, f2 = a - c;
-
-    vec3 axis;
-    r32 r, p0, p1, p2;
-    // a00
-    {
-        // @NOTE: distances from the origin to the projections of the triangle vertices onto an axis n
-        // @NOTE: Erikson expands these dot products thus:
-        //        p0 = a.z * b.y - a.y * b.z;
-        //        p2 = c.z * (b.y - a.y) - c.y * (b.z - a.z);
-        //        But I'm too lazy and dumb right now
-        axis = V3(0, -f0.z, f0.y);
-        p0 = Dot(a, axis);
-        p2 = Dot(c, axis);
-        r = e1 * Abs(-f0.z) + e2 * Abs(f0.y);
-        if (Max(-Max(p0, p2), Min(p0, p2)) > r) { return false; }
-    }
-    // a01
-    {
-        // @WARNING:
-        // Making an intuitive guess and saying that if for a00 p0 == p1, then for a01 p1 == p2, and a02 p2 == p0
-        // I lack the compentence to actually prove that, so this could be broken.
-        axis = V3(0, -f1.z, f1.y);
-        p0 = Dot(a, axis);
-        p1 = Dot(b, axis);
-
-        r = e1 * Abs(f1.z) + e2 * Abs(f1.y);
-        
-        if (Max(-Max(p0, p1), Min(p0, p1)) > r) { return false; }
-    }
-    // a02
-    {
-        axis = V3(0, -f2.z, f2.y);
-        p1 = Dot(b, axis);
-        p2 = Dot(c, axis);        
-
-        r = e1 * Abs(f2.z) + e2 * Abs(f2.y);
-        
-        if (Max(-Max(p1, p2), Min(p1, p2)) > r) { return false; }
-    }
-
-    // a10
-    {
-        axis = V3(f0.z, 0, -f0.x);
-        p0 = Dot(a, axis);
-        p2 = Dot(c, axis);
-
-        r = e0 * Abs(f0.z) + e2 * Abs(f0.x);
-        
-        if (Max(-Max(p0, p2), Min(p0, p2)) > r) { return false; }        
-    }
-    // a11
-    {
-        axis = V3(f1.z, 0, -f1.x);
-        p0 = Dot(a, axis);
-        p1 = Dot(b, axis);
-        
-        r = e0 * Abs(f1.z) + e2 * Abs(f1.x);
-        
-        if (Max(-Max(p0, p1), Min(p0, p1)) > r) { return false; }
-    }
-    // a12
-    {
-        axis = V3(f2.z, 0, -f2.x);
-        p1 = Dot(b, axis);
-        p2 = Dot(c, axis);
-        
-        r = e0 * Abs(f2.z) + e2 * Abs(f2.x);
-        
-        if (Max(-Max(p1, p2), Min(p1, p2)) > r) { return false; }
-    }
-
-    // a20
-    {
-        axis = V3(-f0.y, f0.x, 0);
-        p0 = Dot(a, axis);
-        p2 = Dot(c, axis);
-        
-        r = e0 * Abs(f0.y) + e1 * Abs(f0.x);
-
-        if (Max(-Max(p0, p2), Min(p0, p2)) > r) { return false; }        
-    }
-    // a21
-    {
-        axis = V3(-f1.y, f1.x, 0);
-        p0 = Dot(a, axis);
-        p1 = Dot(b, axis);
-        
-        r = e0 * Abs(f1.y) + e1 * Abs(f1.x);
-        
-        if (Max(-Max(p0, p1), Min(p0, p1)) > r) { return false; }
-    }
-    // a22
-    {
-        axis = V3(-f2.y, f2.x, 0);
-        p1 = Dot(b, axis);
-        p2 = Dot(c, axis);
-        
-        r = e0 * Abs(f2.y) + e1 * Abs(f2.x);
-        
-        if (Max(-Max(p1, p2), Min(p1, p2)) > r) { return false; }
-    }
-
-    // @WARNING: robustness issues!!! see 5.2.1.1 in RealTime Collision Detection
-    if (Max(Max(a.x, b.x), c.x) < -e0 || Min(Min(a.x, b.x), c.x) > e0) { return false; }
-    if (Max(Max(a.y, b.y), c.y) < -e1 || Min(Min(a.y, b.y), c.y) > e1) { return false; }
-    if (Max(Max(a.z, b.z), c.z) < -e2 || Min(Min(a.z, b.z), c.z) > e2) { return false; }
-
-    // @NOTE: we have translated the triangle to center of AABB but we must put it back
-    //        when testing the plane
-    return TestAABBPlane(a + center, Cross(f0, f1), min, max);
-}
-
-// @NOTE: position is assumed to be bottom left, and X/Y spans the length of rect
-inline bool RaycastRect(vec3 position, vec3 X, vec3 Y, Ray ray, real32 *t = NULL) {
-    //ASSERT(fabs(Dot(X, Y)) <= 0.00001f);
-
-    bool result = false;
-    real32 intersection = 0;
-
-    vec3 XNorm = Normalize(X);
-    vec3 YNorm = Normalize(Y);
-    vec3 normal = Cross(XNorm, YNorm);
-
-    if (RaycastPlane(position, normal, ray, &intersection)) {
-        vec3 pointOnPlane = PointAt(ray, intersection);
-        vec3 offset = pointOnPlane - position;
-
-        if (Dot(offset, XNorm) >= 0 && Dot(offset, XNorm) <= Dot(X, XNorm) &&
-            Dot(offset, YNorm) >= 0 && Dot(offset, YNorm) <= Dot(Y, YNorm)) {
-            result = true;
-        }
-    }
-
-    if (t != NULL) {
-        *t = intersection;
-    }
-
-    return result;
-}
-
-inline bool RaycastCenteredRect(vec3 position, quaternion rotation, vec2 scale, Ray ray, real32 *t = NULL) {
-    vec3 X = Rotate(rotation, V3(1, 0, 0)) * scale.x;
-    vec3 Y = Rotate(rotation, V3(0, 1, 0)) * scale.y;
-    vec3 lowerLeft = position - (X * 0.5f) - (Y * 0.5f);
-
-    return RaycastRect(lowerLeft, X, Y, ray, t);
-}
-
-inline bool RaycastPlanarPolygon(vec3 normal, vec3 *points, uint32 pointCount, uint32 pointStride, uint32 *indices, Ray ray, real32 *t = NULL) {
-    bool result = false;
-
-    if (pointCount < 3) {
-        return false;
-    }
-
-    vec3 p0;
-    if (indices != NULL) {
-        p0 = points[indices[0]];
-    }
-    else {
-        p0 = points[0];
-    }
-
-    if (RaycastPlane(p0, normal, ray, t)) {
-        vec3 point = PointAt(ray, *t);
-        result = PointInPolygon(normal, points, pointCount, pointStride, indices, point);
-    }
-
-    return result;
-}
-
-inline bool RaycastSphere(vec3 center, real32 radius, Ray ray, real32 *t = NULL) {
-    bool result = false;
-    real32 intersection = 0.0f;
-
-    
-    real32 b = Dot(ray.direction, (ray.origin - center));
-    real32 c = LengthSq(ray.origin - center) - radius * radius;
-    real32 discriminant = b * b - c;
-
-    if (discriminant >= 0) {
-        real32 sqrtDiscriminant = sqrtf(discriminant);
-
-        real32 intersection1 = -b - sqrtDiscriminant;
-        real32 intersection2 = -b + sqrtDiscriminant;
-
-        if (intersection1 <= intersection2) {
-            if (intersection1 >= 0) {
-                intersection = intersection1;
-            }
-            else {
-                intersection = intersection2;
-            }
-        }
-        else {
-            if (intersection2 >= 0) {
-                intersection = intersection2;
-            }
-            else {
-                intersection = intersection1;
-            }
-        }
-
-        result = intersection >= 0;
-    }
-
-    if (t != NULL) {
-        *t = intersection;
-    }
-    return result;
-}
-
-// [0] http://mrl.nyu.edu/~dzorin/rend05/lecture2.pdf
-inline bool RaycastCylinder(vec3 a, vec3 b, real32 radius, Ray ray, real32 *t = NULL) {
-    bool result = false;
-    real32 intersection = 0.0f;
-
-    vec3 axis = Normalize(b - a);
-    vec3 deltaP = ray.origin - a;
-
-    // optimized out some constant terms, similar to RaycastSphere
-    real32 aTerm = LengthSq(ray.direction - Dot(ray.direction, axis) * axis);
-    real32 bTerm = Dot(ray.direction - Dot(ray.direction, axis) * axis, deltaP - Dot(deltaP, axis) * axis);
-    real32 cTerm = LengthSq(deltaP - Dot(deltaP, axis) * axis) - radius * radius;
-
-    real32 discriminant = Square(bTerm) - aTerm * cTerm;
-    if (discriminant >= 0) {
-        real32 intersection0 = (-bTerm - sqrtf(discriminant)) / aTerm;
-        vec3 point0 = PointAt(ray, intersection0);
-        if (PlaneTest(a, axis, point0) >= 0 &&
-            PlaneTest(b, -axis, point0) >= 0) {
-            intersection = intersection0;
-            result = true;
-        }
-        
-        real32 intersection1 = (-bTerm + sqrtf(discriminant)) / aTerm;
-        if (!result || intersection1 < intersection0) {
-            vec3 point1 = PointAt(ray, intersection1);
-            if (PlaneTest(a, axis, point1) >= 0
-                && PlaneTest(b, -axis, point1) >= 0) {
-                intersection = intersection1;
-                result = true;
-            }
-        }
-
-        // Cap Intersections, (but only do them if the finite cone intersection succeeded)
-        if (result) {
-            real32 intersection2;
-            real32 intersection3;
-
-            // (Only one of the plane intersections is possible!)
-            if (RaycastPlane(a, axis, ray, &intersection2)) {
-                vec3 point2 = PointAt(ray, intersection2);
-                if (Distance(point2, a) <= radius) {
-                    intersection = Min(intersection, intersection2);
-                }
-            }
-            else if (RaycastPlane(b, -axis, ray, &intersection3)) {
-                vec3 point3 = PointAt(ray, intersection3);
-                if (Distance(point3, b) <= radius) {
-                    intersection = Min(intersection, intersection3);
-                }
-            }
-        }
-    }
-
-    if (t != NULL) {
-        *t = intersection;
-    }
-    return result;
-}
-
-
-inline bool RaycastCapsule(vec3 pointA, vec3 pointB, real32 radius, Ray ray, real32 *t = NULL) {
-    real32 tA = ClosestToPointAt(ray, pointA);
-    real32 tB = ClosestToPointAt(ray, pointB);
-
-    // @MAYBE @BUG: I'm not convinced that this will always provide us the correct closestPoint along the
-    // capsule's inner segment.
-    vec3 rayA = PointAt(ray, tA);
-    vec3 rayB = PointAt(ray, tB);
-
-    real32 s, t_;
-    vec3 c1, c2;
-    real32 sqDist = ClosestPointSegmentToSegment(pointA, pointB, rayA, rayB, &s, &t_, &c1, &c2);
-
-    return RaycastSphere(c1, radius, ray, t);
-}
-
-// @MAYBE @BUG: these may not work since the t vale is 0-1, which goes againt our convention
-// in the raycast system functions
-inline bool RaycastPolyhedron(vec3 *points, vec3 *normals, u32 faceCount, Ray ray, real32 *tFirst, real32 *tLast) {
-
-    *tFirst = 0.0f; *tLast = 1.0f; 
-    for (int i = 0; i < faceCount; i++) {
-        real32 d = Dot(normals[i], points[i]);
-        real32 denom = Dot(normals[i], ray.direction);
-        real32 dist = d - Dot(normals[i], ray.origin);
-
-        // ray runs parallel to face
-        if (denom == 0.0f) {
-            if (dist > 0.0) { return false; }
-        } 
-        else {
-            real32 t = denom / dist; 
-            
-            if (denom < 0.0f) {
-                if (t > *tFirst) { *tFirst = t; }
-            }
-            else {
-                if (t < *tLast) { *tLast = t; }
-            }
-
-            if (*tFirst > *tLast) { return false; }
-        }
-    }
-    
-    return true;
-}
-
-inline bool RaycastPolyhedron(Plane *planes, u32 planeCount, Ray ray, real32 *tFirst, real32 *tLast) {
-
-    *tFirst = 0; *tLast = FLT_MAX; 
-    for (int i = 0; i < planeCount; i++) {
-
-        real32 d = Dot(planes[i].normal, planes[i].point);
-        real32 denom = Dot(planes[i].normal, ray.direction);
-        real32 dist = d - Dot(planes[i].normal, ray.origin);
-
-        // ray runs parallel to face
-        if (denom == 0.0f) {
-            if (dist > 0.0) { return false; }
-        } 
-        else {
-            real32 t = dist / denom; 
-            
-            if (denom < 0.0f) {
-                if (t > *tFirst) { 
-                    *tFirst = t; 
-                }
-            }
-            else {
-                if (t < *tLast) { 
-                    *tLast = t; 
-                }
-            }
-
-            if (*tFirst > *tLast) { return false; }
-        }
-    }
-    
-    return true;
-}
 
 
 // Delaunay Triangulation
@@ -2783,10 +2404,48 @@ Rect GlobalRect(vec2 position, Rect rect) {
     return result;
 }
 
+inline bool TestPointAABB(vec2 p, vec2 min, vec2 max) {
+    return (p.x > min.x && p.x < max.x) &&
+        (p.y > min.y && p.y < max.y);
+}
+
+inline bool RaycastAABB(vec2 aabbMin, vec2 aabbMax, Ray ray, real32 *tMin, bool testInside = false, real32 epsilon = FLT_EPSILON) {
+    *tMin = 0.0f;
+    r32 tMax = INFINITY;
+
+    for (int i = 0; i < 2; i++) {
+        if (Abs(ray.direction.data[i]) < epsilon) {
+            if (ray.origin.data[i] < aabbMin.data[i] || ray.origin.data[i] > aabbMax.data[i]) { return false; }
+        }
+        else {
+            r32 ood = 1.0f / ray.direction.data[i];
+            r32 t1 = (aabbMin.data[i] - ray.origin.data[i]) * ood;
+            r32 t2 = (aabbMax.data[i] - ray.origin.data[i]) * ood;
+
+            if (t1 > t2) {
+                r32 temp = t1; t1 = t2; t2 = temp;
+            }
+
+            *tMin = Max(*tMin, t1);
+            tMax = Min(tMax, t2);
+
+            if (*tMin > tMax) { return false; }
+        }
+    }
+    
+    if (testInside && TestPointAABB(V2(ray.origin.x, ray.origin.y), aabbMin, aabbMax)) {
+        *tMin = tMax;    
+    }
+
+    return true;
+}
+
+
 // This function takes a pointer to a vec2. That means when we change the values of dir, we are
 // changing the values at the memory address we passed in!
 // We WANT the value of dir to change based on the computation of this function. IMPORTANT
 // This uses the SeparatingAxisTheorem
+// @NOTE: this will not set the component of dir that doesn't need to be moved, so make sure it's cleared
 bool RectTest(Rect a, Rect b, vec2 aPosition, vec2 bPosition, vec2 *dir) {
 
     Rect aGlobal;

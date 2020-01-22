@@ -2,6 +2,8 @@
 void PatrickInit(GameMemory *gameMem) {
     Patrick *patrick = &gameMem->patrick;
 
+    patrick->guy.x = 1;
+
     patrick->pos = V2(3, 3);
 
     AllocateEntityDB(&gameMem->entityDB, 1024);

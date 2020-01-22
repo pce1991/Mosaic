@@ -23,6 +23,8 @@
 #include "patrick.h"
 #include "patrick2.h"
 
+#include "mosaic.h"
+
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "../lib/stb_truetype.h"
@@ -79,6 +81,8 @@ struct GameMemory {
 
     Patrick patrick;
     Patrick2 patrick2;
+
+    MosaicMem mosaic;
 };
 
 GameMemory *Game = NULL;

@@ -13,13 +13,12 @@
 #include "patrick.cpp"
 #include "patrick2.cpp"
 
+#include "mosaic.cpp"
+
 const uint32 screenWidth = 1600;
 const uint32 screenHeight = 900;
 
-
-
 void GameInit(GameMemory *gameMem) {
-
     Game = gameMem;
 
     Game->screenWidth = screenWidth;
@@ -162,8 +161,8 @@ void GameInit(GameMemory *gameMem) {
 
 
     PatrickInit(gameMem);
+    MosaicInit(gameMem);
 }
-
 
 void GameUpdateAndRender(GameMemory *gameMem) {
     
@@ -175,7 +174,8 @@ void GameUpdateAndRender(GameMemory *gameMem) {
         gameMem->running = false;
     }
 
-    PatrickUpdate(gameMem);
+    //PatrickUpdate(gameMem);
+    MosaicUpdate(gameMem);
 
     DeleteEntities(&Game->entityDB);
 

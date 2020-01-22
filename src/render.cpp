@@ -357,3 +357,6 @@ void DrawMouseCursor(vec2 position, real32 size) {
     glDisableVertexAttribArray(1);    
 }
 
+void DrawTile() {
+    
+}

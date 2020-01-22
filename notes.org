@@ -1,3 +1,76 @@
+
+"Then comes the hard part: what is worth doing?"
+I love you Brian Moriarty
+
+Something I love about his style is making metaphors/allegories to a lot of different fields: 
+Music
+Sports
+Games
+Movies
+Writing
+
+
+My question is: is this a useful way to learn how to program and do game design? 
+
+
+
+Games are:
+input data
+operations on that data
+output data
+
+Is Rand broken again!?!?!?
+Want a better API naming convention anyway
+
+Overload V4() so we don't get those obnoxious errors when not everything is a floating point. 
+
+Allow all inputs on the keyboard so people arent limited in a dumb way.
+
+Write a clear API and documentation. 
+
+DynamicArray is probably necessary, especially for tiles 
+
+Clearly separate things because it's very easy to mess up by moving the grid rendering code, or checking for input in the wrong place, etc. Especially so they can easily create a new game by copy-pasting the directory and not needing to easily segmenting their code from the other stuff. Like we could have 
+Tile {
+   basic;
+   custom;
+};
+
+Possible to teach math stuff with this? 
+
+
+Oh this could be really cool for Gray Matter!
+
+
+DESIGN: 
+I think we need the tiles to record some time information: last time changed position
+
+If you change the grid size do we delete tiles out of bounds? 
+
+GlobalVars file Thekla style? Could move things like screen/board/line color in there, but that isn't really a huge barrier to entry...
+        
+Things like repeat key rate might be something we want internal...
+
+I'd rather not pass in input to InputPressed
+
+Do we do thins GOL style and say each tile is just on or off, there is no such thing as deletion or moving? That seems counterintuitive for a lot of games (moving a pawn is actually turning this thing to nothing and this tile to a pawn)
+
+I kinda like the animation system used in GOL, might be nice to implement that here. This depends on whether tiles/cells have positions, or are simply coordinates in space
+
+Wow this is a lot like Changes...
+
+
+TODO: 
+audio
+Font rendering
+custom sprites on a tile? Kinda flies in the face of the idea but Perlenspiel has it...
+path finding?
+Saving/loading games state?
+Animations (like start lerping between these colors or something?)
+Debug log (kinda weird to implement a sophisticated text rendering system in something that doesn't let you do anything more advanced than a line at the top...)
+
+
+
 TODO: figure out whats up with glTexParameter and why its necessary
       Frame buffers
 

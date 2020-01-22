@@ -1183,6 +1183,11 @@ inline real32 Length(vec2 a) {
     return result;
 }
 
+inline real32 Length(vec2i a) {
+    real32 result = sqrtf(a.x * a.x + a.y * a.y);
+    return result;
+}
+
 inline real32 Length(vec3 a) {
     real32 result = sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
     return result;
@@ -1209,6 +1214,10 @@ inline real32 LengthSq(vec4 a) {
 }
 
 inline real32 Distance(vec2 a, vec2 b) {
+    return Length(b - a);
+}
+
+inline real32 Distance(vec2i a, vec2i b) {
     return Length(b - a);
 }
 
