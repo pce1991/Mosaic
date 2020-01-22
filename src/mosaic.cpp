@@ -22,23 +22,6 @@ void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
     mosaic->gridOrigin = V2(0) + V2(-mosaic->gridSize.x * 0.5f, mosaic->gridSize.y * 0.5f);
 }
 
-
-void MoonPeltInit(MosaicMem *mosaic, Scene *scenePtr) {
-    scenePtr->data = malloc(sizeof(MoonPelt));
-
-    MoonPelt *moon = (MoonPelt *)scenePtr->data;
-
-    moon->moonPos = V2(24, 24);
-
-    moon->moonDir = 1;
-}
-
-void BoatTidesInit(MosaicMem *mosaic, Scene *scenePtr) {
-    scenePtr->data = malloc(sizeof(BoatTides));
-
-    BoatTides *scene = (BoatTides *)scenePtr->data;
-}
-
 void MosaicInit(GameMemory *mem) {
     MosaicMem *mosaic = &mem->mosaic;
     Mosaic = mosaic;
@@ -87,8 +70,6 @@ void MosaicInit(GameMemory *mem) {
             tile->position = V2i(x, y);
         }
     }
-
-    MoonPeltInit(mosaic, &mosaic->scenes[SceneID_MoonPelt]);
 }
 
 void RandomizeTiles() {
