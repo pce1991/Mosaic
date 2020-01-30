@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <stdarg.h> 
+
 #include <pthread.h>
 #include <semaphore.h>
 
