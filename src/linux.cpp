@@ -324,7 +324,7 @@ void InitOpenGL(Display *display, Window *window, GLXContext *context) {
     glXSwapIntervalEXTProc glXSwapIntervalEXT = 0;
     glXSwapIntervalEXT = (glXSwapIntervalEXTProc)
         glXGetProcAddressARB( (const GLubyte *) "glXSwapIntervalEXT" );
-    glXSwapIntervalEXT(display, *window, 1);
+    //glXSwapIntervalEXT(display, *window, 1);
 
     // Must set to experimental so GLEW ignores glGetString and gets function pointers
     // https://www.opengl.org/wiki/OpenGL_Loading_Library#GLEW_.28OpenGL_Extension_Wrangler.29
