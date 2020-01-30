@@ -16,14 +16,14 @@
 
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ETC_AUDIO_BUFFER_COUNT 4
-#include <alsa/asoundlib.h>
+//#include <alsa/asoundlib.h>
 
 #include <linux/joystick.h>
 
 #include <GL/glew.h>
 #include <GL/glx.h>
 
-#include "game.c"
+#include "game.cpp"
 
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
@@ -336,12 +336,17 @@ int main() {
 
     context = DefaultGC(display, screen);
 
+    GLint glAttributes[] = {GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None};
+    visual = glXChooseVisual(display, screen, glAttributes);
+
     window = XCreateSimpleWindow(display, rootWindow, 10, 10, screenWidth, screenHeight, 1, XBlackPixel(display, screen), XWhitePixel(display, screen));
     XSelectInput(display, window, KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | ExposureMask | PointerMotionMask);
 
     XMapWindow(display, window);
 
     InitOpenGL(display, &window, &context);
+
+    
 
     Visual *visual = DefaultVisual(display, screen);
     int depth = DefaultDepth(display, screen);
@@ -433,6 +438,8 @@ int main() {
         //printf("%d read %d keys\n", gameMem.frame, inputRead);
 
         GameUpdateAndRender(&gameMem);
+
+        glXSwapBuffers(platform->display, *platform->window);
         
         sem_post(inputQueue->semaphore);
 
