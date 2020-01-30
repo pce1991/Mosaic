@@ -12,9 +12,24 @@
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
 
+#define NUM_THREADS 4
+
+#define ALSA_PCM_NEW_HW_PARAMS_API
+#define ETC_AUDIO_BUFFER_COUNT 4
+#include <alsa/asoundlib.h>
+
 #include <linux/joystick.h>
 
+#include <GL/glew.h>
+#include <GL/glx.h>
+
 #include "game.c"
+
+
+#define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
+#define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
+typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+typedef void (*glXSwapIntervalEXTProc)(Display*, GLXDrawable, int);
 
 typedef struct {
     InputQueue *input;
@@ -226,6 +241,76 @@ void* ReadInputProc(void *ptr) {
     }
 }
 
+
+void InitOpenGL(Display *display, Window *windos, GLXContext *context) {
+
+    static int visual_attribs[] = {
+        GLX_X_RENDERABLE    , True,
+        GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+        GLX_X_VISUAL_TYPE   , GLX_DIRECT_COLOR,
+        GLX_DOUBLEBUFFER    , True,
+        None
+    };
+  
+    glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
+    glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)
+        glXGetProcAddressARB( (const GLubyte *) "glXCreateContextAttribsARB" );
+  
+    int fbCount;
+    GLXFBConfig* fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbCount);
+
+    int bestFBC = -1, worstFBC = -1, bestNumSamp = -1, worstNumSamp = 999;
+
+    // pick fb with most samples per pixel... why?
+    for (int i = 0; i < fbCount; i++) {
+        XVisualInfo *vi = glXGetVisualFromFBConfig( platform->display, fbc[i] );
+        if (vi)
+            {
+                int samp_buf, samples;
+                glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
+                glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLES, &samples);
+
+                if ((bestFBC < 0 || samp_buf) && samples > bestNumSamp) {
+                    bestFBC = i, bestNumSamp = samples;
+                }
+                if (worstFBC < 0 || !samp_buf || samples < worstNumSamp) {
+                    worstFBC = i, worstNumSamp = samples;
+                }
+            }
+        XFree(vi);
+    }
+
+    GLXFBConfig bestFbc = fbc[bestFBC];
+    XFree(fbc);
+  
+    int contextAttributes[] =
+        {
+            GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+            GLX_CONTEXT_MINOR_VERSION_ARB, 1,
+            //GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+            None
+        };
+    *context = glXCreateContextAttribsARB(platform->display, bestFbc, 0, True, contextAttributes);
+    glXMakeCurrent(platform->display, *window, context);
+
+    
+    // https://www.khronos.org/opengl/wiki/Swap_Interval#In_Linux_.2F_GLX
+    // Your application's use of swap interval may be overridden by external, driver-specific configuration.
+    // For example, forcing Vsync Off in a driver's control panel will prevent Vsync,
+    // even if swap interval is set to 1 in your application.
+
+    glXSwapIntervalEXTProc glXSwapIntervalEXT = 0;
+    glXSwapIntervalEXT = (glXSwapIntervalEXTProc)
+        glXGetProcAddressARB( (const GLubyte *) "glXSwapIntervalEXT" );
+    glXSwapIntervalEXT(display, *window, 1);
+
+    // Must set to experimental so GLEW ignores glGetString and gets function pointers
+    // https://www.opengl.org/wiki/OpenGL_Loading_Library#GLEW_.28OpenGL_Extension_Wrangler.29
+    glewExperimental = GL_TRUE;
+    glewInit();
+    glCheckError();
+}
+
 int main() {
 
     Display *display;
@@ -255,6 +340,8 @@ int main() {
     XSelectInput(display, window, KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | ExposureMask | PointerMotionMask);
 
     XMapWindow(display, window);
+
+    InitOpenGL(display, &window, &context);
 
     Visual *visual = DefaultVisual(display, screen);
     int depth = DefaultDepth(display, screen);

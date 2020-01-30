@@ -188,7 +188,32 @@ void MosaicUpdate(GameMemory *mem) {
 
     Tile *tiles = Mosaic->tiles;
 
-    Tile *hoveredTile = Mosaic->hoveredTile;
+    for (int y = 0; y < 48; y++) {
+        for (int x = 0; x < 48; x++) {
+            Tile *tile = GetTile(x, y);
+
+            float t = x / 48.0f;
+
+            float t2 = y / 48.0f; 
+            
+            // tile->color = Lerp(V4(0.2f, 0.6f, 1.0f, 1.0f),
+            //                    V4(1.0f, 0.5f, 0.0f, 1.0f), t);
+
+            tile->color =
+                Lerp(V4(1.0f, 0.5f, 0.0f, 1.0f),
+                     Lerp(V4(0.2f, 0.6f, 1.0f, 1.0f),
+                          V4(0.15f, 0.4f, 1.0f, 1.0f), t),
+                     t2);
+
+            tile->color = tile->color +
+                Lerp(V4(0.05f, 1.0f, 1.0f, 1.0f),
+                     V4(1.0f, 0.5f, 0.0f, 1.0f), t) * 0.5f;
+        
+            tile->active = true;
+        }
+    }
+
+    Tile* hoveredTile = Mosaic->hoveredTile;
 
     if (hoveredTile != NULL) {
         hoveredTile->active = true;
@@ -199,6 +224,17 @@ void MosaicUpdate(GameMemory *mem) {
     }
     // store previous hovered tile and set it to inactive
 
+    // let's say that bees has the address of 55336626
+    int bees = 4444;
+    int x = 5 * bees;
+
+    // A type name followed by a asterisk represents
+    // a pointer!
+    // A pointer represents the address in RAM of our
+    // variable. A pointer is just a number.
+    // The ampersand "&" operator takes a variable, and
+    // gives us the address of that variable in RAM
+    int* p = &bees;
 
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
     {

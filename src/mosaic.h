@@ -16,9 +16,6 @@ struct Tile {
 // @NOTE: origin of the grid is top left so coordinate (0, 0) is top left.
 
 enum SceneID {
-     SceneID_MoonPelt,
-     SceneID_EarthSmash,
-     SceneID_BoatTides,
      SceneID_Count,
 };
 

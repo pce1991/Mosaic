@@ -20,9 +20,6 @@
 #include "mesh.h"
 #include "entity.h"
 
-#include "patrick.h"
-#include "patrick2.h"
-
 #include "mosaic.h"
 
 
@@ -78,9 +75,6 @@ struct GameMemory {
     EntityDB entityDB;
 
     int32 gameIndex;
-
-    Patrick patrick;
-    Patrick2 patrick2;
 
     MosaicMem mosaic;
 };

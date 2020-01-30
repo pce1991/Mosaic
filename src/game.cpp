@@ -10,9 +10,6 @@
 #include "mesh.cpp"
 #include "entity.cpp"
 
-#include "patrick.cpp"
-#include "patrick2.cpp"
-
 #include "mosaic.cpp"
 
 const uint32 screenWidth = 1600;
@@ -160,7 +157,6 @@ void GameInit(GameMemory *gameMem) {
     OpenGL_InitTexture(&gameMem->pixelTest);
 
 
-    PatrickInit(gameMem);
     MosaicInit(gameMem);
 }
 
@@ -174,7 +170,6 @@ void GameUpdateAndRender(GameMemory *gameMem) {
         gameMem->running = false;
     }
 
-    //PatrickUpdate(gameMem);
     MosaicUpdate(gameMem);
 
     DeleteEntities(&Game->entityDB);
