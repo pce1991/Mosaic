@@ -313,7 +313,7 @@ void InitOpenGL(Display *display, Window *window, GLXContext *context) {
             None
         };
     *context = glXCreateContextAttribsARB(display, bestFbc, 0, True, contextAttributes);
-    glXMakeCurrent(display, *window, context);
+    glXMakeCurrent(display, *window, *context);
 
     
     // https://www.khronos.org/opengl/wiki/Swap_Interval#In_Linux_.2F_GLX
