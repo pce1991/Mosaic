@@ -366,8 +366,8 @@ int main() {
 
     XMapWindow(display, window);
 
-    InitOpenGL(display, &window, &context);
-
+    GLXContext glxContext = {};
+    InitOpenGL(display, &window, &glxContext);
     
 
     Visual *visual = DefaultVisual(display, screen);
