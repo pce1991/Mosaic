@@ -25,6 +25,20 @@
 
 #include "game.cpp"
 
+void Print(const char *fmt, ...) {
+    char buffer[PRINT_MAX_BUFFER_LEN];
+
+    va_list args;
+    va_start (args, fmt);
+
+    vsnprintf(buffer, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    printf(buffer);
+    printf("\n");
+
+    va_end(args);
+}
+
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
