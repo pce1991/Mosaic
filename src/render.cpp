@@ -14,8 +14,6 @@ inline bool glCheckError_(char *file, uint32 line) {
 void LoadShader(const char *vertPath, const char *fragPath, Shader *shader) {
     FILE *file = fopen(vertPath, "r");
 
-    // FUCK fgets! Just use something good
-
     if (file != NULL) {
         fseek(file, 0, SEEK_END);
         shader->vertSize = ftell(file);
@@ -23,7 +21,7 @@ void LoadShader(const char *vertPath, const char *fragPath, Shader *shader) {
 
         shader->vertSrc = (char *)malloc(shader->vertSize + 1);
         int index = 0;
-        char c = fgetc(file);
+        int c = fgetc(file);
         while (c != EOF) {
             shader->vertSrc[index++] = c;
             c = fgetc(file);
@@ -46,7 +44,7 @@ void LoadShader(const char *vertPath, const char *fragPath, Shader *shader) {
 
         shader->fragSrc = (char *)malloc(shader->fragSize + 1);
         int index = 0;
-        char c = fgetc(file);
+        int c = fgetc(file);
         while (c != EOF) {
             shader->fragSrc[index++] = c;
             c = fgetc(file);
