@@ -264,7 +264,7 @@ void* ReadInputProc(void *ptr) {
 }
 
 
-void InitOpenGL(Display *display, Window *windos, GLXContext *context) {
+void InitOpenGL(Display *display, Window *window, GLXContext *context) {
 
     static int visual_attribs[] = {
         GLX_X_RENDERABLE    , True,
@@ -459,7 +459,7 @@ int main() {
 
         GameUpdateAndRender(&gameMem);
 
-        glXSwapBuffers(display, *window);
+        glXSwapBuffers(display, window);
         
         sem_post(inputQueue->semaphore);
 
