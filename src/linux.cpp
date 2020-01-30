@@ -420,7 +420,7 @@ int main() {
     }
 
 
-    XImage *image = XCreateImage(display, visual, depth, ZPixmap, 0, gameMem.bitmap, screenWidth, screenHeight, 32, 0);
+    //XImage *image = XCreateImage(display, visual, depth, ZPixmap, 0, gameMem.bitmap, screenWidth, screenHeight, 32, 0);
     
 
     while (gameMem.running) {
@@ -463,7 +463,7 @@ int main() {
         
         sem_post(inputQueue->semaphore);
 
-        XPutImage(display, window, context, image, 0, 0, 0, 0, screenWidth, screenHeight);
+        //XPutImage(display, window, context, image, 0, 0, 0, 0, screenWidth, screenHeight);
 
         timeSinceRender = 0.0;
     }
