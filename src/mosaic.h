@@ -54,21 +54,6 @@ struct MosaicMem {
     Scene scenes[SceneID_Count];
 };
 
-struct MoonCrater {
-    vec2i offsetPos;
-    real32 timeHit;
-    real32 radius;
-};
-
-struct MoonPelt {
-    vec2 moonPos;
-    real32 moonDepth;
-    int32 moonDir;
-
-    DynamicArray<MoonCrater> craters;
-};
-
-
 struct BoatTides {
     vec2 moonPos;
     vec2 boatPos;
