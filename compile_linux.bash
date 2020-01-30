@@ -1,4 +1,4 @@
 
 rm -rf build/
 mkdir build/
-gcc -O0 -Isrc -Ilib src/linux.cpp -o game -lx11 -lGL -lGLU -lGLEW -lm -std=c++11
+gcc -O0 -Isrc src/linux.cpp -o game -lx11 -lGL -lGLU -lGLEW -lm -std=c++11

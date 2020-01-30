@@ -26,6 +26,7 @@
 #include <GL/glx.h>
 
 
+#define PRINT_MAX_BUFFER_LEN 1024
 void Print(const char *fmt, ...) {
     char buffer[PRINT_MAX_BUFFER_LEN];
 
