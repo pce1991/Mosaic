@@ -459,7 +459,7 @@ int main() {
 
         GameUpdateAndRender(&gameMem);
 
-        glXSwapBuffers(platform->display, *platform->window);
+        glXSwapBuffers(display, *window);
         
         sem_post(inputQueue->semaphore);
 
