@@ -285,7 +285,7 @@ void InitOpenGL(Display *display, Window *window, GLXContext *context) {
 
     // pick fb with most samples per pixel... why?
     for (int i = 0; i < fbCount; i++) {
-        XVisualInfo *vi = glXGetVisualFromFBConfig( platform->display, fbc[i] );
+        XVisualInfo *vi = glXGetVisualFromFBConfig( display, fbc[i] );
         if (vi)
             {
                 int samp_buf, samples;
@@ -312,8 +312,8 @@ void InitOpenGL(Display *display, Window *window, GLXContext *context) {
             //GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
             None
         };
-    *context = glXCreateContextAttribsARB(platform->display, bestFbc, 0, True, contextAttributes);
-    glXMakeCurrent(platform->display, *window, context);
+    *context = glXCreateContextAttribsARB(display, bestFbc, 0, True, contextAttributes);
+    glXMakeCurrent(display, *window, context);
 
     
     // https://www.khronos.org/opengl/wiki/Swap_Interval#In_Linux_.2F_GLX
