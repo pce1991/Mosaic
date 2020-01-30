@@ -23,7 +23,6 @@
 #include <GL/glew.h>
 #include <GL/glx.h>
 
-#include "game.cpp"
 
 void Print(const char *fmt, ...) {
     char buffer[PRINT_MAX_BUFFER_LEN];
@@ -38,6 +37,9 @@ void Print(const char *fmt, ...) {
 
     va_end(args);
 }
+
+
+#include "game.cpp"
 
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
