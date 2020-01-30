@@ -176,8 +176,8 @@ void PushKeyboardEvents(Display *display, InputQueue *inputQueue) {
             
 
         if (event.type == MotionNotify) {
-            inputQueue->mousePosition.x = event.xmotion.x;
-            inputQueue->mousePosition.y = event.xmotion.y;
+            inputQueue->mousePos.x = event.xmotion.x;
+            inputQueue->mousePos.y = event.xmotion.y;
         }
 
         if (event.type == ButtonPress) {
