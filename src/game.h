@@ -24,10 +24,10 @@
 
 
 #define STB_TRUETYPE_IMPLEMENTATION
-#include "../lib/stb_truetype.h"
+#include "stb_truetype.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../lib/stb_image.h"
+#include "stb_image.h"
 
 #define HERTZ 60.0f
 
