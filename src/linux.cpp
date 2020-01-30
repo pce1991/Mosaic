@@ -9,6 +9,7 @@
 #include <semaphore.h>
 
 #include <assert.h>
+#define ASSERT(...) assert(__VA_ARGS__)
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
