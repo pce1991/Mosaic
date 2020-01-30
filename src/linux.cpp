@@ -359,7 +359,7 @@ int main() {
     context = DefaultGC(display, screen);
 
     GLint glAttributes[] = {GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None};
-    Visual *visual = glXChooseVisual(display, screen, glAttributes);
+    XVisualInfo *visual = glXChooseVisual(display, screen, glAttributes);
 
     window = XCreateSimpleWindow(display, rootWindow, 10, 10, screenWidth, screenHeight, 1, XBlackPixel(display, screen), XWhitePixel(display, screen));
     XSelectInput(display, window, KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | ExposureMask | PointerMotionMask);
