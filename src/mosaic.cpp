@@ -26,8 +26,8 @@ void MosaicInit(GameMemory *mem) {
     MosaicMem *mosaic = &mem->mosaic;
     Mosaic = mosaic;
 
-    mosaic->gridWidth = 48;
-    mosaic->gridHeight = 48;
+    mosaic->gridWidth = 16;
+    mosaic->gridHeight = 16;
 
     mosaic->tileCapacity = mosaic->gridWidth * mosaic->gridHeight;
     mosaic->tiles = (Tile *)malloc(sizeof(Tile) * mosaic->tileCapacity);
@@ -35,6 +35,8 @@ void MosaicInit(GameMemory *mem) {
     memset(mosaic->tiles, 0, mosaic->tileCapacity * sizeof(Tile));
 
     mosaic->padding = 1.0f;
+
+    AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &mosaic->rectBuffer);
 
     real32 screenAspect = 16.0f / 9.0f;
     real32 levelAspect = mosaic->gridWidth / (mosaic->gridHeight * 1.0f);
@@ -70,6 +72,9 @@ void MosaicInit(GameMemory *mem) {
             tile->position = V2i(x, y);
         }
     }
+
+    Mosaic->guyDir = 1;
+    Mosaic->guyUp = 1;
 }
 
 void RandomizeTiles() {
@@ -114,7 +119,9 @@ vec2 GridPositionToWorldPosition(vec2i gridPosition) {
 
 void DrawTile(vec2i position, vec4 color) {
     vec2 worldPos = GridPositionToWorldPosition(position);
-    DrawRect(worldPos, V2(Mosaic->tileSize * 0.5f), color);
+    //DrawRect(worldPos, V2(Mosaic->tileSize * 0.5f), color);
+
+    DrawRect(&Mosaic->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
 }
 
 void DrawBorder() {
@@ -172,6 +179,13 @@ Tile *GetHoveredTile() {
 }
 
 Tile *GetTile(int32 x, int32 y) {
+    if (x < 0 || x >= Mosaic->gridWidth) {
+        return NULL;
+    }
+    if (y < 0 || y >= Mosaic->gridHeight) {
+        return NULL;
+    }
+    
     // TODO: clamp these in case they're out of bounds, so we don't crash
     int32 index = (y * Mosaic->gridWidth) + x;
     return &Mosaic->tiles[index];
@@ -188,31 +202,63 @@ void MosaicUpdate(GameMemory *mem) {
 
     Tile *tiles = Mosaic->tiles;
 
-    for (int y = 0; y < 48; y++) {
-        for (int x = 0; x < 48; x++) {
+    for (int y = 0; y < Mosaic->gridHeight; y++) {
+        for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *tile = GetTile(x, y);
 
-            float t = x / 48.0f;
+            float t = x / (Mosaic->gridWidth  * 1.0f);
+            float t2 = y / (Mosaic->gridHeight  * 1.0f);
 
-            float t2 = y / 48.0f; 
+            // tile->color = Lerp(V4(1.0f, 0.8f, 0.8f, 1.0f),
+            //                    V4(0.6f, 0.0f, 0.0f, 1.0f), t) * Lerp(1.0f, 0.6f, t2);
+
+            //tile->color = V4(0.54f, 1.0f, 0.37f, 1.0f);
+            //tile->color = V4(0.674f, 0.13f, 0.82, 1.0f);
+            tile->color = V4(0.4444444444f, 1.0f, 0.681953145f, 1.0f) +
+                V4(sinf(Game->time * 6) * 0.25f, 0.0f, 0.1f, 1.0f);
             
-            // tile->color = Lerp(V4(0.2f, 0.6f, 1.0f, 1.0f),
-            //                    V4(1.0f, 0.5f, 0.0f, 1.0f), t);
+            // tile->color =
+            //     Lerp(V4(1.0f, 0.5f, 0.0f, 1.0f),
+            //          Lerp(V4(0.2f, 0.6f, 1.0f, 1.0f),
+            //               V4(0.15f, 0.4f, 1.0f, 1.0f), t),
+            //          t2);
 
-            tile->color =
-                Lerp(V4(1.0f, 0.5f, 0.0f, 1.0f),
-                     Lerp(V4(0.2f, 0.6f, 1.0f, 1.0f),
-                          V4(0.15f, 0.4f, 1.0f, 1.0f), t),
-                     t2);
-
-            tile->color = tile->color +
-                Lerp(V4(0.05f, 1.0f, 1.0f, 1.0f),
-                     V4(1.0f, 0.5f, 0.0f, 1.0f), t) * 0.5f;
+            // tile->color = tile->color +
+            //     Lerp(V4(0.05f, 1.0f, 1.0f, 1.0f),
+            //          V4(1.0f, 0.5f, 0.0f, 1.0f), t) * 0.5f;
         
             tile->active = true;
         }
     }
 
+    vec4 guyColor = V4(0.5f + (Mosaic->guyPos.x / Mosaic->gridWidth), 0.5f * (Mosaic->guyPos.x / Mosaic->gridWidth), 0.9f, 1.0f);
+
+    Mosaic->guyPos.x += (0.5f + cosf(Game->time * 5) * 0.25f) * Mosaic->guyDir;
+
+    if (Mosaic->guyPos.x > 16) {
+        Mosaic->guyDir = -1;
+        Mosaic->guyPos.y += Mosaic->guyUp;
+        //Mosaic->guyPos.y = 11;
+    }
+    if (Mosaic->guyPos.x < 0) {
+        Mosaic->guyDir = 1;
+        Mosaic->guyPos.y += Mosaic->guyUp;
+    }
+
+    if (Mosaic->guyPos.y <= 0) {
+        Mosaic->guyUp = 1;
+    }
+    if (Mosaic->guyPos.y >= 15) {
+        Mosaic->guyUp = -1;
+    }
+
+    vec2 guyPos = Mosaic->guyPos;
+    
+    Tile *guyTile = GetTile(guyPos.x, guyPos.y);
+    if (guyTile) {
+        guyTile->color = guyColor;
+    }
+    
     Tile* hoveredTile = Mosaic->hoveredTile;
 
     if (hoveredTile != NULL) {
@@ -224,19 +270,10 @@ void MosaicUpdate(GameMemory *mem) {
     }
     // store previous hovered tile and set it to inactive
 
-    // let's say that bees has the address of 55336626
-    int bees = 4444;
-    int x = 5 * bees;
-
-    // A type name followed by a asterisk represents
-    // a pointer!
-    // A pointer represents the address in RAM of our
-    // variable. A pointer is just a number.
-    // The ampersand "&" operator takes a variable, and
-    // gives us the address of that variable in RAM
-    int* p = &bees;
-
+    
+    
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
+    Mosaic->rectBuffer.count = 0;
     {
         DrawRect(V2(0), Mosaic->gridSize * 0.5f, Mosaic->boardColor);
     }
@@ -255,4 +292,6 @@ void MosaicUpdate(GameMemory *mem) {
     else {
         DrawGrid();        
     }
+
+    RenderRectBuffer(&Mosaic->rectBuffer);
 }

@@ -63,6 +63,8 @@ struct GameMemory {
     Sprite mouseCursorTexture;
     Sprite galagaShip;
     Sprite pixelTest;
+
+    Shader instancedQuadShader;
     
     Shader shader;
     int32 vertBuffer;

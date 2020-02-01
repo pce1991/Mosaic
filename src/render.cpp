@@ -315,6 +315,98 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
 }
 
 
+void AllocateRectBuffer(int32 capacity, RectBuffer *buffer) {
+    buffer->count = 0;
+    buffer->capacity = capacity;
+    buffer->bufferSize = sizeof(RectRenderData) * buffer->capacity;
+
+    buffer->data = (RectRenderData *)malloc(buffer->bufferSize);
+    memset(buffer->data, 0, buffer->bufferSize);
+    
+    glGenBuffers(1, &buffer->bufferID);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
+    glBufferData(GL_ARRAY_BUFFER, buffer->bufferSize, buffer->data, GL_STREAM_DRAW);
+}
+
+void DrawRect(RectBuffer *buffer, vec2 pos, vec2 scale, vec4 color) {
+    RectRenderData data = {};
+    data.color = color;
+    data.model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 0.0f));
+    
+    if (buffer->count < buffer->capacity) {
+        buffer->data[buffer->count++] = data;
+    }
+}
+
+void RenderRectBuffer(RectBuffer *buffer) {
+    Mesh *mesh = &Game->quad;
+    
+    Shader *shader = &Game->instancedQuadShader;
+    SetShader(shader);
+    
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+    // Position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (uint8 *)0);
+
+    int32 stride = sizeof(RectRenderData);
+
+    glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
+    glBufferData(GL_ARRAY_BUFFER, buffer->bufferSize, buffer->data, GL_STREAM_DRAW);
+
+    int pos = glGetAttribLocation(shader->programID, "instance_model");
+    int pos2 = glGetAttribLocation(shader->programID, "instance_color");
+    
+    // color
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0);
+    glVertexAttribDivisor(1, 1);
+
+    // model column 0
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4));
+    glVertexAttribDivisor(2, 1);
+
+    // model column 1
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 2);
+    glVertexAttribDivisor(3, 1);
+
+    // model column 2
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 3);
+    glVertexAttribDivisor(4, 1);
+
+    // model column 3
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 4);
+    glVertexAttribDivisor(5, 1);
+
+    glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (uint8 *)NULL + 0, buffer->count);
+    
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(3);
+    glDisableVertexAttribArray(4);
+    glDisableVertexAttribArray(5);
+    
+    glVertexAttribDivisor(0, 0);
+    glVertexAttribDivisor(1, 0);
+    glVertexAttribDivisor(2, 0);
+    glVertexAttribDivisor(3, 0);
+    glVertexAttribDivisor(4, 0);
+    glVertexAttribDivisor(5, 0);
+}
+
+
 void DrawMouseCursor(vec2 position, real32 size) {
         
     Shader *shader = &Game->texturedQuadShader;

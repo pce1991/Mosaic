@@ -41,16 +41,21 @@ typedef struct {
     uint8 a;
 } Color;
 
-#if 0
-Color Lerp(Color a, Color b, real32 t) {
-    return {
-            Lerp(a.r, b.r, t),
-            Lerp(a.g, b.g, t),
-            Lerp(a.b, b.b, t),
-            Lerp(a.a, b.a, t),
-    };
-}
-#endif
+
+struct RectRenderData {
+    vec4 color;
+    mat4 model;
+};
+
+struct RectBuffer {
+    int32 count;
+    int32 capacity;
+    RectRenderData *data;
+
+    uint32 bufferID;
+    uint32 bufferSize;
+};
+
 
 Color MultColor(Color c, real32 n) {
     c.r *= n;

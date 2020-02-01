@@ -34,6 +34,7 @@ struct MosaicMem {
     vec2 gridOrigin;
     real32 padding;
 
+    RectBuffer rectBuffer;
     
     vec4 screenColor;
     vec4 boardColor;
@@ -51,7 +52,11 @@ struct MosaicMem {
     Tile *hoveredTile;
     Tile *hoveredTilePrev;
 
-    Scene scenes[SceneID_Count];
+    //Scene scenes[SceneID_Count];
+
+    vec2 guyPos;
+    float guyDir;
+    float guyUp;
 };
 
 struct BoatTides {
