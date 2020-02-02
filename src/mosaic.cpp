@@ -119,9 +119,9 @@ vec2 GridPositionToWorldPosition(vec2i gridPosition) {
 
 void DrawTile(vec2i position, vec4 color) {
     vec2 worldPos = GridPositionToWorldPosition(position);
-    //DrawRect(worldPos, V2(Mosaic->tileSize * 0.5f), color);
-
-    DrawRect(&Mosaic->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
+    DrawRect(worldPos, V2(Mosaic->tileSize * 0.5f), color);
+    // Instancing
+    //DrawRect(&Mosaic->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
 }
 
 void DrawBorder() {
@@ -293,5 +293,6 @@ void MosaicUpdate(GameMemory *mem) {
         DrawGrid();        
     }
 
-    RenderRectBuffer(&Mosaic->rectBuffer);
+    //Instancing
+    //RenderRectBuffer(&Mosaic->rectBuffer);
 }

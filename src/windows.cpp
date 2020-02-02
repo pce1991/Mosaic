@@ -1,3 +1,5 @@
+#define WINDOWS 1
+
 #include <windows.h>
 #include <windowsx.h>
 

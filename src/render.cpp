@@ -112,13 +112,15 @@ void CompileShader(Shader *shader, uint32 uniformCount, const char **uniformName
     
     if (shader->vertID != 0) {
         glAttachShader(shader->programID, shader->vertID);
+        glCheckError();
     }
     if (shader->fragID != 0) {
         glAttachShader(shader->programID, shader->fragID);
+        glCheckError();
     }
 
     glLinkProgram(shader->programID);
-
+    glCheckError();
     
     
     shader->uniformCount = uniformCount;
@@ -135,6 +137,7 @@ void CompileShader(Shader *shader, uint32 uniformCount, const char **uniformName
         uniform->name[nameLen] = 0;
         
         uniform->id = glGetUniformLocation(shader->programID, uniform->name);
+        glCheckError();
         
         if (uniform->id >= 0) {
             Print("Setting uniform %s", uniform->name);    
@@ -200,17 +203,19 @@ void DrawCircle2D(vec2 position, real32 radius) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
 
     // 1st attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         
     // 2nd attribute buffer : texcoords
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
+    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
+    glEnableVertexAttribArray(texcoord);
+    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
         
     glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);    
+    glDisableVertexAttribArray(vert);
+    glDisableVertexAttribArray(texcoord);    
 }
 
 void LoadSprite(Sprite *sprite, char *path) {
@@ -271,17 +276,19 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
 
     // 1st attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         
     // 2nd attribute buffer : texcoords
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
+    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
+    glEnableVertexAttribArray(texcoord);
+    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
         
     glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);    
+    glDisableVertexAttribArray(vert);
+    glDisableVertexAttribArray(texcoord);    
 }
 
 
@@ -295,7 +302,10 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
     Mesh *mesh = &Game->quad;
     
     mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 0.0f));
-     
+
+    int32 loc = glGetUniformLocation(shader->programID, "model");
+    glCheckError();
+    
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
 
@@ -305,13 +315,13 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
 
     // 1st attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         
     glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);    
+    glDisableVertexAttribArray(vert);
 }
 
 
@@ -353,57 +363,58 @@ void RenderRectBuffer(RectBuffer *buffer) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
 
     // Position
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (uint8 *)0);
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (uint8 *)0);
 
     int32 stride = sizeof(RectRenderData);
 
     glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
     glBufferData(GL_ARRAY_BUFFER, buffer->bufferSize, buffer->data, GL_STREAM_DRAW);
 
-    int pos = glGetAttribLocation(shader->programID, "instance_model");
-    int pos2 = glGetAttribLocation(shader->programID, "instance_color");
+    int model = glGetAttribLocation(shader->programID, "instance_model");
+    int color = glGetAttribLocation(shader->programID, "instance_color");
     
     // color
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0);
-    glVertexAttribDivisor(1, 1);
+    glEnableVertexAttribArray(color);
+    glVertexAttribPointer(color, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0);
+    glVertexAttribDivisor(color, 1);
 
     // model column 0
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4));
-    glVertexAttribDivisor(2, 1);
+    glEnableVertexAttribArray(model);
+    glVertexAttribPointer(model, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4));
+    glVertexAttribDivisor(model, 1);
 
     // model column 1
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 2);
-    glVertexAttribDivisor(3, 1);
+    glEnableVertexAttribArray(model + 1);
+    glVertexAttribPointer(model + 1, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 2);
+    glVertexAttribDivisor(model + 1, 1);
 
     // model column 2
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 3);
-    glVertexAttribDivisor(4, 1);
+    glEnableVertexAttribArray(model + 2);
+    glVertexAttribPointer(model + 2, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 3);
+    glVertexAttribDivisor(model + 2, 1);
 
     // model column 3
-    glEnableVertexAttribArray(5);
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 4);
-    glVertexAttribDivisor(5, 1);
+    glEnableVertexAttribArray(model + 3);
+    glVertexAttribPointer(model + 3, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(vec4) * 4);
+    glVertexAttribDivisor(model + 3, 1);
 
     glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (uint8 *)NULL + 0, buffer->count);
     
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
-    glDisableVertexAttribArray(3);
-    glDisableVertexAttribArray(4);
-    glDisableVertexAttribArray(5);
+    glDisableVertexAttribArray(vert);
+    glDisableVertexAttribArray(color);
+    glDisableVertexAttribArray(model);
+    glDisableVertexAttribArray(model + 1);
+    glDisableVertexAttribArray(model + 2);
+    glDisableVertexAttribArray(model + 3);
     
-    glVertexAttribDivisor(0, 0);
-    glVertexAttribDivisor(1, 0);
-    glVertexAttribDivisor(2, 0);
-    glVertexAttribDivisor(3, 0);
-    glVertexAttribDivisor(4, 0);
-    glVertexAttribDivisor(5, 0);
+    glVertexAttribDivisor(vert, 0);
+    glVertexAttribDivisor(color, 0);
+    glVertexAttribDivisor(model, 0);
+    glVertexAttribDivisor(model + 1, 0);
+    glVertexAttribDivisor(model + 2, 0);
+    glVertexAttribDivisor(model + 3, 0);
 }
 
 
@@ -434,12 +445,14 @@ void DrawMouseCursor(vec2 position, real32 size) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
 
     // 1st attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         
     // 2nd attribute buffer : texcoords
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
+    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
+    glEnableVertexAttribArray(texcoord);
+    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
         
     glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
 
