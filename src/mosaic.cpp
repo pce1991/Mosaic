@@ -233,7 +233,8 @@ void MosaicUpdate(GameMemory *mem) {
 
     vec4 guyColor = V4(0.5f + (Mosaic->guyPos.x / Mosaic->gridWidth), 0.5f * (Mosaic->guyPos.x / Mosaic->gridWidth), 0.9f, 1.0f);
 
-    Mosaic->guyPos.x += (0.5f + cosf(Game->time * 5) * 0.25f) * Mosaic->guyDir;
+    real32 speed = 30;
+    Mosaic->guyPos.x += (0.5f + cosf(Game->time * 5) * 0.25f) * Mosaic->guyDir * Game->deltaTime * speed;
 
     if (Mosaic->guyPos.x > 16) {
         Mosaic->guyDir = -1;
