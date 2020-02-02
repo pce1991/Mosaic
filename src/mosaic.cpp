@@ -47,14 +47,14 @@ void MosaicInit(GameMemory *mem) {
 
     memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
-    Mosaic->padding = 1.0f;
+    Mosaic->padding = 1.5f;
 
     AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
 
     real32 screenAspect = 16.0f / 9.0f;
     real32 levelAspect = Mosaic->gridWidth / (Mosaic->gridHeight * 1.0f);
 
-    Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridWidth;
+    Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridHeight;
 
     // Note: proportional to tileSize so the grid doesn't take up more room proportionally
     Mosaic->lineThickness = Mosaic->tileSize * 0.04f;
@@ -256,5 +256,11 @@ void MosaicUpdate() {
         hoveredTile->active = true;
         hoveredTile->color = V4(1);
     }
+
+    //DrawText(V2(0), 8.0f, V4(1, 0, 0, 1), "MESSAGE");
+    //DrawText(V2(0, 256.0f / 900), 8.0f, V4(1, 0, 0, 1), "MESSAGE Part 2");
+    //DrawTextCentered(V2(0, 0), 8.0f, V4(1, 0, 0, 1), "MESSAGE");
+    //DrawTextCentered(Mosaic->gridOrigin + V2(Mosaic->gridSize.x / 2, 0.25f), 8.0f, V4(1, 0, 0, 1), "How to play:");
+    DrawTextCentered(Mosaic->gridOrigin + V2(Mosaic->gridSize.x / 2, 0.25f), 8.0f, V4(1, 0, 0, 1), "x: %d y: %d", hoveredTile->position.x, hoveredTile->position.y);
 }
 

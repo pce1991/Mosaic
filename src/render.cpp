@@ -456,10 +456,17 @@ void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     va_end(args);
 }
 
-void DrawTextCentered(vec2 pos, real32 size, vec4 color, const char *str) {
-    int32 len = strlen(str);
-
+void DrawTextCentered(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     GlyphBuffer *buffer = &Game->glyphBuffers[Game->currentGlyphBufferIndex];
+
+    char str[GlyphBufferCapacity];
+
+    va_list args;
+    va_start (args, fmt);
+
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    
+    int32 len = strlen(str);
 
     r32 x = 0;
     for (int i = 0; i < len; i++) {
