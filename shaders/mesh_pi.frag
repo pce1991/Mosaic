@@ -1,10 +1,8 @@
 #version 120
 
-attribute vec4 fs_color;
-
-varying vec4 color_;
+varying vec4 fs_color;
 
 void main(void){
-    color_ = fs_color;
+    gl_FragColor = fs_color;
 }
 

@@ -81,6 +81,28 @@ bool ShaderCompiled(GLuint shader, char **infoLog) {
     return isCompiled;
 }
 
+bool ShaderLinked(GLuint shader, char **infoLog) {
+    int32 isLinked = 0;
+    glGetProgramiv(shader, GL_LINK_STATUS, &isLinked);
+    if (isLinked == GL_FALSE) {
+        if (infoLog != NULL) {
+            GLint maxLength = 0;
+            glGetProgramiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+            maxLength = 256;
+
+            *infoLog = (GLchar *)malloc(sizeof(GLchar) * maxLength);
+            glGetProgramInfoLog(shader, maxLength, &maxLength, (GLchar *)*infoLog);
+        }
+
+        Print(*infoLog);
+        
+        glDeleteShader(shader);
+    }
+
+    return isLinked;
+}
+
 
 void CompileShader(Shader *shader, uint32 uniformCount, const char **uniformNames) {
     char *infoLog = NULL;
@@ -109,6 +131,9 @@ void CompileShader(Shader *shader, uint32 uniformCount, const char **uniformName
 
     shader->programID = glCreateProgram();
 
+    if (!glIsProgram(shader->programID)) {
+        Print("NOT A SHADER!");
+    }
     
     if (shader->vertID != 0) {
         glAttachShader(shader->programID, shader->vertID);
@@ -121,6 +146,8 @@ void CompileShader(Shader *shader, uint32 uniformCount, const char **uniformName
 
     glLinkProgram(shader->programID);
     glCheckError();
+
+    ShaderLinked(shader->programID, &infoLog);
     
     
     shader->uniformCount = uniformCount;
