@@ -162,23 +162,23 @@ void GameInit(GameMemory *gameMem) {
         CompileShader(&gameMem->shader, 3, uniforms);
     }
 
-    {
-        LoadShader("shaders/instanced_quad_shader.vert", "shaders/instanced_quad_shader.frag", &gameMem->instancedQuadShader);
-        const char *uniforms[] = {
-            "viewProjection",
-        };
-        CompileShader(&gameMem->instancedQuadShader, 1, uniforms);
-    }
+    // {
+    //     LoadShader("shaders/instanced_quad_shader.vert", "shaders/instanced_quad_shader.frag", &gameMem->instancedQuadShader);
+    //     const char *uniforms[] = {
+    //         "viewProjection",
+    //     };
+    //     CompileShader(&gameMem->instancedQuadShader, 1, uniforms);
+    // }
 
-    {
-        LoadShader("shaders/textured_quad.vert", "shaders/textured_quad.frag", &gameMem->texturedQuadShader);
-        const char *uniforms[] = {
-            "model",
-            "viewProjection",
-            "texture0",
-        };
-        CompileShader(&gameMem->texturedQuadShader, 3, uniforms);
-    }
+    // {
+    //     LoadShader("shaders/textured_quad.vert", "shaders/textured_quad.frag", &gameMem->texturedQuadShader);
+    //     const char *uniforms[] = {
+    //         "model",
+    //         "viewProjection",
+    //         "texture0",
+    //     };
+    //     CompileShader(&gameMem->texturedQuadShader, 3, uniforms);
+    // }
 #endif
 
     

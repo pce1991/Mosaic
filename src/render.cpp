@@ -303,9 +303,6 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
     
     mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 0.0f));
 
-    int32 loc = glGetUniformLocation(shader->programID, "model");
-    glCheckError();
-    
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
 
