@@ -203,48 +203,6 @@ void OpenGL_InitMesh(Mesh *mesh) {
     
 }
 
-void DrawCircle2D(vec2 position, real32 radius) {
-        
-    Shader *shader = &Game->texturedQuadShader;
-    SetShader(shader);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    Mesh *mesh = &Game->quad;
-
-    //mat4 model = TRS(V3(position.x - radius * 0.5f, position.y + radius * 0.5f, 0), IdentityQuaternion(), V3(radius));
-    mat4 model = TRS(V3(position.x, position.y, 0), IdentityQuaternion(), V3(radius));
-     
-    Sprite *texture = &Game->circleTexture;
-
-    //vec4 topLeft = mvp * V4(gameMem->quad.verts[0], 1.0f);
-    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
-    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture->textureID);
-    glUniform1i(shader->uniforms[2].id, 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
-
-    // 1st attribute buffer : vertices
-    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
-    glEnableVertexAttribArray(vert);
-    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        
-    // 2nd attribute buffer : texcoords
-    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
-    glEnableVertexAttribArray(texcoord);
-    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
-        
-    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
-
-    glDisableVertexAttribArray(vert);
-    glDisableVertexAttribArray(texcoord);    
-}
-
 void LoadSprite(Sprite *sprite, char *path) {
     int32 x, y, n;
     uint8 *data = stbi_load(path, &x, &y, &n, 4);
@@ -442,48 +400,3 @@ void RenderRectBuffer(RectBuffer *buffer) {
 }
 
 
-void DrawMouseCursor(vec2 position, real32 size) {
-        
-    Shader *shader = &Game->texturedQuadShader;
-    SetShader(shader);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    Mesh *mesh = &Game->quad;
-
-    mat4 model = TRS(V3(position.x + (size * 0.5f), position.y - (size * 0.5f), 0), IdentityQuaternion(), V3(size));
-     
-    Sprite *texture = &Game->mouseCursorTexture;
-
-    //vec4 topLeft = mvp * V4(gameMem->quad.verts[0], 1.0f);
-    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
-    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture->textureID);
-    glUniform1i(shader->uniforms[2].id, 0);
-        
-
-    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
-
-    // 1st attribute buffer : vertices
-    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
-    glEnableVertexAttribArray(vert);
-    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        
-    // 2nd attribute buffer : texcoords
-    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
-    glEnableVertexAttribArray(texcoord);
-    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
-        
-    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);    
-}
-
-void DrawTile() {
-    
-}

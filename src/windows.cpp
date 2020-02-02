@@ -317,7 +317,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     memset(&gameMem, 0, sizeof(GameMemory));
 
     // @GACK: need this for seeding the random number generator in GameInit
-    // @BUG: It seems like the seeded value is almost always exactly the same tho???????
+    // @BUG: It seems like the seeded value is almost always exactly the same tho?
     gameMem.systemTime = (real32)systemTime.QuadPart;
 
     GameInit(&gameMem);
@@ -341,10 +341,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     int pixelCount = (bitmapWidth * bitmapHeight);
     int bytesPerPixel = 4; // one byte for each color
     int bitmapMemorySize = bytesPerPixel * pixelCount;
-
-    // stack allocated variable
-    gameMem.bitmap = (uint8 *)malloc(bitmapMemorySize);
-    gameMem.pitch = 4 * bitmapWidth;
 
     
     HDC hdc = GetDC(window);

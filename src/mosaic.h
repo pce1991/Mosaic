@@ -15,14 +15,8 @@ struct Tile {
 
 // @NOTE: origin of the grid is top left so coordinate (0, 0) is top left.
 
-enum SceneID {
-     SceneID_Count,
-};
-
-struct Scene {
-    SceneID id;
-    bool inited;
-    void *data;
+struct MyData {
+    // @NOTE: this is where you can put in any data specific to your game.
 };
 
 struct MosaicMem {
@@ -52,19 +46,9 @@ struct MosaicMem {
     Tile *hoveredTile;
     Tile *hoveredTilePrev;
 
-    //Scene scenes[SceneID_Count];
+    MyData data;
 
     vec2 guyPos;
     float guyDir;
     float guyUp;
-};
-
-struct BoatTides {
-    vec2 moonPos;
-    vec2 boatPos;
-
-    int32 moonDir;
-
-    real32 waveRate;
-    real32 lastWaveTime;
 };

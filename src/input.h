@@ -17,11 +17,11 @@ typedef enum {
     Input_MouseRight,
 
     Input_Count,
-} Input;
+} InputID;
 
 struct InputEvent {
     int32 deviceID;
-    Input input;
+    InputID input;
     bool release;
 };
 

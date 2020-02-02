@@ -7,7 +7,8 @@ void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
     mosaic->gridWidth = Clamp(newWidth, 1, 255);
     mosaic->gridHeight = Clamp(newHeight, 1, 255);
 
-    // @TODO: free? 
+    free(mosaic->tiles);
+    
     mosaic->tileCapacity = mosaic->gridWidth * mosaic->gridHeight;
     mosaic->tiles = (Tile *)malloc(sizeof(Tile) * mosaic->tileCapacity);
 
@@ -23,44 +24,39 @@ void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
 }
 
 void MosaicInit(GameMemory *mem) {
-    MosaicMem *mosaic = &mem->mosaic;
-    Mosaic = mosaic;
+    Mosaic = &mem->mosaic;
 
-    mosaic->gridWidth = 16;
-    mosaic->gridHeight = 16;
+    Mosaic->gridWidth = 16;
+    Mosaic->gridHeight = 16;
 
-    mosaic->tileCapacity = mosaic->gridWidth * mosaic->gridHeight;
-    mosaic->tiles = (Tile *)malloc(sizeof(Tile) * mosaic->tileCapacity);
+    Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
+    Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
 
-    memset(mosaic->tiles, 0, mosaic->tileCapacity * sizeof(Tile));
+    memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
-    mosaic->padding = 1.0f;
+    Mosaic->padding = 1.0f;
 
-    AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &mosaic->rectBuffer);
+    AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
 
     real32 screenAspect = 16.0f / 9.0f;
-    real32 levelAspect = mosaic->gridWidth / (mosaic->gridHeight * 1.0f);
+    real32 levelAspect = Mosaic->gridWidth / (Mosaic->gridHeight * 1.0f);
 
-    if (levelAspect > screenAspect) {
-        
-    }
-
-    mosaic->tileSize = (9.0f - mosaic->padding) / mosaic->gridWidth;
+    Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridWidth;
 
     // Note: proportional to tileSize so the grid doesn't take up more room proportionally
-    mosaic->lineThickness = mosaic->tileSize * 0.04f;
+    Mosaic->lineThickness = Mosaic->tileSize * 0.04f;
 
     // @TODO: add the line sizes
-    mosaic->gridSize.x = mosaic->tileSize * mosaic->gridWidth;
-    mosaic->gridSize.y = mosaic->tileSize * mosaic->gridHeight;
+    Mosaic->gridSize.x = Mosaic->tileSize * Mosaic->gridWidth;
+    Mosaic->gridSize.y = Mosaic->tileSize * Mosaic->gridHeight;
     
-    mosaic->gridOrigin = V2(0) + V2(-mosaic->gridSize.x * 0.5f, mosaic->gridSize.y * 0.5f);
+    Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
 
-    mosaic->screenColor = V4(0.2f, 0.2f, 0.2f, 1.0f);
-    mosaic->boardColor = V4(0, 0, 0, 1.0f);
-    mosaic->lineColor = V4(0.8f, 0.8f, 0.8f, 1.0f);
+    Mosaic->screenColor = V4(0.2f, 0.2f, 0.2f, 1.0f);
+    Mosaic->boardColor = V4(0, 0, 0, 1.0f);
+    Mosaic->lineColor = V4(0.8f, 0.8f, 0.8f, 1.0f);
 
-    mosaic->onlyDrawBorder = true;
+    Mosaic->onlyDrawBorder = true;
 
     Tile *tiles = Mosaic->tiles;
     for (int y = 0; y < Mosaic->gridHeight; y++) {
@@ -191,14 +187,50 @@ Tile *GetTile(int32 x, int32 y) {
     return &Mosaic->tiles[index];
 }
 
+Tile *GetTile(vec2i pos) {
+    return GetTile(pos.x, pos.y);
+}
 
-void MosaicUpdate(GameMemory *mem) {
-    MosaicMem *mosaic = &mem->mosaic;
 
-    InputQueue *input = &Game->inputQueue;
+void MosaicRender() {
+    Tile *tiles = Mosaic->tiles;
+    
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
+    Mosaic->rectBuffer.count = 0;
+    {
+        DrawRect(V2(0), Mosaic->gridSize * 0.5f, Mosaic->boardColor);
+    }
 
+    for (int i = 0; i < Mosaic->tileCapacity; i++) {
+        Tile *tile = &tiles[i];
+
+        if (tile->active) {
+            DrawTile(tile->position, tile->color);
+        }
+    }
+
+    if (Mosaic->onlyDrawBorder) {
+        DrawBorder();    
+    }
+    else {
+        DrawGrid();        
+    }
+
+    //Instancing
+    //RenderRectBuffer(&Mosaic->rectBuffer);
+}
+
+// @NOTE: this is here so code can be inserted into MosaicUpdate in any order you want without
+// messing up the internal state of the engine.
+// Feel free to ignore this if you know what you're doing.
+void MosaicUpdateInternal() {
     Mosaic->hoveredTilePrev = Mosaic->hoveredTile;
     Mosaic->hoveredTile = GetHoveredTile();
+}
+
+void MosaicUpdate() {
+    InputQueue *input = &Game->inputQueue;
 
     Tile *tiles = Mosaic->tiles;
 
@@ -269,32 +301,5 @@ void MosaicUpdate(GameMemory *mem) {
     if (Mosaic->hoveredTilePrev !=  NULL && Mosaic->hoveredTilePrev != hoveredTile) {
         //Mosaic->hoveredTilePrev->active = false;
     }
-    // store previous hovered tile and set it to inactive
-
-    
-
-    glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
-    Mosaic->rectBuffer.count = 0;
-    {
-        DrawRect(V2(0), Mosaic->gridSize * 0.5f, Mosaic->boardColor);
-    }
-
-    for (int i = 0; i < mosaic->tileCapacity; i++) {
-        Tile *tile = &tiles[i];
-
-        if (tile->active) {
-            DrawTile(tile->position, tile->color);
-        }
-    }
-
-    if (Mosaic->onlyDrawBorder) {
-        DrawBorder();    
-    }
-    else {
-        DrawGrid();        
-    }
-
-    //Instancing
-    //RenderRectBuffer(&Mosaic->rectBuffer);
 }
+

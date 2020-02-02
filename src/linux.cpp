@@ -421,9 +421,6 @@ int main() {
     }
 
 
-    //XImage *image = XCreateImage(display, visual, depth, ZPixmap, 0, gameMem.bitmap, screenWidth, screenHeight, 32, 0);
-    
-
     while (gameMem.running) {
 
         clock_gettime(CLOCK_MONOTONIC, &spec);

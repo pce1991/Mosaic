@@ -10,7 +10,7 @@
 #include "math/math.h"
 #include "my_memory.h"
 
-//#include "dynamic_array.h"
+#include "dynamic_array.h"
 
 #include "render.h"
 #include "input.h"
@@ -46,9 +46,6 @@ struct GameMemory {
     uint32 screenHeight;
     uint32 pitch;
 
-    uint32 bitmapSize;
-    uint8 *bitmap;
-
     Glyph *glyphs;
     Sprite fontSprite;
 
@@ -58,11 +55,6 @@ struct GameMemory {
     real32 camAngle;
 
     Shader texturedQuadShader;
-
-    Sprite circleTexture;
-    Sprite mouseCursorTexture;
-    Sprite galagaShip;
-    Sprite pixelTest;
 
     Shader instancedQuadShader;
     
@@ -82,5 +74,6 @@ struct GameMemory {
 };
 
 GameMemory *Game = NULL;
+InputQueue *Input = NULL;
 
 #define ArrayLength(array, type) sizeof(array)/sizeof(type)
