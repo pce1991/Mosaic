@@ -272,7 +272,8 @@ void MosaicUpdate(GameMemory *mem) {
     // store previous hovered tile and set it to inactive
 
     
-    
+
+    glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
     Mosaic->rectBuffer.count = 0;
     {
