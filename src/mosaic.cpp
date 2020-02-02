@@ -256,11 +256,5 @@ void MosaicUpdate() {
         hoveredTile->active = true;
         hoveredTile->color = V4(1);
     }
-
-    //DrawText(V2(0), 8.0f, V4(1, 0, 0, 1), "MESSAGE");
-    //DrawText(V2(0, 256.0f / 900), 8.0f, V4(1, 0, 0, 1), "MESSAGE Part 2");
-    //DrawTextCentered(V2(0, 0), 8.0f, V4(1, 0, 0, 1), "MESSAGE");
-    //DrawTextCentered(Mosaic->gridOrigin + V2(Mosaic->gridSize.x / 2, 0.25f), 8.0f, V4(1, 0, 0, 1), "How to play:");
-    DrawTextCentered(Mosaic->gridOrigin + V2(Mosaic->gridSize.x / 2, 0.25f), 8.0f, V4(1, 0, 0, 1), "x: %d y: %d", hoveredTile->position.x, hoveredTile->position.y);
 }
 
