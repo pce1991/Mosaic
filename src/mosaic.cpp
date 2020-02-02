@@ -2,25 +2,38 @@
 MosaicMem *Mosaic = NULL;
 
 void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
-    MosaicMem *mosaic = Mosaic;
+    Mosaic->gridWidth = Clamp(newWidth, 1, 255);
+    Mosaic->gridHeight = Clamp(newHeight, 1, 255);
+
+    free(Mosaic->tiles);
     
-    mosaic->gridWidth = Clamp(newWidth, 1, 255);
-    mosaic->gridHeight = Clamp(newHeight, 1, 255);
+    Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
+    Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
 
-    free(mosaic->tiles);
-    
-    mosaic->tileCapacity = mosaic->gridWidth * mosaic->gridHeight;
-    mosaic->tiles = (Tile *)malloc(sizeof(Tile) * mosaic->tileCapacity);
+    memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
-    memset(mosaic->tiles, 0, mosaic->tileCapacity * sizeof(Tile));
-
-    mosaic->tileSize = (9.0f - mosaic->padding) / mosaic->gridWidth;
+    Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridWidth;
 
     // @TODO: add the line sizes
-    mosaic->gridSize.x = mosaic->tileSize * mosaic->gridWidth;
-    mosaic->gridSize.y = mosaic->tileSize * mosaic->gridHeight;
+    Mosaic->gridSize.x = Mosaic->tileSize * Mosaic->gridWidth;
+    Mosaic->gridSize.y = Mosaic->tileSize * Mosaic->gridHeight;
     
-    mosaic->gridOrigin = V2(0) + V2(-mosaic->gridSize.x * 0.5f, mosaic->gridSize.y * 0.5f);
+    Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
+
+    Tile *tiles = Mosaic->tiles;
+    for (int y = 0; y < Mosaic->gridHeight; y++) {
+        for (int x = 0; x < Mosaic->gridWidth; x++) {
+            int32 index = (y * Mosaic->gridWidth) + x;
+
+            Tile *tile = &tiles[index];
+
+            tile->position = V2i(x, y);
+        }
+    }
+}
+
+void MosaicMyDataInit(MyData *myData) {
+    
 }
 
 void MosaicInit(GameMemory *mem) {
@@ -69,8 +82,7 @@ void MosaicInit(GameMemory *mem) {
         }
     }
 
-    Mosaic->guyDir = 1;
-    Mosaic->guyUp = 1;
+    MosaicMyDataInit(&Mosaic->myData);
 }
 
 void RandomizeTiles() {

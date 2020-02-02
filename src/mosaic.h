@@ -46,9 +46,5 @@ struct MosaicMem {
     Tile *hoveredTile;
     Tile *hoveredTilePrev;
 
-    MyData data;
-
-    vec2 guyPos;
-    float guyDir;
-    float guyUp;
+    MyData myData;
 };

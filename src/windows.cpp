@@ -347,6 +347,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
     real64 timeSinceRender = 0.0;
 
+    HCURSOR cursor = LoadCursor(NULL, IDC_ARROW);
+    SetCursor(cursor);
     //ShowCursor(false);
     WinMoveMouse(window, screenWidth / 2.0f, screenHeight / 2.0f, screenHeight);
 
