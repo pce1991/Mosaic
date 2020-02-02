@@ -11,6 +11,9 @@ Create a scene architecture for moving between different types of games.
 A good exercise for the Engine class would be to see something like how to load OpenGL shaders, and then have to improve on it. For instance, storing the uniform and attribute locations.
 
 
+Get the tile to move and go up or down everytime it hits the edge.
+
+
 "Then comes the hard part: what is worth doing?"
 I love you Brian Moriarty
 

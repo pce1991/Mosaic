@@ -152,9 +152,7 @@ void DrawGrid() {
 }
 
 Tile *GetHoveredTile() {
-    InputQueue *input = &Game->inputQueue;
-
-    vec2 mousePos = input->mousePosNormSigned;
+    vec2 mousePos = Input->mousePosNormSigned;
     mousePos.x *= 8;
     mousePos.y *= 4.5f;
 
@@ -230,76 +228,21 @@ void MosaicUpdateInternal() {
 }
 
 void MosaicUpdate() {
-    InputQueue *input = &Game->inputQueue;
-
     Tile *tiles = Mosaic->tiles;
+    
+    Tile* hoveredTile = Mosaic->hoveredTile;
 
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
-            Tile *tile = GetTile(x, y);
-
-            float t = x / (Mosaic->gridWidth  * 1.0f);
-            float t2 = y / (Mosaic->gridHeight  * 1.0f);
-
-            // tile->color = Lerp(V4(1.0f, 0.8f, 0.8f, 1.0f),
-            //                    V4(0.6f, 0.0f, 0.0f, 1.0f), t) * Lerp(1.0f, 0.6f, t2);
-
-            //tile->color = V4(0.54f, 1.0f, 0.37f, 1.0f);
-            //tile->color = V4(0.674f, 0.13f, 0.82, 1.0f);
-            tile->color = V4(0.4444444444f, 1.0f, 0.681953145f, 1.0f) +
-                V4(sinf(Game->time * 6) * 0.25f, 0.0f, 0.1f, 1.0f);
-            
-            // tile->color =
-            //     Lerp(V4(1.0f, 0.5f, 0.0f, 1.0f),
-            //          Lerp(V4(0.2f, 0.6f, 1.0f, 1.0f),
-            //               V4(0.15f, 0.4f, 1.0f, 1.0f), t),
-            //          t2);
-
-            // tile->color = tile->color +
-            //     Lerp(V4(0.05f, 1.0f, 1.0f, 1.0f),
-            //          V4(1.0f, 0.5f, 0.0f, 1.0f), t) * 0.5f;
-        
-            tile->active = true;
+            Tile *t = GetTile(x, y);
+            t->color = V4(0, 0, 0, 1);
+            t->active = false;
         }
     }
-
-    vec4 guyColor = V4(0.5f + (Mosaic->guyPos.x / Mosaic->gridWidth), 0.5f * (Mosaic->guyPos.x / Mosaic->gridWidth), 0.9f, 1.0f);
-
-    real32 speed = 30;
-    Mosaic->guyPos.x += (0.5f + cosf(Game->time * 5) * 0.25f) * Mosaic->guyDir * Game->deltaTime * speed;
-
-    if (Mosaic->guyPos.x > 16) {
-        Mosaic->guyDir = -1;
-        Mosaic->guyPos.y += Mosaic->guyUp;
-        //Mosaic->guyPos.y = 11;
-    }
-    if (Mosaic->guyPos.x < 0) {
-        Mosaic->guyDir = 1;
-        Mosaic->guyPos.y += Mosaic->guyUp;
-    }
-
-    if (Mosaic->guyPos.y <= 0) {
-        Mosaic->guyUp = 1;
-    }
-    if (Mosaic->guyPos.y >= 15) {
-        Mosaic->guyUp = -1;
-    }
-
-    vec2 guyPos = Mosaic->guyPos;
-    
-    Tile *guyTile = GetTile(guyPos.x, guyPos.y);
-    if (guyTile) {
-        guyTile->color = guyColor;
-    }
-    
-    Tile* hoveredTile = Mosaic->hoveredTile;
 
     if (hoveredTile != NULL) {
         hoveredTile->active = true;
         hoveredTile->color = V4(1);
-    }
-    if (Mosaic->hoveredTilePrev !=  NULL && Mosaic->hoveredTilePrev != hoveredTile) {
-        //Mosaic->hoveredTilePrev->active = false;
     }
 }
 
