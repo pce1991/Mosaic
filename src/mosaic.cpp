@@ -2,65 +2,74 @@
 MosaicMem *Mosaic = NULL;
 
 void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
-    MosaicMem *mosaic = Mosaic;
+    Mosaic->gridWidth = Clamp(newWidth, 1, 255);
+    Mosaic->gridHeight = Clamp(newHeight, 1, 255);
+
+    free(Mosaic->tiles);
     
-    mosaic->gridWidth = Clamp(newWidth, 1, 255);
-    mosaic->gridHeight = Clamp(newHeight, 1, 255);
+    Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
+    Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
 
-    // @TODO: free? 
-    mosaic->tileCapacity = mosaic->gridWidth * mosaic->gridHeight;
-    mosaic->tiles = (Tile *)malloc(sizeof(Tile) * mosaic->tileCapacity);
+    memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
-    memset(mosaic->tiles, 0, mosaic->tileCapacity * sizeof(Tile));
-
-    mosaic->tileSize = (9.0f - mosaic->padding) / mosaic->gridWidth;
+    Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridWidth;
 
     // @TODO: add the line sizes
-    mosaic->gridSize.x = mosaic->tileSize * mosaic->gridWidth;
-    mosaic->gridSize.y = mosaic->tileSize * mosaic->gridHeight;
+    Mosaic->gridSize.x = Mosaic->tileSize * Mosaic->gridWidth;
+    Mosaic->gridSize.y = Mosaic->tileSize * Mosaic->gridHeight;
     
-    mosaic->gridOrigin = V2(0) + V2(-mosaic->gridSize.x * 0.5f, mosaic->gridSize.y * 0.5f);
+    Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
+
+    Tile *tiles = Mosaic->tiles;
+    for (int y = 0; y < Mosaic->gridHeight; y++) {
+        for (int x = 0; x < Mosaic->gridWidth; x++) {
+            int32 index = (y * Mosaic->gridWidth) + x;
+
+            Tile *tile = &tiles[index];
+
+            tile->position = V2i(x, y);
+        }
+    }
+}
+
+void MosaicMyDataInit(MyData *myData) {
+    
 }
 
 void MosaicInit(GameMemory *mem) {
-    MosaicMem *mosaic = &mem->mosaic;
-    Mosaic = mosaic;
+    Mosaic = &mem->mosaic;
 
-    mosaic->gridWidth = 84;
-    mosaic->gridHeight = 64;
+    Mosaic->gridWidth = 16;
+    Mosaic->gridHeight = 16;
 
-    mosaic->tileCapacity = mosaic->gridWidth * mosaic->gridHeight;
-    mosaic->tiles = (Tile *)malloc(sizeof(Tile) * mosaic->tileCapacity);
+    Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
+    Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
 
-    memset(mosaic->tiles, 0, mosaic->tileCapacity * sizeof(Tile));
+    memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
-    mosaic->padding = 1.0f;
+    Mosaic->padding = 1.5f;
 
-    AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &mosaic->rectBuffer);
+    AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
 
     real32 screenAspect = 16.0f / 9.0f;
-    real32 levelAspect = mosaic->gridWidth / (mosaic->gridHeight * 1.0f);
+    real32 levelAspect = Mosaic->gridWidth / (Mosaic->gridHeight * 1.0f);
 
-    if (levelAspect > screenAspect) {
-        
-    }
-
-    mosaic->tileSize = (9.0f - mosaic->padding) / mosaic->gridWidth;
+    Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridHeight;
 
     // Note: proportional to tileSize so the grid doesn't take up more room proportionally
-    mosaic->lineThickness = mosaic->tileSize * 0.04f;
+    Mosaic->lineThickness = Mosaic->tileSize * 0.04f;
 
     // @TODO: add the line sizes
-    mosaic->gridSize.x = mosaic->tileSize * mosaic->gridWidth;
-    mosaic->gridSize.y = mosaic->tileSize * mosaic->gridHeight;
+    Mosaic->gridSize.x = Mosaic->tileSize * Mosaic->gridWidth;
+    Mosaic->gridSize.y = Mosaic->tileSize * Mosaic->gridHeight;
     
-    mosaic->gridOrigin = V2(0) + V2(-mosaic->gridSize.x * 0.5f, mosaic->gridSize.y * 0.5f);
+    Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
 
-    mosaic->screenColor = V4(0.2f, 0.2f, 0.2f, 1.0f);
-    mosaic->boardColor = V4(0, 0, 0, 1.0f);
-    mosaic->lineColor = V4(0.8f, 0.8f, 0.8f, 1.0f);
+    Mosaic->screenColor = V4(0.2f, 0.2f, 0.2f, 1.0f);
+    Mosaic->boardColor = V4(0, 0, 0, 1.0f);
+    Mosaic->lineColor = V4(0.8f, 0.8f, 0.8f, 1.0f);
 
-    mosaic->onlyDrawBorder = true;
+    Mosaic->onlyDrawBorder = true;
 
     Tile *tiles = Mosaic->tiles;
     for (int y = 0; y < Mosaic->gridHeight; y++) {
@@ -73,8 +82,7 @@ void MosaicInit(GameMemory *mem) {
         }
     }
 
-    Mosaic->guyDir = 1;
-    Mosaic->guyUp = 1;
+    MosaicMyDataInit(&Mosaic->myData);
 }
 
 void RandomizeTiles() {
@@ -156,9 +164,7 @@ void DrawGrid() {
 }
 
 Tile *GetHoveredTile() {
-    InputQueue *input = &Game->inputQueue;
-
-    vec2 mousePos = input->mousePosNormSigned;
+    vec2 mousePos = Input->mousePosNormSigned;
     mousePos.x *= 8;
     mousePos.y *= 4.5f;
 
@@ -191,88 +197,14 @@ Tile *GetTile(int32 x, int32 y) {
     return &Mosaic->tiles[index];
 }
 
+Tile *GetTile(vec2i pos) {
+    return GetTile(pos.x, pos.y);
+}
 
-void MosaicUpdate(GameMemory *mem) {
-    MosaicMem *mosaic = &mem->mosaic;
 
-    InputQueue *input = &Game->inputQueue;
-
-    Mosaic->hoveredTilePrev = Mosaic->hoveredTile;
-    Mosaic->hoveredTile = GetHoveredTile();
-
+void MosaicRender() {
     Tile *tiles = Mosaic->tiles;
-
-    for (int y = 0; y < Mosaic->gridHeight; y++) {
-        for (int x = 0; x < Mosaic->gridWidth; x++) {
-            Tile *tile = GetTile(x, y);
-
-            float t = x / (Mosaic->gridWidth  * 1.0f);
-            float t2 = y / (Mosaic->gridHeight  * 1.0f);
-
-            // tile->color = Lerp(V4(1.0f, 0.8f, 0.8f, 1.0f),
-            //                    V4(0.6f, 0.0f, 0.0f, 1.0f), t) * Lerp(1.0f, 0.6f, t2);
-
-            //tile->color = V4(0.54f, 1.0f, 0.37f, 1.0f);
-            //tile->color = V4(0.674f, 0.13f, 0.82, 1.0f);
-            tile->color = V4(0.4444444444f, 1.0f, 0.681953145f, 1.0f) +
-                V4(sinf(Game->time * 6) * 0.25f, 0.0f, 0.1f, 1.0f);
-            
-            // tile->color =
-            //     Lerp(V4(1.0f, 0.5f, 0.0f, 1.0f),
-            //          Lerp(V4(0.2f, 0.6f, 1.0f, 1.0f),
-            //               V4(0.15f, 0.4f, 1.0f, 1.0f), t),
-            //          t2);
-
-            // tile->color = tile->color +
-            //     Lerp(V4(0.05f, 1.0f, 1.0f, 1.0f),
-            //          V4(1.0f, 0.5f, 0.0f, 1.0f), t) * 0.5f;
-        
-            tile->active = true;
-        }
-    }
-
-    vec4 guyColor = V4(0.5f + (Mosaic->guyPos.x / Mosaic->gridWidth), 0.5f * (Mosaic->guyPos.x / Mosaic->gridWidth), 0.9f, 1.0f);
-
-    real32 speed = 30;
-    Mosaic->guyPos.x += (0.5f + cosf(Game->time * 5) * 0.25f) * Mosaic->guyDir * Game->deltaTime * speed;
-
-    if (Mosaic->guyPos.x > 16) {
-        Mosaic->guyDir = -1;
-        Mosaic->guyPos.y += Mosaic->guyUp;
-        //Mosaic->guyPos.y = 11;
-    }
-    if (Mosaic->guyPos.x < 0) {
-        Mosaic->guyDir = 1;
-        Mosaic->guyPos.y += Mosaic->guyUp;
-    }
-
-    if (Mosaic->guyPos.y <= 0) {
-        Mosaic->guyUp = 1;
-    }
-    if (Mosaic->guyPos.y >= 15) {
-        Mosaic->guyUp = -1;
-    }
-
-    vec2 guyPos = Mosaic->guyPos;
     
-    Tile *guyTile = GetTile(guyPos.x, guyPos.y);
-    if (guyTile) {
-        guyTile->color = guyColor;
-    }
-    
-    Tile* hoveredTile = Mosaic->hoveredTile;
-
-    if (hoveredTile != NULL) {
-        hoveredTile->active = true;
-        hoveredTile->color = V4(1);
-    }
-    if (Mosaic->hoveredTilePrev !=  NULL && Mosaic->hoveredTilePrev != hoveredTile) {
-        //Mosaic->hoveredTilePrev->active = false;
-    }
-    // store previous hovered tile and set it to inactive
-
-    //MoveMouse(800, 400);
-
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
     Mosaic->rectBuffer.count = 0;
@@ -280,7 +212,7 @@ void MosaicUpdate(GameMemory *mem) {
         DrawRect(V2(0), Mosaic->gridSize * 0.5f, Mosaic->boardColor);
     }
 
-    for (int i = 0; i < mosaic->tileCapacity; i++) {
+    for (int i = 0; i < Mosaic->tileCapacity; i++) {
         Tile *tile = &tiles[i];
 
         if (tile->active) {
@@ -298,3 +230,31 @@ void MosaicUpdate(GameMemory *mem) {
     //Instancing
     //RenderRectBuffer(&Mosaic->rectBuffer);
 }
+
+// @NOTE: this is here so code can be inserted into MosaicUpdate in any order you want without
+// messing up the internal state of the engine.
+// Feel free to ignore this if you know what you're doing.
+void MosaicUpdateInternal() {
+    Mosaic->hoveredTilePrev = Mosaic->hoveredTile;
+    Mosaic->hoveredTile = GetHoveredTile();
+}
+
+void MosaicUpdate() {
+    Tile *tiles = Mosaic->tiles;
+    
+    Tile* hoveredTile = Mosaic->hoveredTile;
+
+    for (int y = 0; y < Mosaic->gridHeight; y++) {
+        for (int x = 0; x < Mosaic->gridWidth; x++) {
+            Tile *t = GetTile(x, y);
+            t->color = V4(0, 0, 0, 1);
+            t->active = false;
+        }
+    }
+
+    if (hoveredTile != NULL) {
+        hoveredTile->active = true;
+        hoveredTile->color = V4(1);
+    }
+}
+

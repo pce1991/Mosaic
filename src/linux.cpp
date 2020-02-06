@@ -174,7 +174,7 @@ void PushKeyboardEvents(Display *display, InputQueue *inputQueue) {
 
         if (event.type == MotionNotify) {
             inputQueue->mousePos.x = event.xmotion.x;
-            inputQueue->mousePos.y = event.xmotion.y;
+            inputQueue->mousePos.y = screenHeight - event.xmotion.y;
         }
 
         if (event.type == ButtonPress) {
@@ -424,9 +424,6 @@ int main() {
         assert(tErr == 0);
     }
 
-
-    //XImage *image = XCreateImage(display, visual, depth, ZPixmap, 0, gameMem.bitmap, screenWidth, screenHeight, 32, 0);
-    
 
     while (gameMem.running) {
 

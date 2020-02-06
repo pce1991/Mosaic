@@ -11,7 +11,7 @@
 #include "math/math.h"
 #include "my_memory.h"
 
-//#include "dynamic_array.h"
+#include "dynamic_array.h"
 
 #include "render.h"
 #include "input.h"
@@ -34,6 +34,24 @@
 
 #define FRAME_RATE 1 / HERTZ
 
+struct FontTable {
+    int32 glyphCount;
+    Sprite texture;
+
+    vec4 *texcoordsMapData;
+    
+    int32 texcoordsMapID;
+
+    real32 ascent;
+    real32 descent;
+};
+
+// @NOTE: there are only 32 buffers for text rendering so on one frame you can only have
+//        32 calls to DrawText(). You can increase this number if you're willing to allocate
+//        more memory.
+#define GlyphBufferCount 32
+#define GlyphBufferCapacity 64
+
 struct GameMemory {
     bool running;
 
@@ -47,11 +65,10 @@ struct GameMemory {
     uint32 screenHeight;
     uint32 pitch;
 
-    uint32 bitmapSize;
-    uint8 *bitmap;
-
     Glyph *glyphs;
-    Sprite fontSprite;
+    int32 currentGlyphBufferIndex;
+    GlyphBuffer glyphBuffers[GlyphBufferCount];
+    FontTable font;
 
     Camera camera;
     vec3 cameraPosition;
@@ -60,18 +77,16 @@ struct GameMemory {
 
     Shader texturedQuadShader;
 
-    Sprite circleTexture;
-    Sprite mouseCursorTexture;
-    Sprite galagaShip;
-    Sprite pixelTest;
-
     Shader instancedQuadShader;
     
     Shader shader;
     int32 vertBuffer;
 
+    Shader textShader;
+
     Mesh tri;
     Mesh quad;
+    Mesh glyphQuad;
 
     InputQueue inputQueue;
 
@@ -83,5 +98,6 @@ struct GameMemory {
 };
 
 GameMemory *Game = NULL;
+InputQueue *Input = NULL;
 
 #define ArrayLength(array, type) sizeof(array)/sizeof(type)

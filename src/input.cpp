@@ -30,7 +30,7 @@ InputQueue AllocateInputQueue(int32 capacity, int32 deviceCount) {
     return queue;
 }
 
-void PushInputPress(InputQueue *queue, Input input, int32 deviceID = 0) {
+void PushInputPress(InputQueue *queue, InputID input, int32 deviceID = 0) {
     // @WARNING: this could go out of bounds of our input buffer
     InputEvent e;
     e.input = input;
@@ -39,7 +39,7 @@ void PushInputPress(InputQueue *queue, Input input, int32 deviceID = 0) {
     queue->events[queue->count++] = e;
 }
 
-void PushInputRelease(InputQueue *queue, Input input, int32 deviceID = 0) {
+void PushInputRelease(InputQueue *queue, InputID input, int32 deviceID = 0) {
     InputEvent e;
     e.input = input;
     e.release = true;
@@ -51,15 +51,15 @@ void PushInputChar(InputQueue *queue, char c) {
     queue->inputChars[queue->charCount++] = c;
 }
 
-bool InputPressed(InputQueue *queue, Input input, int32 deviceID = 0) {
+bool InputPressed(InputQueue *queue, InputID input, int32 deviceID = 0) {
     return queue->deviceStates[deviceID].pressed[input];
 }
 
-bool InputReleased(InputQueue *queue, Input input, int32 deviceID = 0) {
+bool InputReleased(InputQueue *queue, InputID input, int32 deviceID = 0) {
     return queue->deviceStates[deviceID].released[input];
 }
 
-bool InputHeld(InputQueue *queue, Input input, int32 deviceID = 0) {
+bool InputHeld(InputQueue *queue, InputID input, int32 deviceID = 0) {
     return queue->deviceStates[deviceID].framesHeld[input] > 0;
 }
 
@@ -96,7 +96,7 @@ void UpdateInput(InputQueue *queue) {
     
     for (int i = 0; i < queue->count; i++) {
         InputEvent event = queue->events[i];
-        Input input = event.input;
+        InputID input = event.input;
 
         //printf("event %d %d frames %d\n", i, event.release, queue->framesHeld[input]);
 

@@ -231,7 +231,7 @@ inline void InsertAtIndex(DynamicArray<T> *array, uint32 index, T element) {
 
     uint32 elementsToMove = array->count - index;
     if (elementsToMove > 0) {
-        Plat.MoveMem(array->data + index + 1, array->data + index, sizeof(T) * elementsToMove);
+        memmove(array->data + index + 1, array->data + index, sizeof(T) * elementsToMove);
     }
 
     array->data[index] = element;
@@ -252,7 +252,7 @@ inline T *InsertAtIndexPtr(DynamicArray<T> *array, uint32 index) {
     array->count++;
 
     T *result = &array->data[index];
-    Plat.ClearMem(result, sizeof(T));
+    memset(result, 0, sizeof(T));
 
     return result;
 }

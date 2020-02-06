@@ -203,48 +203,6 @@ void OpenGL_InitMesh(Mesh *mesh) {
     
 }
 
-void DrawCircle2D(vec2 position, real32 radius) {
-        
-    Shader *shader = &Game->texturedQuadShader;
-    SetShader(shader);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    Mesh *mesh = &Game->quad;
-
-    //mat4 model = TRS(V3(position.x - radius * 0.5f, position.y + radius * 0.5f, 0), IdentityQuaternion(), V3(radius));
-    mat4 model = TRS(V3(position.x, position.y, 0), IdentityQuaternion(), V3(radius));
-     
-    Sprite *texture = &Game->circleTexture;
-
-    //vec4 topLeft = mvp * V4(gameMem->quad.verts[0], 1.0f);
-    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
-    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture->textureID);
-    glUniform1i(shader->uniforms[2].id, 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
-
-    // 1st attribute buffer : vertices
-    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
-    glEnableVertexAttribArray(vert);
-    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        
-    // 2nd attribute buffer : texcoords
-    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
-    glEnableVertexAttribArray(texcoord);
-    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
-        
-    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
-
-    glDisableVertexAttribArray(vert);
-    glDisableVertexAttribArray(texcoord);    
-}
-
 void LoadSprite(Sprite *sprite, char *path) {
     int32 x, y, n;
     uint8 *data = stbi_load(path, &x, &y, &n, 4);
@@ -275,6 +233,22 @@ void OpenGL_InitTexture(Sprite *texture) {
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glCheckError();
+}
+
+void OpenGL_InitFontTable(FontTable *font) {
+    glGenTextures(1, (GLuint *)&font->texcoordsMapID);
+    glBindTexture(GL_TEXTURE_1D, font->texcoordsMapID);
+
+    // @TODO: why is this necessary? 
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, font->glyphCount, 0, GL_RGBA, GL_FLOAT, font->texcoordsMapData);
+    glBindTexture(GL_TEXTURE_1D, 0);
+
+    OpenGL_InitTexture(&font->texture);
 }
 
 
@@ -442,48 +416,166 @@ void RenderRectBuffer(RectBuffer *buffer) {
 }
 
 
-void DrawMouseCursor(vec2 position, real32 size) {
+
+void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+    GlyphBuffer *buffer = &Game->glyphBuffers[Game->currentGlyphBufferIndex];
         
-    Shader *shader = &Game->texturedQuadShader;
+    char str[GlyphBufferCapacity];
+
+    va_list args;
+    va_start (args, fmt);
+
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    
+    int32 len = strlen(str);
+
+    buffer->model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(1));
+
+#if 1
+    r32 x = 0;
+    for (int i = 0; i < len; i++) {
+        int32 codepoint = str[i] - 32;
+        
+        buffer->data[i].position = V2(x, 0);
+        buffer->data[i].position.y += Game->glyphs[codepoint].lowerLeft.y * size;
+        buffer->data[i].position.x += Game->glyphs[codepoint].lowerLeft.x * size;
+        
+        buffer->data[i].color = color;
+        buffer->data[i].codepoint = codepoint;
+
+        vec4 corners = Game->font.texcoordsMapData[codepoint];
+        buffer->data[i].dimensions = V2(corners.z - corners.x, corners.w - corners.y) * size;
+        buffer->count++;
+
+        x += (Game->glyphs[codepoint].xAdvance * size);
+    }
+
+    Game->currentGlyphBufferIndex++;
+#endif
+
+    va_end(args);
+}
+
+void DrawTextCentered(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+    GlyphBuffer *buffer = &Game->glyphBuffers[Game->currentGlyphBufferIndex];
+
+    char str[GlyphBufferCapacity];
+
+    va_list args;
+    va_start (args, fmt);
+
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    
+    int32 len = strlen(str);
+
+    r32 x = 0;
+    for (int i = 0; i < len; i++) {
+        int32 codepoint = str[i] - 32;
+        
+        buffer->data[i].position = V2(x, 0);
+        buffer->data[i].position.y += Game->glyphs[codepoint].lowerLeft.y * size;
+        buffer->data[i].position.x += Game->glyphs[codepoint].lowerLeft.x * size;
+        
+        buffer->data[i].color = color;
+        buffer->data[i].codepoint = codepoint;
+
+        vec4 corners = Game->font.texcoordsMapData[codepoint];
+        buffer->data[i].dimensions = V2(corners.z - corners.x, corners.w - corners.y) * size;
+        buffer->count++;
+
+        x += (Game->glyphs[codepoint].xAdvance * size);
+    }
+
+    buffer->model = TRS(V3(pos.x - (x * 0.5f), pos.y, 0), IdentityQuaternion(), V3(1));
+
+    Game->currentGlyphBufferIndex++;
+
+    //DrawRect(pos, V2(x, 0.01f), V4(1));
+}
+
+void DrawGlyphs(GlyphBuffer *buffers, FontTable *font) {
+
+    // @TODO: generate buffers
+    // buffer data for some number of codepoints,
+    // do the draws
+    // The glyph struct should include codepoints, and color, probably nothing else.
+    // Have a buffer for glyphs of each size?
+        
+    Shader *shader = &Game->textShader;
     SetShader(shader);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Mesh *mesh = &Game->quad;
+    for (int i = 0; i < GlyphBufferCount; i++) {
+        GlyphBuffer *buffer = &buffers[i];
 
-    mat4 model = TRS(V3(position.x + (size * 0.5f), position.y - (size * 0.5f), 0), IdentityQuaternion(), V3(size));
+        if (buffer->count == 0) {
+            continue;
+        }
+        
+        mat4 model = buffer->model;
+
+        Mesh *mesh = &Game->glyphQuad;
      
-    Sprite *texture = &Game->mouseCursorTexture;
+        glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
+        glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
 
-    //vec4 topLeft = mvp * V4(gameMem->quad.verts[0], 1.0f);
-    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
-    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, font->texture.textureID);
+        glUniform1i(shader->uniforms[3].id, 0);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture->textureID);
-    glUniform1i(shader->uniforms[2].id, 0);
-        
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_1D, font->texcoordsMapID);
+        glUniform1i(shader->uniforms[2].id, 1);
 
-    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+        glUniform1f(shader->uniforms[4].id, Game->time);
 
-    // 1st attribute buffer : vertices
-    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
-    glEnableVertexAttribArray(vert);
-    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        
-    // 2nd attribute buffer : texcoords
-    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
-    glEnableVertexAttribArray(texcoord);
-    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
-        
-    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
+        glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);    
-}
+        // 1st attribute buffer : vertices
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-void DrawTile() {
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2,  GL_FLOAT, GL_FALSE, 0, (void*)((sizeof(vec3) * mesh->vertCount)));
+
     
+        // Buffer the data and draw it
+        glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
+        glBufferData(GL_ARRAY_BUFFER, buffer->size, buffer->data, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(2);
+        glVertexAttribIPointer(2, 1, GL_INT, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, codepoint));
+        glVertexAttribDivisor(2, 1);
+
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, color));
+        glVertexAttribDivisor(3, 1);
+
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 2, GL_FLOAT, false, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, dimensions));
+        glVertexAttribDivisor(4, 1);
+    
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 3, GL_FLOAT, false, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, position));
+        glVertexAttribDivisor(5, 1);
+
+        // DrawIndexInstanced?
+        //glDrawElementsInstanced(GL_TRIANGLES, buffer->count, GL_UNSIGNED_INT, (GLvoid *)0, mesh->indexCount);
+        glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0, buffer->count);
+        
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(3);
+        glDisableVertexAttribArray(4);
+        glDisableVertexAttribArray(5);
+    
+        buffer->count = 0;
+    }
+    //glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
 }
+
+

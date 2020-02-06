@@ -1,4 +1,19 @@
 
+Sprites (access the pixel and then set the colors)
+Animations
+
+Create a simple menu
+
+Create sprites
+
+Create a scene architecture for moving between different types of games.
+
+A good exercise for the Engine class would be to see something like how to load OpenGL shaders, and then have to improve on it. For instance, storing the uniform and attribute locations.
+
+
+Get the tile to move and go up or down everytime it hits the edge.
+
+
 "Then comes the hard part: what is worth doing?"
 I love you Brian Moriarty
 
@@ -19,12 +34,9 @@ input data
 operations on that data
 output data
 
-Is Rand broken again!?!?!?
-Want a better API naming convention anyway
 
 Overload V4() so we don't get those obnoxious errors when not everything is a floating point. 
 
-Allow all inputs on the keyboard so people arent limited in a dumb way.
 
 Write a clear API and documentation. 
 
