@@ -28,3 +28,9 @@ void WinMoveMouse(HWND window, int32 screenX, int32 screenY, int32 height) {
 
     SetCursorPos(screenPoint.x, (int32)screenPoint.y);
 }
+
+
+void MoveMouse(int32 screenX, int32 screenY) {
+    WinMoveMouse(*Platform->window, screenX, screenY, Platform->screenHeight);
+}
+

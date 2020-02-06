@@ -26,8 +26,8 @@ void MosaicInit(GameMemory *mem) {
     MosaicMem *mosaic = &mem->mosaic;
     Mosaic = mosaic;
 
-    mosaic->gridWidth = 16;
-    mosaic->gridHeight = 16;
+    mosaic->gridWidth = 84;
+    mosaic->gridHeight = 64;
 
     mosaic->tileCapacity = mosaic->gridWidth * mosaic->gridHeight;
     mosaic->tiles = (Tile *)malloc(sizeof(Tile) * mosaic->tileCapacity);
@@ -271,7 +271,7 @@ void MosaicUpdate(GameMemory *mem) {
     }
     // store previous hovered tile and set it to inactive
 
-    
+    //MoveMouse(800, 400);
 
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);

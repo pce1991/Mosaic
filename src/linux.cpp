@@ -29,22 +29,18 @@
 #include <GL/glew.h>
 #include <GL/glx.h>
 
+#include "types.h"
 
-#define PRINT_MAX_BUFFER_LEN 1024
-void Print(const char *fmt, ...) {
-    char buffer[PRINT_MAX_BUFFER_LEN];
+struct LinuxPlatform {
+    Display *display;
+    Window *window;
+    int32 screenWidth;
+    int32 screenHeight;
+};
 
-    va_list args;
-    va_start (args, fmt);
+LinuxPlatform *Platform = NULL;
 
-    vsnprintf(buffer, PRINT_MAX_BUFFER_LEN, fmt, args);
-
-    printf(buffer);
-    printf("\n");
-
-    va_end(args);
-}
-
+#include "linux_api.cpp"
 
 #include "game.cpp"
 
@@ -386,6 +382,14 @@ int main() {
     // seconds
     double frameRate = 1.0 / 60.0; // Hertz
     double timeSinceRender = 0.0;
+
+    LinuxPlatform plat = {};
+    plat.window = window;
+    plat.display = display;
+    plat.screenWidth = screenWidth;
+    plat.screenHeight = screenHeight;
+
+    Platform = &plat;
 
     GameMemory gameMem = {};
 

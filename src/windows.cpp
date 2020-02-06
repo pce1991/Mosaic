@@ -10,6 +10,16 @@
 #include <gl/glew.h>
 #include <gl/wglew.h>
 
+#include "types.h"
+
+struct WindowsPlatform {
+    HWND *window;
+    int32 screenHeight;
+    int32 screenWidth;
+};
+
+WindowsPlatform *Platform = NULL;
+
 #include "windows_api.cpp"
 
 #include <assert.h>
@@ -19,6 +29,7 @@
 
 bool PlatformRunning = true;
 
+
 struct OpenGLInfo {
     const uint8 *vendor;
     const uint8 *renderer;
@@ -26,7 +37,6 @@ struct OpenGLInfo {
     const uint8 *shadingLanguageVersion;
     const uint8 *extensions;
 };
-
 
 
 LRESULT CALLBACK MainWindowCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -299,6 +309,13 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
                  SWP_NOZORDER);
     ShowWindow(window, SW_SHOW);
     UpdateWindow(window);
+
+    WindowsPlatform plat = {};
+
+    Platform = &plat;
+    plat.window = &window;
+    plat.screenWidth = screenWidth;
+    plat.screenHeight = screenHeight;
 
     OpenGLInfo glInfo;
     InitOpenGL(window, &glInfo);
