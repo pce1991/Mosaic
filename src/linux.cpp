@@ -384,7 +384,7 @@ int main() {
     double timeSinceRender = 0.0;
 
     LinuxPlatform plat = {};
-    plat.window = window;
+    plat.window = &window;
     plat.display = display;
     plat.screenWidth = screenWidth;
     plat.screenHeight = screenHeight;
