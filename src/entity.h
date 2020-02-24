@@ -40,12 +40,12 @@ struct Entity {
     uint32 id;
     
     vec2 position;
-    Rect rect;
 };
 
-struct  EntityBuffer {
+struct EntityBuffer {
     EntityType type;
 
+    // @MAYBE: use DynamicArrays but tricky 'cause this isnt templatized. 
     void *data;
     int32 capacity;
     int32 count;

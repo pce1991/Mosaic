@@ -1,4 +1,6 @@
 
+// @TODO: number keys, arrow keys, modifier keys
+
 typedef enum {
     Input_None,
 
@@ -10,6 +12,11 @@ typedef enum {
     Input_Down,
     Input_Left,
     Input_Right,
+
+    Input_UpArrow,
+    Input_DownArrow,
+    Input_LeftArrow,
+    Input_RightArrow,
 
     Input_Space,
 

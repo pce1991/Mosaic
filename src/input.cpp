@@ -84,11 +84,11 @@ void UpdateInput(InputQueue *queue) {
         InputDeviceState *deviceState = &queue->deviceStates[d];
         
         for (int i = 0; i < Input_Count; i++) {
+            deviceState->released[i] = false;
+            
             // @NOTE: until we get a release event we consider a key to be pressed
             if (deviceState->framesHeld[i] >= 0) {
                 deviceState->framesHeld[i]++;
-
-                deviceState->released[i] = false;
                 deviceState->pressed[i] = false;
             }
         }
@@ -97,6 +97,7 @@ void UpdateInput(InputQueue *queue) {
     for (int i = 0; i < queue->count; i++) {
         InputEvent event = queue->events[i];
         InputID input = event.input;
+        
 
         //printf("event %d %d frames %d\n", i, event.release, queue->framesHeld[input]);
 

@@ -47,6 +47,8 @@ void MosaicInit(GameMemory *mem) {
 
     memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
+    MoveMouse(Game->screenWidth / 2.0f, Game->screenHeight / 2.0f);
+
     Mosaic->padding = 1.5f;
 
     AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
@@ -254,7 +256,7 @@ void MosaicUpdate() {
 
     if (hoveredTile != NULL) {
         hoveredTile->active = true;
-        hoveredTile->color = V4(1);
+        hoveredTile->color = V4(1, 1, 1, 1);
     }
 }
 
