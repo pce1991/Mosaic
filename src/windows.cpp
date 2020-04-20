@@ -161,21 +161,48 @@ void WindowsGetInput(InputQueue *inputQueue) {
                 if (keycode == 0x1B) {
                     PushInputPress(inputQueue, Input_Escape, 0);
                 }
+                
+                if (keycode == VK_BACK) {
+                    PushInputPress(inputQueue, Input_Backspace, 0);
+                }
+
+                if (keycode == VK_RETURN) {
+                    PushInputPress(inputQueue, Input_Return, 0);
+                }
 
                 if (keycode == 0x41) {
                     PushInputPress(inputQueue, Input_Left, 0);
                 }
-
                 if (keycode == 0x44) {
                     PushInputPress(inputQueue, Input_Right, 0);
                 }
-
                 if (keycode == 0x53) {
                     PushInputPress(inputQueue, Input_Down, 0);
                 }
-
                 if (keycode == 0x57) {
                     PushInputPress(inputQueue, Input_Up, 0);
+                }
+
+                if (keycode == 0x25) {
+                    PushInputPress(inputQueue, Input_LeftArrow, 0);
+                }
+                if (keycode == 0x25) {
+                    PushInputPress(inputQueue, Input_UpArrow, 0);
+                }
+                if (keycode == 0x26) {
+                    PushInputPress(inputQueue, Input_RightArrow, 0);
+                }
+                if (keycode == 0x28) {
+                    PushInputPress(inputQueue, Input_DownArrow, 0);
+                }
+
+
+                if (keycode == 0x5A) {
+                    PushInputPress(inputQueue, Input_Z, 0);
+                }
+
+                if (keycode == 0x52) {
+                    PushInputPress(inputQueue, Input_R, 0);
                 }
 
                 if (keycode == VK_SPACE) {
@@ -189,10 +216,20 @@ void WindowsGetInput(InputQueue *inputQueue) {
                 if (keycode == 0x1B) {
                     PushInputRelease(inputQueue, Input_Escape, 0);
                 }
-                if (keycode == 0x41 || keycode == 0x4F) {
+
+                if (keycode == VK_BACK) {
+                    PushInputRelease(inputQueue, Input_Backspace, 0);
+                }
+
+                if (keycode == VK_RETURN) {
+                    PushInputRelease(inputQueue, Input_Return, 0);
+                }
+
+                
+                if (keycode == 0x41) {
                     PushInputRelease(inputQueue, Input_Left, 0);
                 }
-                if (keycode == 0x44 || keycode == 0x55) {
+                if (keycode == 0x44) {
                     PushInputRelease(inputQueue, Input_Right, 0);
                 }
                 if (keycode == 0x53) {
@@ -200,6 +237,29 @@ void WindowsGetInput(InputQueue *inputQueue) {
                 }
                 if (keycode == 0x57) {
                     PushInputRelease(inputQueue, Input_Up, 0);
+                }
+
+                
+                if (keycode == 0x25) {
+                    PushInputRelease(inputQueue, Input_LeftArrow, 0);
+                }
+                if (keycode == 0x25) {
+                    PushInputRelease(inputQueue, Input_UpArrow, 0);
+                }
+                if (keycode == 0x26) {
+                    PushInputRelease(inputQueue, Input_RightArrow, 0);
+                }
+                if (keycode == 0x28) {
+                    PushInputRelease(inputQueue, Input_DownArrow, 0);
+                }
+                
+
+                if (keycode == 0x5A) {
+                    PushInputRelease(inputQueue, Input_Z, 0);
+                }
+
+                if (keycode == 0x52) {
+                    PushInputRelease(inputQueue, Input_R, 0);
                 }
 
                 if (keycode == VK_SPACE) {
