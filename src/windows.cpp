@@ -156,6 +156,8 @@ void WindowsGetInput(InputQueue *inputQueue) {
 
         switch (msg.message) {
             case WM_KEYDOWN: {
+                TranslateMessage(&msg);
+                
                 int keycode = msg.wParam;
 
                 if (keycode == 0x1B) {
@@ -210,6 +212,7 @@ void WindowsGetInput(InputQueue *inputQueue) {
 
             case WM_CHAR: {
                 uint16 character = (uint16)msg.wParam;
+                inputQueue->inputChars[inputQueue->charCount++] = character;
             } break;
 
             case WM_MOUSEMOVE : {
@@ -333,9 +336,13 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     GameMemory gameMem;
     memset(&gameMem, 0, sizeof(GameMemory));
 
+    
+
     // @GACK: need this for seeding the random number generator in GameInit
     // @BUG: It seems like the seeded value is almost always exactly the same tho?
     gameMem.systemTime = (real32)systemTime.QuadPart;
+
+    gameMem.startTime = 0.0f;
 
     GameInit(&gameMem);
 
