@@ -7,6 +7,9 @@ typedef enum {
     Input_Escape,
     Input_Return,
     Input_Backspace,
+
+    Input_Z,
+    Input_R,
     
     Input_Up,
     Input_Down,
