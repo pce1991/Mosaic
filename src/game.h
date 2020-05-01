@@ -60,6 +60,8 @@ struct GameMemory {
     real32 time;
     real32 deltaTime;
 
+    real32 startTime;
+
     uint32 frame;
     
     uint32 screenWidth;
