@@ -1,7 +1,4 @@
 
-#ifndef _ETC_MATH_VECTOR_H
-#define _ETC_MATH_VECTOR_H
-
 union vec2 {
     real32 data[2];
     struct { real32 x, y; };
@@ -1460,7 +1457,4 @@ vec3 Ceilv(vec3 a) {
     result.z = Ceilf(a.z);
     return result;
 }
-
-
-#endif
 

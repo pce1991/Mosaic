@@ -1,0 +1,15 @@
+
+* Tech
+  DrawText() should be based on normalized screen coordinates, not the worldspace coordinates since that's weird with our camera.
+
+  Message logging
+  Get input from all keys
+  Audio on windows (from Plura Luna)
+  Audio on Linux
+  Font rendering on Linux
+  hoveredTileClamped so that you just have a tile in the direction of the mouse off the screen.
+  Font size should have a convention. Right now I think its in pixels, and then we scale up by that. 
+  
+  Make sure grid lines are drawn at the center, so a tile should be inset on all sides evenly
+* Architecture
+  Probably could reorganize things a bit to dissolve the layer between Game and Mosaic. It's a layer that isnt needed, but maybe it's good because its clear that the engine can do more than just draw tiles.

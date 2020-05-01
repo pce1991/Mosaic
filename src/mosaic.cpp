@@ -1,5 +1,5 @@
-
 MosaicMem *Mosaic = NULL;
+ 
 
 void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
     Mosaic->gridWidth = Clamp(newWidth, 1, 255);
@@ -39,8 +39,8 @@ void MosaicMyDataInit(MyData *myData) {
 void MosaicInit(GameMemory *mem) {
     Mosaic = &mem->mosaic;
 
-    Mosaic->gridWidth = 16;
-    Mosaic->gridHeight = 16;
+    Mosaic->gridWidth = 32;
+    Mosaic->gridHeight = 32;
 
     Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
     Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
@@ -87,37 +87,6 @@ void MosaicInit(GameMemory *mem) {
     MosaicMyDataInit(&Mosaic->myData);
 }
 
-void RandomizeTiles() {
-    Tile *tiles = Mosaic->tiles;
-    for (int y = 0; y < Mosaic->gridHeight; y++) {
-        for (int x = 0; x < Mosaic->gridWidth; x++) {
-            int32 index = (y * Mosaic->gridWidth) + x;
-
-            Tile *tile = &tiles[index];
-
-            tile->position = V2i(x, y);
-        }
-    }
-    
-    for (int i = 0; i < Mosaic->tileCapacity; i++) {
-        Tile *tile = &tiles[i];
-
-        //int32 r = RandiRange(0, 2);
-        //int32 r = Randi();
-        int32 r = RandfRange(0, 2.0f);
-
-        vec4 color = V4(RandfRange(0, 2.0f), RandfRange(0, 2.0f), RandfRange(0, 2.0f), 1.0f);
-
-        if (r < 0.5f) {
-            tile->active = true;
-        }
-        else {
-            tile->active = false;
-        }
-
-        tile->color = color;
-    }
-}
 
 vec2 GridPositionToWorldPosition(vec2i gridPosition) {
     vec2 worldPos = Mosaic->gridOrigin;
@@ -203,6 +172,18 @@ Tile *GetTile(vec2i pos) {
     return GetTile(pos.x, pos.y);
 }
 
+void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int32 *tilesRetrieved) {
+    for (int y_ = y; y < width; y_++) {
+        for (int x_ = x; x < width; x++) {
+            Tile *t = GetTile(x_, y_);
+            if (t) {
+                tiles[*tilesRetrieved] = t;
+                *tilesRetrieved += 1;
+            }
+        }
+    }
+}
+
 
 void MosaicRender() {
     Tile *tiles = Mosaic->tiles;
@@ -241,6 +222,42 @@ void MosaicUpdateInternal() {
     Mosaic->hoveredTile = GetHoveredTile();
 }
 
+
+// the argument variables only exist within the scope of this function.
+int ClampPosition(int n, int max) {
+    if (n < 0) {
+        return 0;
+    }
+
+    if (n > max) {
+        return max;
+    }
+
+    return n;
+}
+
+void ClampPosition(int *n, int max) {
+    // dereference: this means to take a pointer and get its value
+    if (*n < 0) {
+        *n = 0;
+    }
+
+    if (*n > max) {
+        *n = max;
+    }
+}
+
+void ClampPosition(real32 *n, int max) {
+    // dereference: this means to take a pointer and get its value
+    if (*n < 0) {
+        *n = 0;
+    }
+
+    if (*n > max) {
+        *n = max;
+    }
+}
+
 void MosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
     
@@ -250,13 +267,13 @@ void MosaicUpdate() {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *t = GetTile(x, y);
             t->color = V4(0, 0, 0, 1);
-            t->active = false;
+            t->active = true;
         }
     }
 
     if (hoveredTile != NULL) {
-        hoveredTile->active = true;
-        hoveredTile->color = V4(1, 1, 1, 1);
+        //hoveredTile->active = true;
+        //hoveredTile->color = V4(1, 1, 1, 1);
     }
 }
 

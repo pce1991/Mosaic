@@ -3,6 +3,9 @@
 #include <windows.h>
 #include <windowsx.h>
 
+#include <mmdeviceapi.h>
+#include <audioclient.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -36,6 +39,30 @@ struct OpenGLInfo {
     const uint8 *version;
     const uint8 *shadingLanguageVersion;
     const uint8 *extensions;
+};
+
+#define AUDIO_SAMPLERATE 44100
+#define AUDIO_NUM_CHANNELS 2
+#define AUDIO_BITS_PER_SAMPLE 32
+
+struct WinAudioOutput {
+    IMMDevice *device;
+    IAudioClient *audioClient;
+    IAudioRenderClient *renderClient;
+    HANDLE renderEvent;
+    HANDLE audioSema;
+
+    WAVEFORMATEX waveFormat;
+
+    uint32 bufferSampleCount;
+    uint32 samplesRendered;
+};
+
+struct GamePlatform {
+    bool running;
+    WinAudioOutput audio;
+
+    GameMemory gameMem;
 };
 
 
@@ -148,6 +175,138 @@ void InitOpenGL(HWND window, OpenGLInfo *glInfo) {
     }
 }
 #endif
+
+
+void InitWASAPI(WinAudioOutput *audio) {
+    IMMDeviceEnumerator *pEnumerator = NULL;
+    IMMDevice *pDevice = NULL;
+    IAudioClient *pAudioClient = NULL;
+    IAudioRenderClient *pRenderClient = NULL;
+    HANDLE renderEvent;
+
+    uint32 actualBufferSampleCount;
+
+    REFERENCE_TIME bufferDuration = 1000000;
+
+    HRESULT result;
+    result = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&pEnumerator);
+    if (SUCCEEDED(result)) {
+
+        // @TODO: make sure to close this device later!
+        result = pEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice);
+        if (SUCCEEDED(result)) {
+            result = pDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&pAudioClient);
+            if (SUCCEEDED(result)) {
+
+                WAVEFORMATEX *waveFormat = &audio->waveFormat;
+                waveFormat->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+                waveFormat->nChannels = AUDIO_NUM_CHANNELS;
+                waveFormat->nSamplesPerSec = AUDIO_SAMPLERATE;
+                waveFormat->wBitsPerSample = AUDIO_BITS_PER_SAMPLE;
+                waveFormat->nBlockAlign = (waveFormat->nChannels * waveFormat->wBitsPerSample) / 8;
+                waveFormat->nAvgBytesPerSec = waveFormat->nSamplesPerSec * waveFormat->nBlockAlign;
+                waveFormat->cbSize = 0;
+
+                WAVEFORMATEXTENSIBLE *closestWaveFormat;
+                result = pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED, waveFormat, (WAVEFORMATEX **)&closestWaveFormat);
+
+                if (result == S_FALSE) {
+                    if (closestWaveFormat->Format.nSamplesPerSec != waveFormat->nSamplesPerSec) {
+                        // @TODO: need to resample, there appears to be an API...
+                        // https://msdn.microsoft.com/en-us/library/windows/desktop/ff819070(v=vs.85).aspx
+                        // https://sourceforge.net/p/playpcmwin/wiki/HowToUseResamplerMFT/
+                    }
+
+                    waveFormat = (WAVEFORMATEX *)closestWaveFormat;
+                }
+                    
+                result = pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
+                                                  AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+                                                  bufferDuration, 0, waveFormat, NULL);
+                if (SUCCEEDED(result)) {
+
+                    result = pAudioClient->GetBufferSize(&actualBufferSampleCount);
+                    if (SUCCEEDED(result)) {
+
+                        result = pAudioClient->GetService(__uuidof(IAudioRenderClient), (void**)&pRenderClient);
+                        if (SUCCEEDED(result)) {
+
+                            renderEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+                            result = pAudioClient->SetEventHandle(renderEvent);
+                            if (SUCCEEDED(result)) {
+                                // @NOTE: success!
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    audio->device = pDevice;
+    audio->audioClient = pAudioClient;
+    audio->renderClient = pRenderClient;
+    audio->renderEvent = renderEvent;
+    audio->bufferSampleCount = actualBufferSampleCount;
+
+    audio->audioSema = CreateSemaphoreEx(NULL, 1, 1, NULL, 0, SEMAPHORE_ALL_ACCESS);
+}
+
+void WASAPIThreadProc(void *data) {
+    CoInitialize(NULL);
+
+    GamePlatform *platform = (GamePlatform *)data;
+    WinAudioOutput *audio = &platform->audio;
+
+    audio->audioClient->Start();
+
+    uint32 framesMissed = 0;
+
+    while (platform->running) {
+        WaitForSingleObject(audio->renderEvent, INFINITE);
+
+        uint32 numFramesPadding;
+        if (SUCCEEDED(audio->audioClient->GetCurrentPadding(&numFramesPadding))) {
+            uint32 numFramesAvailable = audio->bufferSampleCount - numFramesPadding;
+
+            if (numFramesAvailable == 0) {
+                continue;
+            }
+
+            real32 *buffer;
+            if (SUCCEEDED(audio->renderClient->GetBuffer(numFramesAvailable, (BYTE **)&buffer))) {
+
+                if (WaitForSingleObject(audio->audioSema, 0) == WAIT_OBJECT_0) {
+
+                    while (framesMissed > 0) {
+                        uint32 framesToRender = Min(numFramesAvailable, framesMissed);
+                        WriteSoundSamples(&platform->gameMem, framesToRender, buffer);
+                        framesMissed -= framesToRender;
+                    }
+                    
+                    WriteSoundSamples(&platform->gameMem, numFramesAvailable, buffer);
+                    ReleaseSemaphore(audio->audioSema, 1, NULL);
+                }
+                else {
+                    memset(buffer, 0, sizeof(real32) * 2 * numFramesAvailable);
+                    framesMissed += numFramesAvailable;
+                }
+
+                audio->renderClient->ReleaseBuffer(numFramesAvailable, 0);
+            }
+        }
+    }
+
+    CoUninitialize();
+}
+
+void StartWASAPIThread(GamePlatform *platform) {
+    DWORD threadID;
+    HANDLE threadHandle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)WASAPIThreadProc, platform, 0, &threadID);
+    CloseHandle(threadHandle);
+}
+
+
 
 void WindowsGetInput(InputQueue *inputQueue) {
 
@@ -307,6 +466,9 @@ void WindowsGetInput(InputQueue *inputQueue) {
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndLine, int nCndShow) {
 
+    GamePlatform platform = {};
+    platform.running = true;
+
     char executablePath[MAX_PATH];
 
     GetModuleFileName(NULL, executablePath, sizeof(executablePath));
@@ -380,6 +542,10 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     OpenGLInfo glInfo;
     InitOpenGL(window, &glInfo);
 
+    InitWASAPI(&platform.audio);
+
+    StartWASAPIThread(&platform);
+
     LARGE_INTEGER startSystemTime;
     LARGE_INTEGER systemTime;
     LARGE_INTEGER systemFrequency;
@@ -390,18 +556,18 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     SeedRand(startSystemTime.QuadPart);
 
     // Init Game Memomry
-    GameMemory gameMem;
-    memset(&gameMem, 0, sizeof(GameMemory));
+    GameMemory *gameMem = &platform.gameMem;
+    memset(gameMem, 0, sizeof(GameMemory));
 
     // @GACK: need this for seeding the random number generator in GameInit
     // @BUG: It seems like the seeded value is almost always exactly the same tho?
-    gameMem.systemTime = (real32)systemTime.QuadPart;
+    gameMem->systemTime = (real32)systemTime.QuadPart;
 
-    GameInit(&gameMem);
+    GameInit(gameMem);
 
-    gameMem.running = true;
+    gameMem->running = true;
 
-    InputQueue *inputQueue = &gameMem.inputQueue;
+    InputQueue *inputQueue = &gameMem->inputQueue;
 
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183376(v=vs.85).aspx
     BITMAPINFO bitmapInfo;
@@ -429,16 +595,16 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     //ShowCursor(false);
     WinMoveMouse(window, screenWidth / 2.0f, screenHeight / 2.0f, screenHeight);
 
-    while(gameMem.running && PlatformRunning) {
+    while(gameMem->running && PlatformRunning) {
 
         LARGE_INTEGER prevSystemTime = systemTime;
         int32 error = QueryPerformanceCounter(&systemTime);
 
-        gameMem.deltaTime = ((real64)systemTime.QuadPart - (real64)prevSystemTime.QuadPart) / (real64)systemFrequency.QuadPart;
+        gameMem->deltaTime = ((real64)systemTime.QuadPart - (real64)prevSystemTime.QuadPart) / (real64)systemFrequency.QuadPart;
 
-        gameMem.time += gameMem.deltaTime;
+        gameMem->time += gameMem->deltaTime;
 
-        timeSinceRender += gameMem.deltaTime;
+        timeSinceRender += gameMem->deltaTime;
 
         ClearInputQueue(inputQueue);
         WindowsGetInput(inputQueue);
@@ -451,7 +617,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        GameUpdateAndRender(&gameMem);
+        GameUpdateAndRender(gameMem);
 
         HDC deviceContext = GetDC(window);
         SwapBuffers(deviceContext);

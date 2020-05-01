@@ -1,4 +1,10 @@
 
+
+#define Bytes(n) (n)
+#define Kilobytes(n) (1024 * Bytes(n))
+#define Megabytes(n) (1024 * Kilobytes(n))
+#define Gigabytes(n) (1024 * Megabytes(n))
+
 typedef struct {
     uint32 capacity;
     uint32 size; // in bytes
@@ -6,6 +12,7 @@ typedef struct {
 } FrameMem;
 
 FrameMem frameMem;
+
 
 void AllocateFrameMem(uint32 capacity) {
     frameMem.capacity = capacity;

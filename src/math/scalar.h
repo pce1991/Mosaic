@@ -1,7 +1,4 @@
 
-#ifndef _ETC_MATH_SCALAR_H
-#define _ETC_MATH_SCALAR_H
-
 inline int32 Powi(int32 base, int32 exp) {
     if (exp < 0) {
         return 0;
@@ -19,25 +16,6 @@ inline int32 Powi(int32 base, int32 exp) {
 
     return result;
 }
-
-// [0]: https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogLookup
-static const int MultiplyDeBruijnBitPosition[32] = {
-  0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
-  8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
-};
-
-inline uint32 Int32Log2(uint32 v) {
-    // first round down to one less than a power of 2 
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-
-    int32 result = MultiplyDeBruijnBitPosition[(uint32)(v * 0x07C4ACDDU) >> 27];
-    return result;
-}
-
 
 inline real32 Snap(real32 value, real32 snapInterval, real32 baseValue = 0.0f) {
     real32 result;
@@ -75,19 +53,6 @@ inline real32 SnapUp(real32 value, real32 snapInterval, real32 baseValue = 0.0f)
     return result;
 }
 
-
-// https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-inline int32 RoundUpPowerOf2(int32 x) {
-    x--;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    x++;
-
-    return x;
-}
 
 // @NOTE: this only works with positive ints
 inline int32 RoundUpToNearestMultiple(int32 x, int32 mult) {
@@ -447,6 +412,4 @@ inline real32 PingPong(real32 t, real32 max) {
 inline bool InRange(real32 n, real32 min, real32 max) {
     return n >= min && n <= max;
 }
-
-#endif
 

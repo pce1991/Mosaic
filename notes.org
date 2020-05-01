@@ -1,4 +1,13 @@
 
+Radically simplify and remove a lot of unused code. I just want a really simple 2D engine students can use. I bet 12 API calls is the sweetspot.
+
+Implement basic UI:
+buttons (with string and with png)
+input string
+input handles
+DebugDrawLine/Circle/Rect
+
+
 Sprites (access the pixel and then set the colors)
 Animations
 

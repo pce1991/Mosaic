@@ -6,6 +6,7 @@
 #include "input.cpp"
 
 #include "render.cpp"
+#include "audio.cpp"
 
 #include "mesh.cpp"
 #include "entity.cpp"
@@ -124,7 +125,7 @@ void GameInit(GameMemory *gameMem) {
     Game->screenWidth = screenWidth;
     Game->screenHeight = screenHeight;
 
-    AllocateFrameMem(1024 * 256);
+    AllocateFrameMem(Megabytes(1024));
 
     // @TODO: super weird and bad we allocate the queue in the game and not the platform because
     // that's where we know how many devices we have obviously
@@ -253,6 +254,12 @@ void GameInit(GameMemory *gameMem) {
 
     MosaicInit(gameMem);
 }
+
+
+void WriteSoundSamples(GameMemory *game, int32 sampleCount, real32 *buffer) {
+    PlayAudio(&game->audioPlayer, sampleCount, buffer);
+}
+
 
 void GameUpdateAndRender(GameMemory *gameMem) {
     

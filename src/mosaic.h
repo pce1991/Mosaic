@@ -42,7 +42,7 @@ struct MosaicMem {
 
     uint32 tileCapacity;
     Tile *tiles;
-
+    
     Tile *hoveredTile;
     Tile *hoveredTilePrev;
 
