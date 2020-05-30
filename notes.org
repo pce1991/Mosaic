@@ -1,4 +1,10 @@
 
+TODO over summer:
+networking
+UI
+DebugDrawing
+
+
 Radically simplify and remove a lot of unused code. I just want a really simple 2D engine students can use. I bet 12 API calls is the sweetspot.
 
 Implement basic UI:
@@ -123,3 +129,10 @@ Geometry
 
 Importantly need to be able to solve equations like "I want this to arrive in n seconds, how do I do that" or "it moves this fast, what time will it arrive"
   Basic algebraic equations like that
+
+
+
+Perlenspiel Thoughts
+I don't like how data is associated with tiles. That leads to a weird thing where the tiles have associated data but they dont move, so you move data from one tile to another. I much prefer the idea that the data is the data and you just access it however you want and use the tiles as rendering.
+
+Sprites: I don't like how sprites can occupy one tile because it kinda lies about what's going on. On the other hand my approach makes doing any grid-based thing with sprites painful because the student has to make their own grid.

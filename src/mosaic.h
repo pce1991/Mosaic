@@ -1,12 +1,5 @@
 
-enum TileState {
-     TileState_Default,
-};
-
 struct Tile {
-    bool active;
-    TileState state;
-
     // This is kinda redundant because the tile can't move, but it's easier to have a tile
     // and know where it is than pass it's position around. 
     vec2i position;
@@ -47,4 +40,9 @@ struct MosaicMem {
     Tile *hoveredTilePrev;
 
     MyData myData;
+
+    bool *cells;
+    bool *cellsCopy;
+    bool *occupiedState;
+    real32 lastTimeUpdated;
 };

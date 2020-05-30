@@ -13,6 +13,8 @@
 
 #include "mosaic.cpp"
 
+#include "patrick.cpp"
+
 const uint32 screenWidth = 1600;
 const uint32 screenHeight = 900;
 

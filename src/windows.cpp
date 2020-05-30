@@ -347,10 +347,10 @@ void WindowsGetInput(InputQueue *inputQueue) {
                 if (keycode == 0x25) {
                     PushInputPress(inputQueue, Input_LeftArrow, 0);
                 }
-                if (keycode == 0x25) {
+                if (keycode == 0x26) {
                     PushInputPress(inputQueue, Input_UpArrow, 0);
                 }
-                if (keycode == 0x26) {
+                if (keycode == 0x27) {
                     PushInputPress(inputQueue, Input_RightArrow, 0);
                 }
                 if (keycode == 0x28) {
@@ -404,10 +404,10 @@ void WindowsGetInput(InputQueue *inputQueue) {
                 if (keycode == 0x25) {
                     PushInputRelease(inputQueue, Input_LeftArrow, 0);
                 }
-                if (keycode == 0x25) {
+                if (keycode == 0x26) {
                     PushInputRelease(inputQueue, Input_UpArrow, 0);
                 }
-                if (keycode == 0x26) {
+                if (keycode == 0x27) {
                     PushInputRelease(inputQueue, Input_RightArrow, 0);
                 }
                 if (keycode == 0x28) {
