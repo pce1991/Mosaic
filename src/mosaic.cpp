@@ -1,6 +1,6 @@
-
 MosaicMem *Mosaic = NULL;
 MyData *Data = NULL;
+Tile *Tiles = NULL;
 
 void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
     Mosaic->gridWidth = Clamp(newWidth, 1, 255);
@@ -40,12 +40,19 @@ void MosaicMyDataInit(MyData *myData) {
     myData->pieceType = PieceType_ElbowRight;
 }
 
+void MyInit();
+
+
+int32 CellIndex(int32 x, int32 y) {
+    return x + (y * Mosaic->gridWidth);
+}
+
 void MosaicInit(GameMemory *mem) {
     Mosaic = &mem->mosaic;
     Data = &Mosaic->myData;
 
-    Mosaic->gridWidth = 11;
-    Mosaic->gridHeight = 24;
+    Mosaic->gridWidth = 16;
+    Mosaic->gridHeight = 16;
 
     Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
     Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
@@ -90,39 +97,10 @@ void MosaicInit(GameMemory *mem) {
     }
 
     MosaicMyDataInit(&Mosaic->myData);
+
+    MyInit();
 }
 
-void RandomizeTiles() {
-    Tile *tiles = Mosaic->tiles;
-    for (int y = 0; y < Mosaic->gridHeight; y++) {
-        for (int x = 0; x < Mosaic->gridWidth; x++) {
-            int32 index = (y * Mosaic->gridWidth) + x;
-
-            Tile *tile = &tiles[index];
-
-            tile->position = V2i(x, y);
-        }
-    }
-    
-    for (int i = 0; i < Mosaic->tileCapacity; i++) {
-        Tile *tile = &tiles[i];
-
-        //int32 r = RandiRange(0, 2);
-        //int32 r = Randi();
-        int32 r = RandfRange(0, 2.0f);
-
-        vec4 color = V4(RandfRange(0, 2.0f), RandfRange(0, 2.0f), RandfRange(0, 2.0f), 1.0f);
-
-        if (r < 0.5f) {
-            tile->active = true;
-        }
-        else {
-            tile->active = false;
-        }
-
-        tile->color = color;
-    }
-}
 
 vec2 GridPositionToWorldPosition(vec2i gridPosition) {
     vec2 worldPos = Mosaic->gridOrigin;
@@ -208,6 +186,18 @@ Tile *GetTile(vec2i pos) {
     return GetTile(pos.x, pos.y);
 }
 
+void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int32 *tilesRetrieved) {
+    for (int y_ = y; y < width; y_++) {
+        for (int x_ = x; x < width; x++) {
+            Tile *t = GetTile(x_, y_);
+            if (t) {
+                tiles[*tilesRetrieved] = t;
+                *tilesRetrieved += 1;
+            }
+        }
+    }
+}
+
 
 void MosaicRender() {
     Tile *tiles = Mosaic->tiles;
@@ -222,9 +212,7 @@ void MosaicRender() {
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         Tile *tile = &tiles[i];
 
-        if (tile->active) {
-            DrawTile(tile->position, tile->color);
-        }
+        DrawTile(tile->position, tile->color);
     }
 
     if (Mosaic->onlyDrawBorder) {
@@ -242,27 +230,20 @@ void MosaicRender() {
 // messing up the internal state of the engine.
 // Feel free to ignore this if you know what you're doing.
 void MosaicUpdateInternal() {
+    Tiles = Mosaic->tiles;
+    
     Mosaic->hoveredTilePrev = Mosaic->hoveredTile;
     Mosaic->hoveredTile = GetHoveredTile();
 }
+
 
 void MosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
     
     Tile* hoveredTile = Mosaic->hoveredTile;
 
-    for (int y = 0; y < Mosaic->gridHeight; y++) {
-        for (int x = 0; x < Mosaic->gridWidth; x++) {
-            Tile *t = GetTile(x, y);
-            t->color = V4(0, 0, 0, 1);
-            t->active = true;
-        }
-    }
-
     if (hoveredTile != NULL) {
-        hoveredTile->active = true;
-        hoveredTile->color = V4(1, 1, 1, 1);
+        hoveredTile->color = V4(1, 0, 0, 1);
     }
 
 }
-

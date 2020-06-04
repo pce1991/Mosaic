@@ -6,6 +6,7 @@
 #include "input.cpp"
 
 #include "render.cpp"
+#include "audio.cpp"
 
 #include "network.cpp"
 
@@ -15,6 +16,8 @@
 #include "ui.cpp"
 
 #include "mosaic.cpp"
+
+#include "patrick.cpp"
 
 const uint32 screenWidth = 1600;
 const uint32 screenHeight = 900;
@@ -128,7 +131,7 @@ void GameInit(GameMemory *gameMem) {
     Game->screenWidth = screenWidth;
     Game->screenHeight = screenHeight;
 
-    AllocateFrameMem(1024 * 256);
+    AllocateFrameMem(Megabytes(1024));
 
     // @TODO: super weird and bad we allocate the queue in the game and not the platform because
     // that's where we know how many devices we have obviously
@@ -277,6 +280,12 @@ void GameInit(GameMemory *gameMem) {
     
 }
 
+
+void WriteSoundSamples(GameMemory *game, int32 sampleCount, real32 *buffer) {
+    PlayAudio(&game->audioPlayer, sampleCount, buffer);
+}
+
+
 void GameUpdateAndRender(GameMemory *gameMem) {
     
     UpdateInput(&Game->inputQueue);
@@ -292,45 +301,6 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     MosaicUpdateInternal();
     MosaicUpdate();
     MosaicRender();
-
-
-#if 0
-    bool pressedEnter = false;
-    //InputString(V2(0, 0), V2(2, 0.5f), 8, &Game->inputStringActive, &pressedEnter, Game->inputString);
-
-    //Button(V2(0.25f), V2(0.1f, 0.1f), V4(1), 8, V4(1, 1, 1, 1), "BUTTON");
-    //Button(V2(450), V2(100), V4(450), 1000, V4(1, 0, 1, 1), "BUTTON");
-
-    //DrawRectScreen(V2(800, 450), V2(10), V4(1));
-
-    // for this screen stuff we want to draw a quad with origin in the top left don't we.
-    //DrawRectScreenNorm(V2(0.25), V2(0.1), V4(1));
-
-    // @TODO: this isn't exactly a fair test so let's make a buffer for sprites so we can batch render them:
-    // everytime we render a sprite we hash it, look up a buffer to put it in, and if not we allocate one.
-    // Then we do a draw call per buffer. 
-    for (int i = 0; i < Game->shipCount; i++) {
-        ShipTest *ship = &Game->ships[i];
-        
-        //DrawSprite(ship->position, V2(0.01f), &Game->galagaShip);
-        //DrawRect(Game->position, V2(0.01f), &Game->galagaShip);
-
-        DrawRect(&Game->rectBuffer, ship->position, V2(0.01f), V4(RandfRange(0.0f, 1.0f), 0.0f, RandfRange(0.0f, 1.0f), 1.0f));
-
-        if (ship->position.x > 8 || ship->position.x < -8) {
-            ship->direction.x *= -1;
-        }
-
-        if (ship->position.y > 4.5 || ship->position.y < -4.5) {
-            ship->direction.y *= -1;
-        }
-
-        real32 speed = 2;
-        //ship->position = ship->position + ship->direction * speed * Game->deltaTime;
-    }
-
-    DrawText(V2(0), 8.0f, V4(0, 1, 0, 1), "FPS: %f, dt: %f", Game->fps, Game->deltaTime);
-#endif
 
     RenderRectBuffer(&Game->rectBuffer);
 

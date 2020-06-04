@@ -395,6 +395,7 @@ int main() {
 
     // @GACK: need this for seeding the random number generator in GameInit
     gameMem.systemTime = systemTime;
+    SeedRand((int)systemTime);
 
     GameInit(&gameMem);
 

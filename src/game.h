@@ -14,6 +14,7 @@
 #include "dynamic_array.h"
 
 #include "render.h"
+#include "audio.h"
 #include "input.h"
 #include "collections.h"
 
@@ -65,6 +66,7 @@ struct GameMemory {
     real32 deltaTime;
 
     real32 startTime;
+
     uint32 frame;
     real32 fps;
     
@@ -81,6 +83,8 @@ struct GameMemory {
     vec3 cameraPosition;
     quaternion cameraRotation;
     real32 camAngle;
+
+    AudioPlayer audioPlayer;
 
     Shader texturedQuadShader;
 

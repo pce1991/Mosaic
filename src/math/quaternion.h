@@ -1,7 +1,4 @@
 
-#ifndef _ETC_MATH_QUATERNION_H
-#define _ETC_MATH_QUATERNION_H
-
 struct quaternion {
     real32 x, y, z, w;
 };
@@ -371,5 +368,3 @@ inline quaternion Slerp(quaternion a, quaternion b, real32 t) {
 bool HasNaN(quaternion q) {
     return isnan(q.x) || isnan(q.y) || isnan(q.z) || isnan(q.w);
 }
-
-#endif
