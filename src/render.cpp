@@ -322,6 +322,45 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
     glDisableVertexAttribArray(vert);
 }
 
+// @NOTE: origin of rect and screen are both top left
+void DrawRectScreen(vec2 pos, vec2 scale, vec4 color) {
+    Shader *shader = &Game->shader;
+    SetShader(shader);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    Mesh *mesh = &Game->quadTopLeft;
+    
+    mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 0.0f));
+
+    mat4 projMat = Orthographic(0, Game->screenWidth, Game->screenHeight, 0, -1, 1);
+    
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
+
+    glUniform4fv(shader->uniforms[2].id, 1, color.data);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+    // 1st attribute buffer : vertices
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        
+    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
+
+    glDisableVertexAttribArray(vert);
+}
+
+void DrawRectScreenNorm(vec2 pos, vec2 scale, vec4 color) {
+    vec2 pos_ = V2(pos.x * Game->screenWidth, pos.y * Game->screenHeight);
+    vec2 scale_ = V2(scale.x * Game->screenWidth, scale.y * Game->screenWidth);
+
+    DrawRectScreen(pos_, scale_, color);
+}
+
 
 void AllocateRectBuffer(int32 capacity, RectBuffer *buffer) {
     buffer->count = 0;
@@ -416,16 +455,9 @@ void RenderRectBuffer(RectBuffer *buffer) {
 }
 
 
-
-void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+void DrawText(vec2 pos, real32 size, vec4 color, bool screen, const char *str) {
     GlyphBuffer *buffer = &Game->glyphBuffers[Game->currentGlyphBufferIndex];
-        
-    char str[GlyphBufferCapacity];
-
-    va_list args;
-    va_start (args, fmt);
-
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    buffer->screen = screen;
     
     int32 len = strlen(str);
 
@@ -453,6 +485,30 @@ void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     Game->currentGlyphBufferIndex++;
 #endif
 
+}
+
+void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    
+    DrawText(pos, size, color, false, str);
+
+    va_end(args);
+}
+
+void DrawTextScreen(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+    
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    
+    DrawText(pos, size, color, true, str);
+    
     va_end(args);
 }
 
@@ -519,7 +575,14 @@ void DrawGlyphs(GlyphBuffer *buffers, FontTable *font) {
         Mesh *mesh = &Game->glyphQuad;
      
         glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
-        glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+
+        if (buffer->screen) {
+            mat4 projMat = Orthographic(0, Game->screenWidth, Game->screenHeight, 0, -1, 1);
+            glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
+        }
+        else {
+            glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+        }
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, font->texture.textureID);

@@ -16,6 +16,11 @@ typedef enum {
     Input_Left,
     Input_Right,
 
+    Input_UpArrow,
+    Input_DownArrow,
+    Input_LeftArrow,
+    Input_RightArrow,
+
     Input_Space,
 
     Input_MouseLeft,

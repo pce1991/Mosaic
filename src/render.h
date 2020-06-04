@@ -116,6 +116,7 @@ struct GlyphBuffer {
     int32 bufferID;
 
     mat4 model;
+    bool screen;
 
     GlyphBuffer *next;
 };

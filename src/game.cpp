@@ -7,8 +7,12 @@
 
 #include "render.cpp"
 
+#include "network.cpp"
+
 #include "mesh.cpp"
 #include "entity.cpp"
+
+#include "ui.cpp"
 
 #include "mosaic.cpp"
 
@@ -162,6 +166,9 @@ void GameInit(GameMemory *gameMem) {
     AllocateGlyphQuad(&gameMem->glyphQuad);
     OpenGL_InitMesh(&gameMem->glyphQuad);
 
+    AllocateQuadTopLeft(&gameMem->quadTopLeft);
+    OpenGL_InitMesh(&gameMem->quadTopLeft);
+
     InitFont(gameMem);
     // Setup glyph buffers
     {
@@ -252,6 +259,22 @@ void GameInit(GameMemory *gameMem) {
 #endif
 
     MosaicInit(gameMem);
+
+    Game->shipCount = 1000;
+    Game->ships = (ShipTest *)malloc(Game->shipCount * sizeof(ShipTest));
+
+    LoadSprite(&Game->galagaShip, "data/galaga_ship.png");
+    OpenGL_InitTexture(&Game->galagaShip);
+
+    AllocateRectBuffer(Game->shipCount, &Game->rectBuffer);
+    
+    for (int i = 0; i < Game->shipCount; i++) {
+        ShipTest *ship = &Game->ships[i];
+        
+        ship->position = V2(RandfRange(-8, 8), RandfRange(-4.5, 4.5));
+        ship->direction = V2(RandfRange(-1, 1), RandfRange(-1, 1));
+    }
+    
 }
 
 void GameUpdateAndRender(GameMemory *gameMem) {
@@ -270,10 +293,59 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     MosaicUpdate();
     MosaicRender();
 
+
+#if 0
+    bool pressedEnter = false;
+    //InputString(V2(0, 0), V2(2, 0.5f), 8, &Game->inputStringActive, &pressedEnter, Game->inputString);
+
+    //Button(V2(0.25f), V2(0.1f, 0.1f), V4(1), 8, V4(1, 1, 1, 1), "BUTTON");
+    //Button(V2(450), V2(100), V4(450), 1000, V4(1, 0, 1, 1), "BUTTON");
+
+    //DrawRectScreen(V2(800, 450), V2(10), V4(1));
+
+    // for this screen stuff we want to draw a quad with origin in the top left don't we.
+    //DrawRectScreenNorm(V2(0.25), V2(0.1), V4(1));
+
+    // @TODO: this isn't exactly a fair test so let's make a buffer for sprites so we can batch render them:
+    // everytime we render a sprite we hash it, look up a buffer to put it in, and if not we allocate one.
+    // Then we do a draw call per buffer. 
+    for (int i = 0; i < Game->shipCount; i++) {
+        ShipTest *ship = &Game->ships[i];
+        
+        //DrawSprite(ship->position, V2(0.01f), &Game->galagaShip);
+        //DrawRect(Game->position, V2(0.01f), &Game->galagaShip);
+
+        DrawRect(&Game->rectBuffer, ship->position, V2(0.01f), V4(RandfRange(0.0f, 1.0f), 0.0f, RandfRange(0.0f, 1.0f), 1.0f));
+
+        if (ship->position.x > 8 || ship->position.x < -8) {
+            ship->direction.x *= -1;
+        }
+
+        if (ship->position.y > 4.5 || ship->position.y < -4.5) {
+            ship->direction.y *= -1;
+        }
+
+        real32 speed = 2;
+        //ship->position = ship->position + ship->direction * speed * Game->deltaTime;
+    }
+
+    DrawText(V2(0), 8.0f, V4(0, 1, 0, 1), "FPS: %f, dt: %f", Game->fps, Game->deltaTime);
+#endif
+
+    RenderRectBuffer(&Game->rectBuffer);
+
+    Game->rectBuffer.count = 0;
+    
     DrawGlyphs(gameMem->glyphBuffers, &gameMem->font);
+
+    
     
     DeleteEntities(&Game->entityDB);
 
+    Game->fps = (real32)Game->frame / (Game->time - Game->startTime);
+
     gameMem->frame++;
     ClearFrameMem();
+
+    ClearInputQueue(input);
 }

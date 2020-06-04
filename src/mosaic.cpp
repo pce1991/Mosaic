@@ -1,5 +1,6 @@
 
 MosaicMem *Mosaic = NULL;
+MyData *Data = NULL;
 
 void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
     Mosaic->gridWidth = Clamp(newWidth, 1, 255);
@@ -33,14 +34,18 @@ void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
 }
 
 void MosaicMyDataInit(MyData *myData) {
-    
+    myData->setBlocks = (bool *)malloc(sizeof(bool) * Mosaic->gridWidth * Mosaic->gridHeight);
+    memset(myData->setBlocks, 0, sizeof(bool) * Mosaic->gridWidth * Mosaic->gridHeight);
+
+    myData->pieceType = PieceType_ElbowRight;
 }
 
 void MosaicInit(GameMemory *mem) {
     Mosaic = &mem->mosaic;
+    Data = &Mosaic->myData;
 
-    Mosaic->gridWidth = 16;
-    Mosaic->gridHeight = 16;
+    Mosaic->gridWidth = 11;
+    Mosaic->gridHeight = 24;
 
     Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
     Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
@@ -250,7 +255,7 @@ void MosaicUpdate() {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *t = GetTile(x, y);
             t->color = V4(0, 0, 0, 1);
-            t->active = false;
+            t->active = true;
         }
     }
 
@@ -258,5 +263,6 @@ void MosaicUpdate() {
         hoveredTile->active = true;
         hoveredTile->color = V4(1, 1, 1, 1);
     }
+
 }
 

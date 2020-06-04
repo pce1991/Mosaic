@@ -63,6 +63,7 @@ bool InputHeld(InputQueue *queue, InputID input, int32 deviceID = 0) {
     return queue->deviceStates[deviceID].framesHeld[input] > 0;
 }
 
+// @NOTE: to be cleared at the end of the frame so we have access to inputChars thruout update. 
 void ClearInputQueue(InputQueue *queue) {
     queue->count = 0;
     memset(queue->events, 0, queue->size);
@@ -121,6 +122,4 @@ void UpdateInput(InputQueue *queue) {
             }
         }
     }
-
-    ClearInputQueue(queue);
 }
