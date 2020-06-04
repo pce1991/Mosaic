@@ -8,6 +8,8 @@
 
 #include "commonlib.h"
 
+#include "network.h"
+
 #include "math/math.h"
 #include "my_memory.h"
 
@@ -116,6 +118,8 @@ struct GameMemory {
     Sprite galagaShip;
 
     RectBuffer rectBuffer;
+
+    Socket socket;
 };
 
 GameMemory *Game = NULL;

@@ -21,7 +21,6 @@ struct WindowsPlatform {
     int32 screenWidth;
 
     WSADATA wsaData;
-    int32 socketHandle;
 };
 
 WindowsPlatform *Platform = NULL;
@@ -545,54 +544,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     plat.screenWidth = screenWidth;
     plat.screenHeight = screenHeight;
 
-    WSAStartup(MAKEWORD(2,2), &Platform->wsaData);
-
-    // UDP 
-    Platform->socketHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (Platform->socketHandle > 0) {
-        Print("Created socket %d", Platform->socketHandle);
-    }
-
-    // Bind to a port number.
-
-    int32 port = 30000; // 0-1024 are reserved for OS, 50K + are dynamically assigned
-    // We could just pass in a port of 0 to say we don't care the port number.
-    //port = 0;
-
-    {
-        sockaddr_in address;
-        address.sin_family = AF_INET;
-        address.sin_addr.s_addr = INADDR_ANY;
-        address.sin_port = htons((u8)port); // this converts from host byte order to network byte order (big endian)
-
-        int32 bindSuccess = bind(Platform->socketHandle, (const sockaddr*)&address, sizeof(sockaddr_in));
-        if (bindSuccess == 0) {
-            Print("bound socket!");
-        }
-        else {
-            Print("failed to bind socket!");
-        }
-    }
-
-    // Set to nonblocking
-    DWORD nonBlocking = 1;
-    int32 nonBlockingSuccess = ioctlsocket(Platform->socketHandle, FIONBIO, &nonBlocking);
-    if (nonBlockingSuccess != 0) {
-        Print("Failed to set non-blocking!");
-    }
-
-    int32 packetSize = 16;
-    u8 packetData[16];
-    for (int i = 0; i < packetSize; i++) {
-        packetData[i] = i * 2;
-    }
-
-    sockaddr_in address;
-    InitAddress(&address, 127, 0, 0, 1, port);
-    
-    int32 sentBytes = sendto(Platform->socketHandle, (char *)packetData, packetSize, 0, (sockaddr *)&address, sizeof(sockaddr_in));
-
-    Print("sentBytes %d", sentBytes);
 
 
     OpenGLInfo glInfo;
@@ -611,11 +562,16 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     startSystemTime = systemTime;
     SeedRand(startSystemTime.QuadPart);
 
+    
+    WSAStartup(MAKEWORD(2,2), &Platform->wsaData);
+
+    // UDP 
+
+    int16 port = 30000; // 0-1024 are reserved for OS, 50K + are dynamically assigned
+    // We could just pass in a port of 0 to say we don't care the port number.
     // Init Game Memomry
     GameMemory *gameMem = &platform.gameMem;
     memset(gameMem, 0, sizeof(GameMemory));
-
-    
 
     // @GACK: need this for seeding the random number generator in GameInit
     // @BUG: It seems like the seeded value is almost always exactly the same tho?
@@ -625,6 +581,16 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     gameMem->startTime = 0.0f;
 
     gameMem->running = true;
+
+    // @TODO: Put this in GameInit()
+    InitSocket(&Game->socket, 127, 0, 0, 1, port);
+
+    int32 packetSize = 16;
+    u8 packetData[16];
+    for (int i = 0; i < packetSize; i++) {
+        packetData[i] = i * i;
+    }
+
 
     InputQueue *inputQueue = &gameMem->inputQueue;
 
@@ -655,25 +621,37 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     WinMoveMouse(window, screenWidth / 2.0f, screenHeight / 2.0f, screenHeight);
 
     while(gameMem->running && PlatformRunning) {
-        
+
+        for (int i = 0; i < packetSize; i++) {
+            packetData[i] = gameMem->frame + i;
+        }
+
+        int32 bytesSent = SendPacket(&Game->socket, packetData, 16);
+    
         while (true) {
             u8 packet[16];
+            memset(packet, 0, 16);
 
-            sockaddr_in from;
-            int32 fromSize = sizeof(from);
-        
-            int32 bytes = recvfrom(Platform->socketHandle, (char *)packet, packetSize, 0, (sockaddr *)&from, &fromSize);
+            Socket fromSocket;
+            int32 bytesReceived = ReceivePacket(&Game->socket, packet, 16, &fromSocket);           
 
-            if (bytes <= 0) {
+            if (bytesReceived <= 0) {
+                int32 error = WSAGetLastError();
+                // 10035 is a non-fatal error you get on non-blocking when there isnt anything found.
+                if (error != 10035) {
+                    Print("recvfrom error: %d", error);
+                }
+            
                 break;
             }
+            
+            int32 fromAddress = ntohl(fromSocket.socketAddress.sin_addr.s_addr);
+            int32 fromPort = ntohs(fromSocket.socketAddress.sin_port);
 
-            int32 fromAddress = ntohl(from.sin_addr.s_addr);
-            int32 fromPort = ntohs(from.sin_port);
-
-            for (int i = 0; i < bytes; i++) {
+            for (int i = 0; i < bytesReceived; i++) {
                 Print("packet[%d] %d", i, packet[i]);
             }
+
         }
 
         LARGE_INTEGER prevSystemTime = systemTime;
