@@ -567,8 +567,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
     // UDP 
 
-    int16 port = 30000; // 0-1024 are reserved for OS, 50K + are dynamically assigned
-    // We could just pass in a port of 0 to say we don't care the port number.
     // Init Game Memomry
     GameMemory *gameMem = &platform.gameMem;
     memset(gameMem, 0, sizeof(GameMemory));
@@ -581,15 +579,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     gameMem->startTime = 0.0f;
 
     gameMem->running = true;
-
-    // @TODO: Put this in GameInit()
-    InitSocket(&Game->socket, 127, 0, 0, 1, port);
-
-    int32 packetSize = 16;
-    u8 packetData[16];
-    for (int i = 0; i < packetSize; i++) {
-        packetData[i] = i * i;
-    }
 
     InputQueue *inputQueue = &gameMem->inputQueue;
 
@@ -620,38 +609,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     WinMoveMouse(window, screenWidth / 2.0f, screenHeight / 2.0f, screenHeight);
 
     while(gameMem->running && PlatformRunning) {
-
-        for (int i = 0; i < packetSize; i++) {
-            packetData[i] = gameMem->frame + i;
-        }
-
-        int32 bytesSent = SendPacket(&Game->socket, packetData, 16);
-    
-        while (true) {
-            u8 packet[16];
-            memset(packet, 0, 16);
-
-            Socket fromSocket;
-            int32 bytesReceived = ReceivePacket(&Game->socket, packet, 16, &fromSocket);           
-
-            if (bytesReceived <= 0) {
-                int32 error = WSAGetLastError();
-                // 10035 is a non-fatal error you get on non-blocking when there isnt anything found.
-                if (error != 10035) {
-                    Print("recvfrom error: %d", error);
-                }
-            
-                break;
-            }
-            
-            int32 fromAddress = ntohl(fromSocket.socketAddress.sin_addr.s_addr);
-            int32 fromPort = ntohs(fromSocket.socketAddress.sin_port);
-
-            for (int i = 0; i < bytesReceived; i++) {
-                Print("packet[%d] %d", i, packet[i]);
-            }
-
-        }
 
         LARGE_INTEGER prevSystemTime = systemTime;
         int32 error = QueryPerformanceCounter(&systemTime);

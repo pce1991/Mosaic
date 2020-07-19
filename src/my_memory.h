@@ -5,33 +5,37 @@
 #define Megabytes(n) (1024 * Kilobytes(n))
 #define Gigabytes(n) (1024 * Megabytes(n))
 
-typedef struct {
+struct MemoryArena {
     uint32 capacity;
     uint32 size; // in bytes
     void *ptr;
-} FrameMem;
+};
 
-FrameMem frameMem;
-
-
-void AllocateFrameMem(uint32 capacity) {
-    frameMem.capacity = capacity;
-    frameMem.size = 0;
-    frameMem.ptr = malloc(capacity);
-    memset(frameMem.ptr, 0, capacity);
+void AllocateMemoryArena(MemoryArena *arena, uint32 capacity) {
+    arena->capacity = capacity;
+    arena->size = 0;
+    arena->ptr = malloc(capacity);
+    memset(arena->ptr, 0, capacity);
 }
 
-void *PushSizeFrameMem(uint32 size) {
-    void *result = (uint8 *)frameMem.ptr + frameMem.size;
-    frameMem.size += size;
+void *PushSizeMemoryArena(MemoryArena *arena, uint32 size) {
+    void *result = (uint8 *)arena->ptr + arena->size;
+    arena->size += size;
 
-    assert(frameMem.size < frameMem.capacity);
+    assert(arena->size < arena->capacity);
     
     return result;
 }
 
-void ClearFrameMem() {
-    frameMem.size = 0;
+void ClearMemoryArena(MemoryArena *arena) {
+    arena->size = 0;
 }
 
-#define PushSizeFrameMem(type, count) (type *)PushSizeFrameMem(sizeof(type) * count)
+#define PushSize(arena, type, count) (type *)PushSizeMemoryArena(arena, sizeof(type) * count)
+
+
+struct Str {
+    int32 count;
+    char *str;
+};
+

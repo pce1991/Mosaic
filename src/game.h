@@ -8,12 +8,13 @@
 
 #include "commonlib.h"
 
+#include "dynamic_array.h"
+
+
 #include "network.h"
 
 #include "math/math.h"
 #include "my_memory.h"
-
-#include "dynamic_array.h"
 
 #include "render.h"
 #include "audio.h"
@@ -75,6 +76,10 @@ struct GameMemory {
     uint32 screenWidth;
     uint32 screenHeight;
     uint32 pitch;
+
+    MemoryArena frameMem;
+
+    NetworkInfo networkInfo;
 
     Glyph *glyphs;
     int32 currentGlyphBufferIndex;

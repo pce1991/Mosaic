@@ -34,13 +34,7 @@ void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
 }
 
 void MosaicMyDataInit(MyData *myData) {
-    myData->setBlocks = (bool *)malloc(sizeof(bool) * Mosaic->gridWidth * Mosaic->gridHeight);
-    memset(myData->setBlocks, 0, sizeof(bool) * Mosaic->gridWidth * Mosaic->gridHeight);
-
-    myData->pieceType = PieceType_ElbowRight;
 }
-
-void MyInit();
 
 
 int32 CellIndex(int32 x, int32 y) {
@@ -97,8 +91,6 @@ void MosaicInit(GameMemory *mem) {
     }
 
     MosaicMyDataInit(&Mosaic->myData);
-
-    MyInit();
 }
 
 

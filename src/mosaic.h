@@ -6,37 +6,7 @@ struct Tile {
     vec4 color;
 };
 
-// @NOTE: origin of the grid is top left so coordinate (0, 0) is top left.
-
-enum PieceType {
-     PieceType_Block,
-     PieceType_Pipe,
-     PieceType_ElbowLeft,
-     PieceType_ElbowRight,
-     PieceType_Z,
-     PieceType_Count,
-};
-
-enum BlockState {
-                 BlockState_Empty = 0,
-                 BlockState_Goal = 1,
-                 BlockState_Satisfied = 2,
-                 BlockState_Unsatisfied = 4,
-};
-
 struct MyData {
-    // @NOTE: this is where you can put in any data specific to your game.
-    bool *setBlocks;
-    
-
-    vec2i piecePos;
-    PieceType pieceType;
-    int32 rotation;
-    vec4 pieceColor;
-
-    real32 timeLastMoved;
-
-    // 3x3 grid, and we rotate aroudn that
 };
 
 struct MosaicMem {

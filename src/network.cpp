@@ -55,25 +55,67 @@ int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fro
 }
 
 
-struct GamePacket {
-    int32 frame;
-};
+void AllocateNetworkInfo(NetworkInfo *info, int32 receivingCount, int32 sendingCount) {
+    info->receivingSocketCount = receivingCount;
+    info->receivingSockets = (Socket *)malloc(receivingCount * sizeof(Socket));
 
-
-struct NetworkInfo {
-    // List of addresses to contact.
-    // For a client they'd only have the severer prob and be like "tell the server to message user ID" and
-    // the server would look that up the info for that player and then message them.
-    // 
-
-    // buffer that gets filled with packets
-    int32 packetCapacity;
-    int32 packetCount;
-    GamePacket *packets;
-};
-
+    info->sendingSocketCount = sendingCount;
+    info->sendingSockets = (Socket *)malloc(sendingCount * sizeof(Socket));
+}
 
 
 // Probably two types of packets: network and client
 // I mean really we can have any number of types of packets, as long as we always receive the max size
-// We'll have different updates based on if the game is a server or a client. 
+// We'll have different updates based on if the game is a server or a client.
+// This way the server can send out the chunky information and clients know what to receieve.
+
+
+void ReceivePackets() {
+
+    // @TODO: need to do this loop for each of the receiving sockets
+    // which means we also need to a way to specify which packet came from where
+
+    NetworkInfo *info = &Game->networkInfo;
+    
+    DynamicArrayClear(&info->packetsReceived);
+
+    while (true) {
+        GamePacket *packet = PushBackPtr(&Game->networkInfo.packetsReceived);
+        
+        Socket sender;
+        Socket fromSocket;
+        int32 bytesReceived = ReceivePacket(&Game->networkInfo.receivingSockets[0], (u8 *)packet, sizeof(GamePacket), &fromSocket);
+
+        if (bytesReceived <= 0) {
+            // @WINDOWS
+            int32 error = WSAGetLastError();
+            // 10035 is a non-fatal error you get on non-blocking when there isnt anything found.
+            if (error != 10035) {
+                Print("recvfrom error: %d", error);
+            }
+            
+            break;
+        }
+            
+        int32 fromAddress = ntohl(fromSocket.socketAddress.sin_addr.s_addr);
+        int32 fromPort = ntohs(fromSocket.socketAddress.sin_port);
+    }
+}
+
+void SendPackets() {
+    NetworkInfo *info = &Game->networkInfo;
+
+    GamePacket packet = {};
+    packet.type = GamePacketType_String;
+    char *str = "Hello There.";
+    memcpy(packet.data, str, strlen(str));
+
+    PushBack(&info->packetsToSend, packet);
+
+    for (int i = 0; i < info->packetsToSend.count; i++) {
+        int32 packetSize = sizeof(GamePacket);
+        int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[0], &info->packetsToSend[i], packetSize);
+    }
+
+    DynamicArrayClear(&info->packetsToSend);
+}

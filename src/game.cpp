@@ -17,8 +17,6 @@
 
 #include "mosaic.cpp"
 
-#include "patrick.cpp"
-
 const uint32 screenWidth = 1600;
 const uint32 screenHeight = 900;
 
@@ -131,7 +129,16 @@ void GameInit(GameMemory *gameMem) {
     Game->screenWidth = screenWidth;
     Game->screenHeight = screenHeight;
 
-    AllocateFrameMem(Megabytes(1024));
+    AllocateMemoryArena(&Game->frameMem, Megabytes(1024));
+    
+    AllocateNetworkInfo(&Game->networkInfo, 1, 1);
+
+    int16 port = 30000; // 0-1024 are reserved for OS, 50K + are dynamically assigned
+    // We could just pass in a port of 0 to say we don't care the port number.
+    // Maybe we want this to get in network info? 
+    InitSocket(&Game->networkInfo.sendingSockets[0], 127, 0, 0, 1, port);
+    Game->networkInfo.receivingSockets[0] = Game->networkInfo.sendingSockets[0];
+
 
     // @TODO: super weird and bad we allocate the queue in the game and not the platform because
     // that's where we know how many devices we have obviously
@@ -285,7 +292,6 @@ void WriteSoundSamples(GameMemory *game, int32 sampleCount, real32 *buffer) {
     PlayAudio(&game->audioPlayer, sampleCount, buffer);
 }
 
-
 void GameUpdateAndRender(GameMemory *gameMem) {
     
     UpdateInput(&Game->inputQueue);
@@ -298,6 +304,19 @@ void GameUpdateAndRender(GameMemory *gameMem) {
 
     Game->currentGlyphBufferIndex = 0;
 
+    // Want to get them all before we decide what to do in our frame.
+    ReceivePackets();
+
+    {
+        NetworkInfo *networkInfo = &Game->networkInfo;
+        for (int i = 0; i < networkInfo->packetsReceived.count; i++) {
+            GamePacket packet = networkInfo->packetsReceived[i];
+            if (packet.type == GamePacketType_String) {
+                Print("string %s", packet.data);
+            }
+        }
+    }
+
     MosaicUpdateInternal();
     MosaicUpdate();
     MosaicRender();
@@ -307,15 +326,16 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     Game->rectBuffer.count = 0;
     
     DrawGlyphs(gameMem->glyphBuffers, &gameMem->font);
-
-    
     
     DeleteEntities(&Game->entityDB);
+
+    // Send all the packets we've accumulated. 
+    SendPackets();
 
     Game->fps = (real32)Game->frame / (Game->time - Game->startTime);
 
     gameMem->frame++;
-    ClearFrameMem();
+    ClearMemoryArena(&Game->frameMem);
 
     ClearInputQueue(input);
 }
