@@ -140,8 +140,8 @@ void GameInit(GameMemory *gameMem) {
     int16 port = 30000; // 0-1024 are reserved for OS, 50K + are dynamically assigned
     // We could just pass in a port of 0 to say we don't care the port number.
     // Maybe we want this to get in network info? 
-    InitSocket(&Game->networkInfo.sendingSockets[0], 127, 0, 0, 1, port);
-
+    //InitSocket(&Game->networkInfo.sendingSockets[0], 127, 0, 0, 1, port);
+    InitSocket(&Game->networkInfo.sendingSockets[0], 192, 168, 1, 35, port);
     Game->networkInfo.receivingSockets[0] = Game->networkInfo.sendingSockets[0];
 
 
