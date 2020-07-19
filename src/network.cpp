@@ -82,9 +82,11 @@ void ReceivePackets() {
     while (true) {
         GamePacket *packet = PushBackPtr(&Game->networkInfo.packetsReceived);
         
-        Socket sender;
         Socket fromSocket;
         int32 bytesReceived = ReceivePacket(&Game->networkInfo.receivingSockets[0], (u8 *)packet, sizeof(GamePacket), &fromSocket);
+
+        // What's going on with the fromSocket?
+        // So the socket we've bound doesn't need to be the same as the socket that this is coming from?
 
         if (bytesReceived <= 0) {
             // @WINDOWS
@@ -105,12 +107,7 @@ void ReceivePackets() {
 void SendPackets() {
     NetworkInfo *info = &Game->networkInfo;
 
-    GamePacket packet = {};
-    packet.type = GamePacketType_String;
-    char *str = "Hello There.";
-    memcpy(packet.data, str, strlen(str));
-
-    PushBack(&info->packetsToSend, packet);
+    //PushBack(&info->packetsToSend, packet);
 
     for (int i = 0; i < info->packetsToSend.count; i++) {
         int32 packetSize = sizeof(GamePacket);

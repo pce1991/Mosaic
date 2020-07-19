@@ -15,7 +15,11 @@
 
 #include "ui.cpp"
 
+// @TODO: get this into game_code so we can just disable it.
+// Mosaic is really just a custom game. 
 #include "mosaic.cpp"
+
+#include "game_code.cpp"
 
 const uint32 screenWidth = 1600;
 const uint32 screenHeight = 900;
@@ -137,6 +141,7 @@ void GameInit(GameMemory *gameMem) {
     // We could just pass in a port of 0 to say we don't care the port number.
     // Maybe we want this to get in network info? 
     InitSocket(&Game->networkInfo.sendingSockets[0], 127, 0, 0, 1, port);
+
     Game->networkInfo.receivingSockets[0] = Game->networkInfo.sendingSockets[0];
 
 
@@ -269,22 +274,6 @@ void GameInit(GameMemory *gameMem) {
 #endif
 
     MosaicInit(gameMem);
-
-    Game->shipCount = 1000;
-    Game->ships = (ShipTest *)malloc(Game->shipCount * sizeof(ShipTest));
-
-    LoadSprite(&Game->galagaShip, "data/galaga_ship.png");
-    OpenGL_InitTexture(&Game->galagaShip);
-
-    AllocateRectBuffer(Game->shipCount, &Game->rectBuffer);
-    
-    for (int i = 0; i < Game->shipCount; i++) {
-        ShipTest *ship = &Game->ships[i];
-        
-        ship->position = V2(RandfRange(-8, 8), RandfRange(-4.5, 4.5));
-        ship->direction = V2(RandfRange(-1, 1), RandfRange(-1, 1));
-    }
-    
 }
 
 
@@ -317,9 +306,11 @@ void GameUpdateAndRender(GameMemory *gameMem) {
         }
     }
 
-    MosaicUpdateInternal();
-    MosaicUpdate();
-    MosaicRender();
+    // MosaicUpdateInternal();
+    // MosaicUpdate();
+    // MosaicRender();
+
+    MyGameUpdate();
 
     RenderRectBuffer(&Game->rectBuffer);
 

@@ -56,11 +56,6 @@ struct FontTable {
 #define GlyphBufferCount 32
 #define GlyphBufferCapacity 64
 
-struct ShipTest {
-    vec2 position;
-    vec2 direction;
-};
-
 struct GameMemory {
     bool running;
 
@@ -118,13 +113,7 @@ struct GameMemory {
     bool inputStringActive;
     char inputString[255];
 
-    int32 shipCount;
-    ShipTest *ships;
-    Sprite galagaShip;
-
     RectBuffer rectBuffer;
-
-    Socket socket;
 };
 
 GameMemory *Game = NULL;

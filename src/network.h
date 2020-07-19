@@ -12,6 +12,7 @@ struct Socket {
 
 enum GamePacketType {
      GamePacketType_Invalid,
+     GamePacketType_IP,
      GamePacketType_String,
 };
 
@@ -41,6 +42,9 @@ struct NetworkInfo {
     // For a client they'd only have the severer prob and be like "tell the server to message user ID" and
     // the server would look that up the info for that player and then message them.
     // For pier-to-pier there'd still be a server everyone connects to simply to get the list of connected users
+
+    // @TODO: specify the ip address of the server in a file. Need to be able to run instance of engine
+    // as a server. 
 
     int32 receivingSocketCount;
     Socket *receivingSockets;
