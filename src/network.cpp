@@ -47,10 +47,6 @@ int32 InitSocket(Socket *socketPtr, u8 a, u8 b, u8 c, u8 d, int16 port) {
 int32 SendPacket(Socket *socket, void *packetData, uint32 packetSize) {
     return sendto(socket->handle, (char *)packetData, packetSize, 0, (sockaddr *)&socket->socketAddress, sizeof(sockaddr_in));
 }
-// SendPacket()
-// ReceivePacket()
-//    We need to know the maxsize of a packet. I dont imagine its a good idea to try to send over mini packets
-//    that specify the type and size and then use that to retrieve the whole packet?
 
 int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fromSocket) {
     int32 fromSize = sizeof(sockaddr_in);
@@ -62,8 +58,7 @@ int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fro
 struct GamePacket {
     int32 frame;
 };
-// Probably two types of packets: network and client
-// I mean really we can have any number of types of packets, as long as we always receive the max size
+
 
 struct NetworkInfo {
     // List of addresses to contact.
@@ -77,3 +72,8 @@ struct NetworkInfo {
     GamePacket *packets;
 };
 
+
+
+// Probably two types of packets: network and client
+// I mean really we can have any number of types of packets, as long as we always receive the max size
+// We'll have different updates based on if the game is a server or a client. 

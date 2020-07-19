@@ -591,7 +591,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
         packetData[i] = i * i;
     }
 
-
     InputQueue *inputQueue = &gameMem->inputQueue;
 
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183376(v=vs.85).aspx

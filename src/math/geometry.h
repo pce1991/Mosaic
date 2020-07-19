@@ -667,13 +667,24 @@ bool RectTest(Rect a, Rect b, vec2 aPosition, vec2 bPosition, vec2 *dir) {
 
     r32 posDiffX = bPosition.x - aPosition.x;
     r32 posDiffY = bPosition.y - aPosition.y;
-
+    
     if (lengthX < lengthY) {
-        dir->x = lengthX * -Sign(posDiffX);
+        if (bGlobal.max.x < aGlobal.max.x) {
+            dir->x = Abs(bGlobal.max.x - aGlobal.min.x);
+        }
+        else {
+            dir->x = -Abs(bGlobal.min.x - aGlobal.max.x);
+        }
     }
     else {
-        dir->y = lengthY * -Sign(posDiffY);
+        if (bGlobal.max.y < aGlobal.max.y) {
+            dir->y = Abs(bGlobal.max.y - aGlobal.min.y);
+        }
+        else {
+            dir->y = -Abs(bGlobal.min.y - aGlobal.max.y);
+        }
     }
+
 
     return true;
 }
