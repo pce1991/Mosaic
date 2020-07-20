@@ -23,6 +23,8 @@ int32 InitSocket(Socket *socketPtr, u8 a, u8 b, u8 c, u8 d, int16 port) {
     
     uint32 address = (a << 24) | (b << 16) | (c << 8) | d;
 
+    socketPtr->port = port;
+
     sockaddr_in *addr = &socketPtr->socketAddress;
 
     addr->sin_family = AF_INET;
@@ -55,10 +57,7 @@ int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fro
 }
 
 
-void AllocateNetworkInfo(NetworkInfo *info, int32 receivingCount, int32 sendingCount) {
-    info->receivingSocketCount = receivingCount;
-    info->receivingSockets = (Socket *)malloc(receivingCount * sizeof(Socket));
-
+void AllocateNetworkInfo(NetworkInfo *info, int32 sendingCount) {
     info->sendingSocketCount = sendingCount;
     info->sendingSockets = (Socket *)malloc(sendingCount * sizeof(Socket));
 }
@@ -71,10 +70,6 @@ void AllocateNetworkInfo(NetworkInfo *info, int32 receivingCount, int32 sendingC
 
 
 void ReceivePackets() {
-
-    // @TODO: need to do this loop for each of the receiving sockets
-    // which means we also need to a way to specify which packet came from where
-
     NetworkInfo *info = &Game->networkInfo;
     
     DynamicArrayClear(&info->packetsReceived);
@@ -83,10 +78,7 @@ void ReceivePackets() {
         GamePacket *packet = PushBackPtr(&Game->networkInfo.packetsReceived);
         
         Socket fromSocket;
-        int32 bytesReceived = ReceivePacket(&Game->networkInfo.receivingSockets[0], (u8 *)packet, sizeof(GamePacket), &fromSocket);
-
-        // What's going on with the fromSocket?
-        // So the socket we've bound doesn't need to be the same as the socket that this is coming from?
+        int32 bytesReceived = ReceivePacket(&Game->networkInfo.receivingSocket, (u8 *)packet, sizeof(GamePacket), &fromSocket);
 
         if (bytesReceived <= 0) {
             // @WINDOWS

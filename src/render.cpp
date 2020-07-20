@@ -455,7 +455,7 @@ void RenderRectBuffer(RectBuffer *buffer) {
 }
 
 
-void DrawText(vec2 pos, real32 size, vec4 color, bool screen, const char *str) {
+void DrawText_(vec2 pos, real32 size, vec4 color, bool screen, const char *str) {
     GlyphBuffer *buffer = &Game->glyphBuffers[Game->currentGlyphBufferIndex];
     buffer->screen = screen;
     
@@ -471,6 +471,10 @@ void DrawText(vec2 pos, real32 size, vec4 color, bool screen, const char *str) {
         buffer->data[i].position = V2(x, 0);
         buffer->data[i].position.y += Game->glyphs[codepoint].lowerLeft.y * size;
         buffer->data[i].position.x += Game->glyphs[codepoint].lowerLeft.x * size;
+
+        if (screen) {
+            buffer->data[i].position = V2(x, 0);
+        }
         
         buffer->data[i].color = color;
         buffer->data[i].codepoint = codepoint;
@@ -479,6 +483,9 @@ void DrawText(vec2 pos, real32 size, vec4 color, bool screen, const char *str) {
         buffer->data[i].dimensions = V2(corners.z - corners.x, corners.w - corners.y) * size;
         buffer->count++;
 
+        if (screen) {
+            //Print("size %f, dim (%f %f) pos (%f %f)", size, buffer->data[i].dimensions.x,  buffer->data[i].dimensions.y, buffer->data[i].position.x,  buffer->data[i].position.y);
+        }
         x += (Game->glyphs[codepoint].xAdvance * size);
     }
 
@@ -494,7 +501,7 @@ void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
     
-    DrawText(pos, size, color, false, str);
+    DrawText_(pos, size, color, false, str);
 
     va_end(args);
 }
@@ -507,7 +514,7 @@ void DrawTextScreen(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
     
-    DrawText(pos, size, color, true, str);
+    DrawText_(pos, size, color, true, str);
     
     va_end(args);
 }
@@ -625,8 +632,6 @@ void DrawGlyphs(GlyphBuffer *buffers, FontTable *font) {
         glVertexAttribPointer(5, 3, GL_FLOAT, false, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, position));
         glVertexAttribDivisor(5, 1);
 
-        // DrawIndexInstanced?
-        //glDrawElementsInstanced(GL_TRIANGLES, buffer->count, GL_UNSIGNED_INT, (GLvoid *)0, mesh->indexCount);
         glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0, buffer->count);
         
         glDisableVertexAttribArray(0);

@@ -21,6 +21,12 @@ void main() {
     
     modelPos.x += vertexPosition_modelspace.x * in_dimensions.x;
     modelPos.y += vertexPosition_modelspace.y * in_dimensions.y;
+
+    // modelPos.x += vertexPosition_modelspace.x;
+    // modelPos.y += vertexPosition_modelspace.y;
+
+    // modelPos.x += vertexPosition_modelspace.x * 256;
+    // modelPos.y += vertexPosition_modelspace.y * 256;
     
     gl_Position = viewProjection * model * vec4(modelPos, 1.0f);
 

@@ -1,4 +1,7 @@
 
+BUG: screen text doesnt work at all!!! Not really sure why, at sizes bigger than 32 we stop seeing it. I think its got something to do with calculating the model position. 
+Its also really annoying that we dont have an emsize or anything, so our sizes are totally random.
+
 TODO over summer:
 networking
 UI

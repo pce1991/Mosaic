@@ -12,4 +12,6 @@ void main() {
     
     color.rgba = textureContrib;
     color.rgb = fs_color.rgb;
+
+    //color.rgba = vec4(1, 0, 0, 1);
 }

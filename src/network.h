@@ -21,6 +21,9 @@ enum GamePacketType {
 // so it isn't posibble to just send one header packet that is (type size) and know that
 // the next packet is the payload.
 struct GamePacket {
+    // This is an ID which we require every packed to send. The server ignores any data it
+    // receives that doesnt begin with this id.
+    int32 id;
     GamePacketType type;
     int32 frame;
 
@@ -44,10 +47,9 @@ struct NetworkInfo {
     // For pier-to-pier there'd still be a server everyone connects to simply to get the list of connected users
 
     // @TODO: specify the ip address of the server in a file. Need to be able to run instance of engine
-    // as a server. 
+    // as a server.
 
-    int32 receivingSocketCount;
-    Socket *receivingSockets;
+    Socket receivingSocket;
 
     int32 sendingSocketCount;
     Socket *sendingSockets;

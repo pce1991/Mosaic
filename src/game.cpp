@@ -135,14 +135,19 @@ void GameInit(GameMemory *gameMem) {
 
     AllocateMemoryArena(&Game->frameMem, Megabytes(1024));
     
-    AllocateNetworkInfo(&Game->networkInfo, 1, 1);
+    AllocateNetworkInfo(&Game->networkInfo, 1);
 
     int16 port = 30000; // 0-1024 are reserved for OS, 50K + are dynamically assigned
     // We could just pass in a port of 0 to say we don't care the port number.
     // Maybe we want this to get in network info? 
-    //InitSocket(&Game->networkInfo.sendingSockets[0], 127, 0, 0, 1, port);
-    InitSocket(&Game->networkInfo.sendingSockets[0], 192, 168, 1, 35, port);
-    Game->networkInfo.receivingSockets[0] = Game->networkInfo.sendingSockets[0];
+    
+    InitSocket(&Game->networkInfo.sendingSockets[0], 192, 168, 1, 218, port);
+    //Game->networkInfo.receivingSockets[0] = Game->networkInfo.sendingSockets[0];
+
+    //InitSocket(&Game->networkInfo.receivingSockets[0], 127, 0, 0, 1, port);
+
+    // We have a socket to ourself and we're looking for things that get sent to us.
+    InitSocket(&Game->networkInfo.receivingSocket, 192, 168, 1, 35, port);
 
 
     // @TODO: super weird and bad we allocate the queue in the game and not the platform because
@@ -313,10 +318,10 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     MyGameUpdate();
 
     RenderRectBuffer(&Game->rectBuffer);
-
     Game->rectBuffer.count = 0;
     
     DrawGlyphs(gameMem->glyphBuffers, &gameMem->font);
+
     
     DeleteEntities(&Game->entityDB);
 
