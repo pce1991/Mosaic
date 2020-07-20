@@ -17,6 +17,9 @@ void MyInit() {
     
 };
 
+// @TODO: show the last time stamp of message
+//        send messages notifying activity, and when they've signed off (n seconds since ping)
+
 void MyGameUpdate() {
 
     NetworkInfo *networking = &Game->networkInfo;
@@ -32,7 +35,7 @@ void MyGameUpdate() {
         PushBack(&networking->packetsToSend, packet);
 
         myData.messageCount = 0;
-        myData.message[0] = 0;
+        memset(myData.message, 0, 128);
     }
     else if (InputHeld(Input, Input_Backspace)) {
         if (myData.messageCount > 0) {
