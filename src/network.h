@@ -38,6 +38,13 @@ struct GamePacket {
 // Lets say we want to send an arbitrary string. We cant know it fits inside our packet size. I think we'd
 // instead break it up into multiple packets, attach an id which tells the server how to construct it. 
 
+struct ReceivedPacket {
+    // @NOTE: rather than make sender responsible for their address, whoever is looking receiving packets
+    // writes out the address.
+    uint32 fromAddress;
+
+    GamePacket packet;
+};
 
 
 struct NetworkInfo {
@@ -52,9 +59,8 @@ struct NetworkInfo {
     Socket receivingSocket;
 
     DynamicArray<Socket> sendingSockets;
-
     
-    DynamicArray<GamePacket> packetsReceived;
+    DynamicArray<ReceivedPacket> packetsReceived;
 
     DynamicArray<GamePacket> packetsToSend;
 };

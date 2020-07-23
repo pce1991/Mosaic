@@ -142,23 +142,8 @@ void GameInit(GameMemory *gameMem) {
     // @NOTE: always set this automatically because we never want to not have a socket for receiving.
     // MyInit will handle setting up any additional sockets depending on what the game needs.
     // We have a socket to ourself and we're looking for things that get sent to us.
-    // @TODO: get a custom port here...
-    char hostName[64];
-    int32 gotName = gethostname(hostName, sizeof(hostName));
 
-    hostent *hostEntry = gethostbyname(hostName);
-    // @PLATFORM: this is inet_pton on unix systems
-
-    char *ipAddress = inet_ntoa((*((struct in_addr*) hostEntry->h_addr_list[0])));
-    int32 address = -1;
-    int32 success = InetPton(AF_INET, ipAddress, &address);
-    address = ntohl(address);
-
-    Print("address string = %s", ipAddress);
-    Print("address got = %u", address);
-    Print("address typed = %u", MakeAddressIPv4(192, 168, 1, 35));
-
-    InitSocket(&Game->networkInfo.receivingSocket, address, port);
+    InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), port);
 
     // @TODO: super weird and bad we allocate the queue in the game and not the platform because
     // that's where we know how many devices we have obviously
@@ -313,16 +298,6 @@ void GameUpdateAndRender(GameMemory *gameMem) {
 
     // Want to get them all before we decide what to do in our frame.
     ReceivePackets();
-
-    {
-        NetworkInfo *networkInfo = &Game->networkInfo;
-        for (int i = 0; i < networkInfo->packetsReceived.count; i++) {
-            GamePacket packet = networkInfo->packetsReceived[i];
-            if (packet.type == GamePacketType_String) {
-                Print("string %s", packet.data);
-            }
-        }
-    }
 
     // MosaicUpdateInternal();
     // MosaicUpdate();

@@ -66,6 +66,18 @@ int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fro
     return recvfrom(socket->handle, (char *)buffer, bufferSize, 0, (sockaddr *)&fromSocket->socketAddress, &fromSize);
 }
 
+uint32 GetMyAddress() {
+    char hostName[64];
+    int32 gotName = gethostname(hostName, sizeof(hostName));
+
+    hostent *hostEntry = gethostbyname(hostName);
+    // @PLATFORM: this is inet_pton on unix systems
+
+    char *ipAddress = inet_ntoa((*((struct in_addr*) hostEntry->h_addr_list[0])));
+    int32 address = -1;
+    int32 success = InetPton(AF_INET, ipAddress, &address);
+    return ntohl(address);
+}
 
 // Probably two types of packets: network and client
 // I mean really we can have any number of types of packets, as long as we always receive the max size
@@ -74,15 +86,15 @@ int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fro
 
 
 void ReceivePackets() {
-    NetworkInfo *info = &Game->networkInfo;
+    NetworkInfo *network = &Game->networkInfo;
     
-    DynamicArrayClear(&info->packetsReceived);
+    DynamicArrayClear(&network->packetsReceived);
 
     while (true) {
-        GamePacket *packet = PushBackPtr(&Game->networkInfo.packetsReceived);
+        ReceivedPacket packet = {};
         
         Socket fromSocket;
-        int32 bytesReceived = ReceivePacket(&Game->networkInfo.receivingSocket, (u8 *)packet, sizeof(GamePacket), &fromSocket);
+        int32 bytesReceived = ReceivePacket(&Game->networkInfo.receivingSocket, (u8 *)&packet.packet, sizeof(GamePacket), &fromSocket);
 
         if (bytesReceived <= 0) {
             // @WINDOWS
@@ -97,6 +109,10 @@ void ReceivePackets() {
             
         int32 fromAddress = ntohl(fromSocket.socketAddress.sin_addr.s_addr);
         int32 fromPort = ntohs(fromSocket.socketAddress.sin_port);
+
+        packet.fromAddress = fromAddress;
+
+        PushBack(&network->packetsReceived, packet);
     }
 }
 
@@ -107,7 +123,13 @@ void SendPackets() {
 
     for (int i = 0; i < info->packetsToSend.count; i++) {
         int32 packetSize = sizeof(GamePacket);
-        int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[0], &info->packetsToSend[i], packetSize);
+
+        // @TODO: we want the packet to specify where it go.
+        // The server shouldnt send all the same data to all the clients (i think)
+        for (int j = 0; j < Game->networkInfo.sendingSockets.count; j++) {
+            int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[j], &info->packetsToSend[i], packetSize);
+        }
+        
     }
 
     DynamicArrayClear(&info->packetsToSend);
