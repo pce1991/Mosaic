@@ -181,6 +181,18 @@ void SetShader(Shader *shader) {
     //glCheckError();
 }
 
+vec2 PixelToNorm(int32 x, int32 y) {
+    return V2(x / (Game->screenWidth * 1.0f), y / (Game->screenHeight * 1.0f));
+}
+
+vec2 PixelToNorm(vec2i pixel) {
+    return V2(pixel.x / (Game->screenWidth * 1.0f), pixel.y / (Game->screenHeight * 1.0f));
+}
+
+vec2 NormToPixel(vec2 norm) {
+    return V2(norm.x * Game->screenWidth, norm.y * Game->screenHeight);
+}
+
 
 void OpenGL_InitMesh(Mesh *mesh) {
     GLuint vertexBuffer;
@@ -455,7 +467,78 @@ void RenderRectBuffer(RectBuffer *buffer) {
 }
 
 
-void DrawText_(vec2 pos, real32 size, vec4 color, bool screen, const char *str) {
+// @NOTE: only works for monospace fonts because it assumes everyone has the same dimensions.
+real32 CharacterCountToWidth(FontTable *font, int32 count, real32 size) {
+    float emSize = Game->font.emSize;
+    char c = '-';
+    int32 codepoint = c - 32;
+
+    real32 x = 0;
+
+    x += Game->glyphs[codepoint].lowerLeft.x * size * emSize;
+    x += Game->glyphs[codepoint].xAdvance * size * emSize;
+
+    return x * count;
+}
+
+// @NOTE: width is totally arbitrary until we figure out the emSize situation.
+void LayoutGlyphs(FontTable *font, const char *string, int32 count, real32 size, vec2 *positions, real32 width, bool center) {
+    float emSize = Game->font.emSize;
+
+    real32 maxWidth = 0;
+    
+    real32 x = 0;
+    real32 y = 0;
+    for (int i = 0; i < count; i++) {
+        char c = string[i];
+
+        int32 codepoint = c - 32;
+
+        // @HACK: actually figure out lineheight of font!
+        if (c == '\n') {
+            x = 0;
+            y -= size * 1.5f; // @HACK
+        }
+
+        // @NOTE: see if we can fit the rest of the word on within the width.
+        real32 tempX = x;
+        int32 tempI = i;
+        char tempC = string[tempI];
+        while (tempC != ' ') {
+            int32 tempCodepoint = tempC - 25;
+
+            tempX += Game->glyphs[tempCodepoint].lowerLeft.x * size * emSize;
+            tempX += Game->glyphs[tempCodepoint].xAdvance * size * emSize;
+
+            tempC = string[++tempI];
+        }
+
+        if (tempX > width) {
+            x = 0;
+            y -= 1.5f;
+        }
+
+        positions[i] = V2(x, y);
+        positions[i].y += Game->glyphs[codepoint].lowerLeft.y * size * emSize;
+        positions[i].x += Game->glyphs[codepoint].lowerLeft.x * size * emSize;
+
+        x += (Game->glyphs[codepoint].xAdvance * size * emSize);
+
+        if (x > maxWidth) {
+            maxWidth = x;
+        }
+    }
+
+    if (center) {
+        for (int i = 0; i < count; i++) {
+            positions[i].x -= maxWidth * 0.5f;
+        }
+    }
+}
+
+
+// @TODO: version of this that just takes GlyphData so we can do custom stuff like set the color of each glyph.
+void DrawText_(vec2 pos, real32 size, vec4 color, bool screen, const char *str, real32 width, bool center) {
     GlyphBuffer *buffer = &Game->glyphBuffers[Game->currentGlyphBufferIndex];
     buffer->screen = screen;
     
@@ -463,35 +546,39 @@ void DrawText_(vec2 pos, real32 size, vec4 color, bool screen, const char *str) 
 
     buffer->model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(1));
 
-#if 1
-    r32 x = 0;
+    float emSize = Game->font.emSize;
+
+    vec2 *positions = PushSize(&Game->frameMem, vec2, len);
+    LayoutGlyphs(&Game->font, str, len, size, positions, width, center);
+
+    buffer->count += len;
+
     for (int i = 0; i < len; i++) {
         int32 codepoint = str[i] - 32;
         
-        buffer->data[i].position = V2(x, 0);
-        buffer->data[i].position.y += Game->glyphs[codepoint].lowerLeft.y * size;
-        buffer->data[i].position.x += Game->glyphs[codepoint].lowerLeft.x * size;
-
-        if (screen) {
-            buffer->data[i].position = V2(x, 0);
-        }
+        buffer->data[i].position = positions[i];
         
         buffer->data[i].color = color;
         buffer->data[i].codepoint = codepoint;
 
         vec4 corners = Game->font.texcoordsMapData[codepoint];
-        buffer->data[i].dimensions = V2(corners.z - corners.x, corners.w - corners.y) * size;
-        buffer->count++;
-
-        if (screen) {
-            //Print("size %f, dim (%f %f) pos (%f %f)", size, buffer->data[i].dimensions.x,  buffer->data[i].dimensions.y, buffer->data[i].position.x,  buffer->data[i].position.y);
-        }
-        x += (Game->glyphs[codepoint].xAdvance * size);
+        buffer->data[i].dimensions = V2(corners.z - corners.x, corners.w - corners.y) * size * emSize;
     }
 
     Game->currentGlyphBufferIndex++;
-#endif
+}
 
+
+void DrawText(vec2 pos, real32 size, vec4 color, bool center, real32 width, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    
+    DrawText_(pos, size, color, false, str, width, center);
+
+    va_end(args);
 }
 
 void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
@@ -501,68 +588,59 @@ void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
     
-    DrawText_(pos, size, color, false, str);
+    DrawText_(pos, size, color, false, str, INFINITY, false);
 
+    va_end(args);
+}
+
+void DrawTextScreen(vec2 pos, real32 size, vec4 color, bool center, real32 width, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    // @BUG
+    // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
+    // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
+    DrawText_(V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, width, center);
+    
+    va_end(args);
+}
+
+void DrawTextScreen(vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    // @BUG
+    // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
+    // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
+    DrawText_(V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, center);
+    
     va_end(args);
 }
 
 void DrawTextScreen(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
-    
     va_list args;
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
-    
-    DrawText_(pos, size, color, true, str);
+
+    // @BUG
+    // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
+    // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
+    DrawText_(V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, false);
     
     va_end(args);
 }
 
-void DrawTextCentered(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
-    GlyphBuffer *buffer = &Game->glyphBuffers[Game->currentGlyphBufferIndex];
-
-    char str[GlyphBufferCapacity];
-
-    va_list args;
-    va_start (args, fmt);
-
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
-    
-    int32 len = strlen(str);
-
-    r32 x = 0;
-    for (int i = 0; i < len; i++) {
-        int32 codepoint = str[i] - 32;
-        
-        buffer->data[i].position = V2(x, 0);
-        buffer->data[i].position.y += Game->glyphs[codepoint].lowerLeft.y * size;
-        buffer->data[i].position.x += Game->glyphs[codepoint].lowerLeft.x * size;
-        
-        buffer->data[i].color = color;
-        buffer->data[i].codepoint = codepoint;
-
-        vec4 corners = Game->font.texcoordsMapData[codepoint];
-        buffer->data[i].dimensions = V2(corners.z - corners.x, corners.w - corners.y) * size;
-        buffer->count++;
-
-        x += (Game->glyphs[codepoint].xAdvance * size);
-    }
-
-    buffer->model = TRS(V3(pos.x - (x * 0.5f), pos.y, 0), IdentityQuaternion(), V3(1));
-
-    Game->currentGlyphBufferIndex++;
-
-    //DrawRect(pos, V2(x, 0.01f), V4(1));
-}
 
 void DrawGlyphs(GlyphBuffer *buffers, FontTable *font) {
-
     // @TODO: generate buffers
-    // buffer data for some number of codepoints,
-    // do the draws
-    // The glyph struct should include codepoints, and color, probably nothing else.
-    // Have a buffer for glyphs of each size?
         
     Shader *shader = &Game->textShader;
     SetShader(shader);
@@ -584,7 +662,7 @@ void DrawGlyphs(GlyphBuffer *buffers, FontTable *font) {
         glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
 
         if (buffer->screen) {
-            mat4 projMat = Orthographic(0, Game->screenWidth, Game->screenHeight, 0, -1, 1);
+            mat4 projMat = Orthographic(0, Game->screenWidth, 0, Game->screenHeight, -1, 1);
             glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
         }
         else {
@@ -629,7 +707,7 @@ void DrawGlyphs(GlyphBuffer *buffers, FontTable *font) {
         glVertexAttribDivisor(4, 1);
     
         glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 3, GL_FLOAT, false, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, position));
+        glVertexAttribPointer(5, 2, GL_FLOAT, false, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, position));
         glVertexAttribDivisor(5, 1);
 
         glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0, buffer->count);
@@ -643,7 +721,6 @@ void DrawGlyphs(GlyphBuffer *buffers, FontTable *font) {
     
         buffer->count = 0;
     }
-    //glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
 }
 
 

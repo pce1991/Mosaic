@@ -1,4 +1,6 @@
 
+
+
 BUG: screen text doesnt work at all!!! Not really sure why, at sizes bigger than 32 we stop seeing it. I think its got something to do with calculating the model position. 
 Its also really annoying that we dont have an emsize or anything, so our sizes are totally random.
 
@@ -6,6 +8,7 @@ TODO over summer:
 networking
 UI
 DebugDrawing
+Logging (both to file and to screen)
 
 
 Radically simplify and remove a lot of unused code. I just want a really simple 2D engine students can use. I bet 12 API calls is the sweetspot.
@@ -140,3 +143,7 @@ Perlenspiel Thoughts
 I don't like how data is associated with tiles. That leads to a weird thing where the tiles have associated data but they dont move, so you move data from one tile to another. I much prefer the idea that the data is the data and you just access it however you want and use the tiles as rendering.
 
 Sprites: I don't like how sprites can occupy one tile because it kinda lies about what's going on. On the other hand my approach makes doing any grid-based thing with sprites painful because the student has to make their own grid.
+
+* Normalized or Pixels
+  We pretty much always calculate the pixels as ratios of the dimensions anyway so it just makes sense to convert to normalized every where.
+  

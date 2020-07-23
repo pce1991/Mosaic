@@ -1,24 +1,36 @@
 
 // TODO: do a think like scenes. We'll just manually add them. it'll be a lot easier to just switch between
-// what scene is running and get the data. 
+// what scene is running and get the data.
+
+// use ipconfig to find this for whatever machine you want to host your server on.
+const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
+const uint16 Port = 30000;
 
 struct MessagingExample {
     int32 messageCount;
-    char message[128];
+    char message[64];
 
     real32 timeReceived;
-    char messageReceived[128];
+    char messageReceived[64];
+
+    real32 lastBackspaceTime;
+
+    bool gotPing;
+    real32 lastTimeGotPing;
 };
 
 // @PERF: does allocating the struct globally affect the cache?
 MessagingExample myData = {};
 
 void MyInit() {
-    
-};
+    Socket sendingSocket = {};
+    InitSocket(&sendingSocket, ServerAddress, Port);
+    PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
+}
 
 // @TODO: show the last time stamp of message
 //        send messages notifying activity, and when they've signed off (n seconds since ping)
+//        multiple users connected to a server.
 
 void MyGameUpdate() {
 
@@ -27,6 +39,12 @@ void MyGameUpdate() {
     // myData.message[0] = ((Game->frame) % 64) + 64;
     // myData.message[1] = 0;
 
+    // @TODO: draw a text cursor.
+
+    GamePacket packet = {};
+    packet.type = GamePacketType_Ping;
+    PushBack(&networking->packetsToSend, packet);
+    
     if (InputPressed(Input, Input_Return)) {
         GamePacket packet = {};
         packet.type = GamePacketType_String;
@@ -37,9 +55,21 @@ void MyGameUpdate() {
         myData.messageCount = 0;
         memset(myData.message, 0, 128);
     }
-    else if (InputHeld(Input, Input_Backspace)) {
+    else if (InputPressed(Input, Input_Backspace)) {
         if (myData.messageCount > 0) {
             myData.message[--myData.messageCount] = 0;
+            myData.lastBackspaceTime = Game->time;
+        }
+    }
+    else if (InputHeld(Input, Input_Backspace)) {
+        real32 timeSince = Game->time - myData.lastBackspaceTime;
+
+        if (timeSince > 0.08f) {
+            if (myData.messageCount > 0) {
+                myData.message[--myData.messageCount] = 0;
+            }
+
+            myData.lastBackspaceTime = Game->time;
         }
     }
     else if (Input->charCount > 0) {
@@ -47,25 +77,35 @@ void MyGameUpdate() {
     }
 
     if (networking->packetsReceived.count > 0) {
-        GamePacket packet = networking->packetsReceived[0];
+        for (int i = 0; i < networking->packetsReceived.count; i++) {
+            GamePacket packet = networking->packetsReceived[i];
 
-        Print("packet");
+            if (packet.type == GamePacketType_String) {
+                memcpy(myData.messageReceived, packet.data, strlen((char *)packet.data));
 
-        if (packet.type == GamePacketType_String) {
-            memcpy(myData.messageReceived, packet.data, strlen((char *)packet.data));
-
-            myData.timeReceived = Game->time;
+                myData.timeReceived = Game->time;
+            }
+            if (packet.type == GamePacketType_Ping) {
+                // @TODO: if we get a ping for the first time we want to figure out who the user is
+                // and display their name.
+                myData.lastTimeGotPing = Game->time;
+            }
         }
     }
 
-    DrawText(V2(-4.0f, 0.0f), 8.0, V4(1), "my message: %s", myData.message);
+    DrawTextScreen(V2(800, 100), 32, V4(1), true, "MESSENGER APPETIZER");
 
-    if (strlen(myData.messageReceived) > 0) {
-        DrawText(V2(-4.0f, -1.5f), 8.0, V4(1), "received: %s", myData.messageReceived);
-    }
-    else {
-        DrawText(V2(-4.0f, -1.5f), 8.0, V4(1), "NO MESSAGE RECEIVED");
-        //DrawText(V2(0.0f, 0.0), 8.0, V4(1), "me: ");
+    DrawText(V2(-4.0f, 1.0f), 0.2, V4(1), "to send: %s", myData.message);
+
+    // @TODO: It'd be nice to get the position of the last glyph so we can draw a quad there,
+    // and to know how big each glyph is so we can advance properly.
+    DrawRectScreen(V2(400, 400), V2(24, 32), V4(0.0f, 0.6f + (0.2f * sinf(Game->time * 8)), 0.4f, 0.8f));    
+
+    DrawText(V2(-4.0f, -0.5f), 0.2, V4(1), "received: %s", myData.messageReceived);
+    
+    real32 timeSincePing = Game->time - myData.lastTimeGotPing;
+    if (!myData.gotPing || timeSincePing > 5.0) {
+        DrawText(V2(-4.0f, -1.5f), 0.2, V4(1, 0, 0, 1), "No user connected");
     }
 
     char name[256] = {};

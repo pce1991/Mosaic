@@ -1,6 +1,5 @@
 
-// The way includes work: are they just copy in the contents of the .h or .cpp file
-// into 
+#define GAME_SERVER 0
 
 #include "game.h"
 #include "input.cpp"
@@ -32,7 +31,10 @@ void InitFont(GameMemory *gameMem) {
     int32 fontBitmapSize = fontBitmapWidth * fontBitmapHeight;
     uint8 *fontBitmap = (uint8 *)malloc(fontBitmapSize);
 
-        
+    // @HACK: actually figure this out.
+    // It should be enough that when we grab a glyph and scale by emSize it should take up 1 unit.
+    // This is totally arbitrarily chosen right now so that a glyph with size 1 is about 1 unit.
+    font->emSize = 26;
 
     uint32 startAscii = 32;
     uint32 endAscii = 127;
@@ -134,21 +136,29 @@ void GameInit(GameMemory *gameMem) {
     Game->screenHeight = screenHeight;
 
     AllocateMemoryArena(&Game->frameMem, Megabytes(1024));
-    
-    AllocateNetworkInfo(&Game->networkInfo, 1);
 
-    int16 port = 30000; // 0-1024 are reserved for OS, 50K + are dynamically assigned
-    // We could just pass in a port of 0 to say we don't care the port number.
-    // Maybe we want this to get in network info? 
-    
-    InitSocket(&Game->networkInfo.sendingSockets[0], 192, 168, 1, 218, port);
-    //Game->networkInfo.receivingSockets[0] = Game->networkInfo.sendingSockets[0];
 
-    //InitSocket(&Game->networkInfo.receivingSockets[0], 127, 0, 0, 1, port);
-
+    int16 port = 30000;
+    // @NOTE: always set this automatically because we never want to not have a socket for receiving.
+    // MyInit will handle setting up any additional sockets depending on what the game needs.
     // We have a socket to ourself and we're looking for things that get sent to us.
-    InitSocket(&Game->networkInfo.receivingSocket, 192, 168, 1, 35, port);
+    // @TODO: get a custom port here...
+    char hostName[64];
+    int32 gotName = gethostname(hostName, sizeof(hostName));
 
+    hostent *hostEntry = gethostbyname(hostName);
+    // @PLATFORM: this is inet_pton on unix systems
+
+    char *ipAddress = inet_ntoa((*((struct in_addr*) hostEntry->h_addr_list[0])));
+    int32 address = -1;
+    int32 success = InetPton(AF_INET, ipAddress, &address);
+    address = ntohl(address);
+
+    Print("address string = %s", ipAddress);
+    Print("address got = %u", address);
+    Print("address typed = %u", MakeAddressIPv4(192, 168, 1, 35));
+
+    InitSocket(&Game->networkInfo.receivingSocket, address, port);
 
     // @TODO: super weird and bad we allocate the queue in the game and not the platform because
     // that's where we know how many devices we have obviously
@@ -278,7 +288,10 @@ void GameInit(GameMemory *gameMem) {
     // }
 #endif
 
+    // @TODO: make an init for this.
     MosaicInit(gameMem);
+
+    MyInit();
 }
 
 

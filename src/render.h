@@ -100,12 +100,15 @@ typedef struct {
     vec2 lowerLeft;
 } Glyph;
 
-typedef struct {
+
+struct GlyphData {
     int32 codepoint;
     vec2 position;
+
     vec2 dimensions;
     vec4 color;
-} GlyphData;
+    
+};
 
 struct GlyphBuffer {
     int32 capacity;

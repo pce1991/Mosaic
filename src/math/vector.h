@@ -119,6 +119,13 @@ inline vec2 V2(real32 x, uint32 y) {
     return result;
 }
 
+
+inline vec2 V2(real64 x, real64 y) {
+    vec2 result = {(real32)x, (real32)y};
+
+    return result;
+}
+
 inline vec2 V2(vec2i a) {
     vec2 result = {(real32)a.x, (real32)a.y};
 

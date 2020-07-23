@@ -48,6 +48,10 @@ struct FontTable {
 
     real32 ascent;
     real32 descent;
+
+    real32 emSize;
+
+    // @TODO: store the GlyphData here for multiple font support
 };
 
 // @NOTE: there are only 32 buffers for text rendering so on one frame you can only have
@@ -114,6 +118,8 @@ struct GameMemory {
     char inputString[255];
 
     RectBuffer rectBuffer;
+
+    void *myData;
 };
 
 GameMemory *Game = NULL;

@@ -18,15 +18,9 @@ out vec4 fs_color;
 
 void main() {
     vec3 modelPos = in_position;
-    
+
     modelPos.x += vertexPosition_modelspace.x * in_dimensions.x;
     modelPos.y += vertexPosition_modelspace.y * in_dimensions.y;
-
-    // modelPos.x += vertexPosition_modelspace.x;
-    // modelPos.y += vertexPosition_modelspace.y;
-
-    // modelPos.x += vertexPosition_modelspace.x * 256;
-    // modelPos.y += vertexPosition_modelspace.y * 256;
     
     gl_Position = viewProjection * model * vec4(modelPos, 1.0f);
 
@@ -34,8 +28,10 @@ void main() {
     vec2 texcoord0 = texcoords.xy;
     vec2 texcoord1 = texcoords.zw;
     vec2 uv = in_uv;
+    // @GACK: this shouldnt be necessary, must be baking something incorrectly.
     uv.y = 1 - uv.y;
     texcoord = mix(texcoord0, texcoord1, uv);
 
     fs_color = in_color;
 }
+

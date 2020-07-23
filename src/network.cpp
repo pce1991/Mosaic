@@ -18,10 +18,16 @@ int32 InitAddress(sockaddr_in *addr, u8 a, u8 b, u8 c, u8 d, int16 port) {
     return address;
 }
 
-int32 InitSocket(Socket *socketPtr, u8 a, u8 b, u8 c, u8 d, int16 port) {
-    socketPtr->handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+inline uint32 MakeAddressIPv4(u8 a, u8 b, u8 c, u8 d) {
+    return (a << 24) | (b << 16) | (c << 8) | d;
+}
+
+inline uint32 StringToIPv4(char *s) {
     
-    uint32 address = (a << 24) | (b << 16) | (c << 8) | d;
+}
+
+uint32 InitSocket(Socket *socketPtr, int32 address, int16 port) {
+    socketPtr->handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     socketPtr->port = port;
 
@@ -46,6 +52,10 @@ int32 InitSocket(Socket *socketPtr, u8 a, u8 b, u8 c, u8 d, int16 port) {
     return address;
 }
 
+uint32 InitSocket(Socket *socketPtr, u8 a, u8 b, u8 c, u8 d, int16 port) {
+    return InitSocket(socketPtr, MakeAddressIPv4(a, b, c, d), port);
+}
+
 int32 SendPacket(Socket *socket, void *packetData, uint32 packetSize) {
     return sendto(socket->handle, (char *)packetData, packetSize, 0, (sockaddr *)&socket->socketAddress, sizeof(sockaddr_in));
 }
@@ -54,12 +64,6 @@ int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fro
     int32 fromSize = sizeof(sockaddr_in);
     
     return recvfrom(socket->handle, (char *)buffer, bufferSize, 0, (sockaddr *)&fromSocket->socketAddress, &fromSize);
-}
-
-
-void AllocateNetworkInfo(NetworkInfo *info, int32 sendingCount) {
-    info->sendingSocketCount = sendingCount;
-    info->sendingSockets = (Socket *)malloc(sendingCount * sizeof(Socket));
 }
 
 

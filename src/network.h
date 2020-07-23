@@ -12,7 +12,7 @@ struct Socket {
 
 enum GamePacketType {
      GamePacketType_Invalid,
-     GamePacketType_IP,
+     GamePacketType_Ping,
      GamePacketType_String,
 };
 
@@ -51,8 +51,7 @@ struct NetworkInfo {
 
     Socket receivingSocket;
 
-    int32 sendingSocketCount;
-    Socket *sendingSockets;
+    DynamicArray<Socket> sendingSockets;
 
     
     DynamicArray<GamePacket> packetsReceived;
