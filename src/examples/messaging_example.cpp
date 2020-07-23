@@ -64,8 +64,17 @@ void ServerUpdate() {
     NetworkInfo *networking = &Game->networkInfo;
     ServerData *server = &myData.server;
 
+    Print("user count %u", server->users.count);
     for (int i = 0; i < server->users.count; i++) {
-        Print("user %d last ping %f", server->users[i].address, server->users[i].lastPingTime);
+        Print("user %u last ping %f", server->users[i].address, server->users[i].lastPingTime);
+
+    }
+
+    {
+        // Ping the users
+        GamePacket toSend = {};
+        toSend.type = GamePacketType_Ping;
+        PushBack(&networking->packetsToSend, toSend);
     }
     
     for (int i = 0; i < networking->packetsReceived.count; i++) {
@@ -126,6 +135,7 @@ void MyGameUpdate() {
     // Client A sends message to server, now client B needs to see it.
     // I think its fine for the clients to keep the data on whats been sent right?
 
+    // Ping the server
     GamePacket packet = {};
     packet.type = GamePacketType_Ping;
     PushBack(&networking->packetsToSend, packet);
