@@ -185,6 +185,7 @@ void MyGameUpdate() {
                 // @TODO: if we get a ping for the first time we want to figure out who the user is
                 // and display their name.
                 myData.lastTimeGotPing = Game->time;
+                myData.gotPing = true;
             }
         }
     }
