@@ -116,7 +116,7 @@ void ServerUpdate() {
                 PushBack(&server->users, user);
 
                 // @HACK: really shouldnt need to check to make sure we didnt get a message from ourselves.
-                if (!received.fromAddress == networking->receivingSocket.address) {
+                if (received.fromAddress != networking->receivingSocket.address) {
                     // @MAYBE: need 
                     Socket socket = {};
                     InitSocket(&socket, received.fromAddress, Port);
