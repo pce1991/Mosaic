@@ -23,9 +23,7 @@
 const uint32 screenWidth = 1600;
 const uint32 screenHeight = 900;
 
-void InitFont(GameMemory *gameMem) {
-    FontTable *font = &gameMem->font;
-        
+void InitFont(FontTable *font, char *path) {
     int32 fontBitmapWidth = 1024;
     int32 fontBitmapHeight = 1024;
     int32 fontBitmapSize = fontBitmapWidth * fontBitmapHeight;
@@ -42,7 +40,10 @@ void InitFont(GameMemory *gameMem) {
 
     uint32 ttfBufferSize = 1024 * 10000;
     uint8 *ttfBuffer = (uint8 *)malloc(ttfBufferSize);
-    FILE *ttfFile = fopen("data/DejaVuSansMono.ttf", "rb");
+    FILE *ttfFile = fopen(path, "rb");
+    //FILE *ttfFile = fopen("data/DejaVuSansMono.ttf", "rb");
+    //FILE *ttfFile = fopen("data/LiberationSerif-Regular.ttf", "rb");
+    
     //FILE *ttfFile = fopen("data/liberation-mono/LiberationMono-Regular.ttf", "rb");
     fread(ttfBuffer, 1, ttfBufferSize, ttfFile);
 
@@ -62,7 +63,9 @@ void InitFont(GameMemory *gameMem) {
     
     stbtt_BakeFontBitmap(ttfBuffer, 0, fontPixelHeight, fontBitmap, fontBitmapWidth, fontBitmapHeight, startAscii, charCount, bakedChars);
 
-    Glyph *glyphs = (Glyph *)malloc(sizeof(Glyph) * charCount);
+    font->glyphs = (Glyph *)malloc(sizeof(Glyph) * charCount);
+    Glyph *glyphs = font->glyphs;
+    
     font->texcoordsMapData = (vec4 *)malloc(sizeof(vec4) * charCount);
 
     font->glyphCount = charCount;
@@ -90,8 +93,6 @@ void InitFont(GameMemory *gameMem) {
                                        bakedChars[i].y1 / (fontBitmapWidth * 1.0f));
 #endif
     }
-
-    gameMem->glyphs = glyphs;
     
     Sprite fontSprite;
     fontSprite.width = fontBitmapWidth;
@@ -123,9 +124,9 @@ void InitFont(GameMemory *gameMem) {
             
     }
 
-    gameMem->font.texture = fontSprite;
+    font->texture = fontSprite;
 
-    OpenGL_InitFontTable(&gameMem->font);
+    OpenGL_InitFontTable(font);
 }
 
 void GameInit(GameMemory *gameMem) {
@@ -184,7 +185,8 @@ void GameInit(GameMemory *gameMem) {
     AllocateQuadTopLeft(&gameMem->quadTopLeft);
     OpenGL_InitMesh(&gameMem->quadTopLeft);
 
-    InitFont(gameMem);
+    InitFont(&gameMem->monoFont, "data/DejaVuSansMono.ttf");
+    InitFont(&gameMem->serifFont, "data/LiberationSerif-Regular.ttf");
     // Setup glyph buffers
     {
         for (int i = 0; i < 32; i++) {
@@ -308,7 +310,7 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     RenderRectBuffer(&Game->rectBuffer);
     Game->rectBuffer.count = 0;
     
-    DrawGlyphs(gameMem->glyphBuffers, &gameMem->font);
+    DrawGlyphs(gameMem->glyphBuffers);
 
     
     DeleteEntities(&Game->entityDB);

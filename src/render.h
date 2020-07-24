@@ -110,6 +110,24 @@ struct GlyphData {
     
 };
 
+
+struct FontTable {
+    int32 glyphCount;
+    Sprite texture;
+
+    vec4 *texcoordsMapData;
+    
+    int32 texcoordsMapID;
+
+    real32 ascent;
+    real32 descent;
+
+    real32 emSize;
+
+    Glyph *glyphs;
+};
+
+
 struct GlyphBuffer {
     int32 capacity;
     int32 size;
@@ -120,6 +138,8 @@ struct GlyphBuffer {
 
     mat4 model;
     bool screen;
+
+    FontTable *font;
 
     GlyphBuffer *next;
 };

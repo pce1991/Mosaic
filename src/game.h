@@ -38,27 +38,11 @@
 
 #define FRAME_RATE 1 / HERTZ
 
-struct FontTable {
-    int32 glyphCount;
-    Sprite texture;
-
-    vec4 *texcoordsMapData;
-    
-    int32 texcoordsMapID;
-
-    real32 ascent;
-    real32 descent;
-
-    real32 emSize;
-
-    // @TODO: store the GlyphData here for multiple font support
-};
-
 // @NOTE: there are only 32 buffers for text rendering so on one frame you can only have
 //        32 calls to DrawText(). You can increase this number if you're willing to allocate
 //        more memory.
-#define GlyphBufferCount 32
-#define GlyphBufferCapacity 64
+#define GlyphBufferCount 512
+#define GlyphBufferCapacity 256
 
 struct GameMemory {
     bool running;
@@ -80,10 +64,12 @@ struct GameMemory {
 
     NetworkInfo networkInfo;
 
-    Glyph *glyphs;
     int32 currentGlyphBufferIndex;
     GlyphBuffer glyphBuffers[GlyphBufferCount];
-    FontTable font;
+
+    FontTable monoFont;
+    
+    FontTable serifFont;
 
     Camera camera;
     vec3 cameraPosition;

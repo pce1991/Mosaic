@@ -2,18 +2,22 @@
 struct Socket {
     int32 handle;
 
-    uint32 address[4];
+    uint32 address;
     int32 port;
 
     sockaddr_in socketAddress;
 };
 
 
-
+// @TODO: This really seems like stuff that needs to be defined on the game side
 enum GamePacketType {
      GamePacketType_Invalid,
      GamePacketType_Ping,
      GamePacketType_String,
+
+     
+     GamePacketType_Message,
+     GamePacketType_Username,
 };
 
 // @NOTE: this is the specification for the packet that gets sent and received.

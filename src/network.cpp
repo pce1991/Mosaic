@@ -26,12 +26,14 @@ inline uint32 StringToIPv4(char *s) {
     
 }
 
-uint32 InitSocket(Socket *socketPtr, int32 address, int16 port) {
+uint32 InitSocket(Socket *socketPtr, uint32 address, int16 port) {
     socketPtr->handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     socketPtr->port = port;
 
     sockaddr_in *addr = &socketPtr->socketAddress;
+
+    socketPtr->address = address;
 
     addr->sin_family = AF_INET;
     addr->sin_addr.s_addr = htonl(address);
