@@ -168,7 +168,7 @@ void ServerUpdate() {
     real32 ballMinSpeed = 5;
     real32 ballMaxSpeed = 10;
     
-    if (readyCount == 2) {
+    if (readyCount == 1) {
         myData->playing = true;
 
         for (int i = 0; i < 2; i++) {
