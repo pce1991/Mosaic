@@ -143,6 +143,7 @@ void ServerUpdate() {
         // Spawn level on client machines.
 
         GamePacket packet = {};
+        packet.id = PacketID;
         packet.type = GamePacketType_String;
 
         const char *str = "SpawnLevel";
@@ -169,6 +170,7 @@ void ClientUpdate() {
                 SpawnLevel();
 
                 GamePacket packet = {};
+                packet.id = PacketID;
                 packet.type = GamePacketType_String;
 
                 const char *str = "SpawnedLevel";
@@ -184,6 +186,7 @@ void ClientUpdate() {
 
         {
             GamePacket packet = {};
+            packet.id = PacketID;
             packet.type = GamePacketType_Ping;
             packet.data[0] = myData->ready;
 
@@ -223,7 +226,7 @@ void MyGameUpdate() {
             ServerUpdate();
             
             myData->server.timeAccumulator -= TICK_HZ;
-            Print("tick server at %f accum: %f dt: %f", Game->time, myData->server.timeAccumulator, Game->deltaTime);
+            //Print("tick server at %f accum: %f dt: %f", Game->time, myData->server.timeAccumulator, Game->deltaTime);
         }
     }
     else {
