@@ -165,10 +165,12 @@ void ServerUpdate() {
         readyCount++;
     }
 
-    real32 ballMinSpeed = 5;
-    real32 ballMaxSpeed = 10;
+    real32 ballMinSpeed = 2.0f;
+    real32 ballMaxSpeed = 4.0f;
+
+    real32 paddleSpeed = 2.4f;
     
-    if (readyCount == 1) {
+    if (readyCount == 1 && !myData->playing) {
         myData->playing = true;
 
         for (int i = 0; i < 2; i++) {
@@ -222,12 +224,11 @@ void ServerUpdate() {
                 }
             }
 
-            real32 speed = 5;
             if (input.input == Input_Up) {
-                player->velocity.y = speed;
+                player->velocity.y = paddleSpeed;
             }
             if (input.input == Input_Down) {
-                player->velocity.y = -speed;
+                player->velocity.y = -paddleSpeed;
             }
 
             // @TODO: clamp player within screen!
