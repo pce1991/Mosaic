@@ -1,5 +1,9 @@
 
-// @TODO: just make this pong? Less game code and focuses more on the networking stuff
+// @TODO: what happens if a client connects after a game is finished? we should be able to restart game
+
+// @BUG: what's going on with the score? its like we transmit 0 every frame except on scoring
+
+// @BUG: The paddle starts to lurch after a while. I dont think this is a packet thing 
 
 // use ipconfig to find this for whatever machine you want to host your server on.
 const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
@@ -168,10 +172,17 @@ void ServerUpdate() {
     }
 
     int32 readyCount = 0;
-    for (int i = 0; i < server->users.count; i++) {
+    for (int i = server->users.count - 1; i >= 0; i--) {
         UserInfo *u = &server->users[i];
 
-        readyCount++;
+        if (Game->time - u->lastPingTime > 5.0f) {
+            myData->playing = false;
+            
+            RemoveAtIndex(&server->users, i);
+        }
+        else {
+            readyCount++;
+        }
     }
 
     real32 ballMinSpeed = 2.0f;
@@ -215,7 +226,6 @@ void ServerUpdate() {
     }
 
     if (myData->playing) {
-        // @TODO: detect if its been too long and we've lost connection with a player.
 
         GamePacket packet = {};
         packet.id = PacketID;
@@ -260,14 +270,25 @@ void ServerUpdate() {
             }
 
             player->velocity.y = Clamp(player->velocity.y, -paddleMaxSpeed, paddleMaxSpeed);
-
-            // @TODO: clamp player within screen!
         }
 
         for (int i = 0; i < 2; i++) {
             Player * player = &myData->players[i];
 
             player->position = player->position + player->velocity * TICK_HZ;
+
+            vec2 min = player->position + player->rect.min;
+            vec2 max = player->position + player->rect.max;
+
+            if (min.y < -4.5) {
+                real32 diff = -4.5 - min.y;
+                player->position.y += diff;
+            }
+            
+            if (max.y > 4.5) {
+                real32 diff = 4.5 - max.y;
+                player->position.y += diff;
+            }
         }
 
         Ball *ball = &myData->ball;
@@ -277,11 +298,12 @@ void ServerUpdate() {
         for (int i = 0; i < 2; i++) {
             Player *player = &myData->players[i];
             clientData->scores[i] = myData->players[i].score;
+            Print("sending score %d for player %d", clientData->scores[i], i);
 
             clientData->positions[i] = player->position;
 
             vec2 dir;
-            if (RectTest(player->rect, ball->rect, player->position, ball->position, &dir)) {
+            if (RectTest(ball->rect, player->rect, ball->position, player->position, &dir)) {
                 clientData->collided[i] = true;
                 ball->position = ball->position + dir;
                 
@@ -293,6 +315,7 @@ void ServerUpdate() {
             clientData->ballVelocity = ball->velocity;
         }
 
+        // @BUG: the ball seems to hit the top edge and just go sliding.
         // .4 because of the dimensions of the ball
         if (ball->position.y > 4.4) {
             clientData->ballVelocity.y *= -1;
@@ -304,11 +327,11 @@ void ServerUpdate() {
         }
 
         bool resetBall = false;
-        if (ball->position.x < -7) {
+        if (ball->position.x < -8) {
             myData->players[0].score++;
             resetBall = true;
         }
-        if (ball->position.x > 7) {
+        if (ball->position.x > 8) {
             myData->players[1].score++;
             resetBall = true;
         }
@@ -337,6 +360,10 @@ void ClientUpdate() {
     for (int i = 0; i < network->packetsReceived.count; i++) {
         ReceivedPacket *received = &network->packetsReceived[i];
 
+        if (received->packet.id != PacketID) {
+            continue;
+        }
+
         ClientPacket *data = (ClientPacket *)received->packet.data;
         if (received->packet.type == GamePacketType_Pong) {
             for (int j = 0; j < 2; j++) {
@@ -355,31 +382,25 @@ void ClientUpdate() {
         }
     }
 
+    GamePacket packet = {};
+    packet.id = PacketID;
+    packet.type = GamePacketType_Ping;
+            
     // @TODO: send this every frame in case the server
     // a) dropped it or b) wasnt started yet (unlikely in production)
     // @TODO: we also need to ping every frame so that the server knows if we we exist 
     if (InputPressed(Input, Input_Space)) {
         myData->ready = !myData->ready;
 
-        {
-            GamePacket packet = {};
-            packet.id = PacketID;
-            packet.type = GamePacketType_Ping;
-            packet.data[0] = myData->ready;
-
-            PushBack(&network->packetsToSend, packet);
-        }
+        packet.data[0] = myData->ready;
     }
+    
+    PushBack(&network->packetsToSend, packet);
 
     // @TODO: instead we should draw one paddle and let you move around to signal readiness
     if (!myData->ready) {
         DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "PRESS SPACE TO READY");
     }
-    // else {
-    //     DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "PRESS SPACE TO UNREADY");
-        
-    //     DrawTextScreen(&Game->serifFont, V2(800, 200), 32, V4(1), true, "WAITING ON OTHER PLAYERS");
-    // }
 
     {
         GamePacket packet = {};
@@ -417,10 +438,10 @@ void ClientUpdate() {
     for (int i = 0; i < 2; i++) {
         Player *player = &myData->players[i];
         if (i == 0) {
-            DrawText(&Game->monoFont, V2(-5, 4), 0.4f, V4(1), "%d", player->score);
+            DrawText(&Game->monoFont, V2(-5, 3.75f), 0.6f, V4(1), "%d", player->score);
         }
         else {
-            DrawText(&Game->monoFont, V2(5, 4), 0.4f, V4(1), "%d", player->score);
+            DrawText(&Game->monoFont, V2(5, 3.75f), 0.6f, V4(1), "%d", player->score);
         }
     }
 }
