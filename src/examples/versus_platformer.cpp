@@ -168,7 +168,9 @@ void ServerUpdate() {
     real32 ballMinSpeed = 2.0f;
     real32 ballMaxSpeed = 4.0f;
 
-    real32 paddleSpeed = 2.4f;
+    real32 paddleMaxSpeed = 2.6f;
+    real32 paddleAccel = 20.0f;
+    real32 paddleDecel = 60.0f;
     
     if (readyCount == 1 && !myData->playing) {
         myData->playing = true;
@@ -225,15 +227,27 @@ void ServerUpdate() {
             }
 
             if (input.input == Input_Up) {
-                player->velocity.y = paddleSpeed;
+                player->velocity.y += paddleAccel * TICK_HZ;
             }
             else if (input.input == Input_Down) {
-                player->velocity.y = -paddleSpeed;
+                player->velocity.y += -paddleAccel * TICK_HZ;
             }
-            else {
-                // @TODO:actually slowdown
-                player->velocity.y = 0;
+            else if (input.input == Input_None) {
+                if (player->velocity.y != 0.0f) {
+                    real32 startVel = player->velocity.y;
+                    
+                    player->velocity.y -= paddleDecel * TICK_HZ;
+                
+                    if (player->velocity.y < 0 && startVel > 0) {
+                        player->velocity.y = 0;
+                    }
+                    else if (player->velocity.y > 0 && startVel < 0) {
+                        player->velocity.y = 0;
+                    }
+                }
             }
+
+            player->velocity.y = Clamp(player->velocity.y, -paddleMaxSpeed, paddleMaxSpeed);
 
             // @TODO: clamp player within screen!
         }
@@ -257,14 +271,18 @@ void ServerUpdate() {
             if (RectTest(player->rect, ball->rect, player->position, ball->position, &dir)) {
                 clientData->collided[i] = true;
                 ball->position = ball->position + dir;
+                
+                ball->velocity.x *= -1;
+                ball->velocity.y = player->velocity.y * 1.5f;
             }
-
-            // @HACK: actually compute the reflection vector.
-            ball->velocity.x *= -1;
-            ball->velocity.y *= -1;
 
             clientData->ballPosition = ball->position;
             clientData->ballVelocity = ball->velocity;
+        }
+
+        // .4 because of the dimensions of the ball
+        if (ball->position.y > 4.4 || ball->position.y < -4.4) {
+            clientData->ballVelocity.y *= -1;
         }
 
         bool resetBall = false;
@@ -350,15 +368,17 @@ void ClientUpdate() {
         packet.id = PacketID;
         packet.type = GamePacketType_Input;
 
+        ((InputPacket *)packet.data)->input = Input_None;
+
+
         if (InputHeld(Input, Input_Up)) {
             ((InputPacket *)packet.data)->input = Input_Up;
-            PushBack(&network->packetsToSend, packet);
         }
         if (InputHeld(Input, Input_Down)) {
             ((InputPacket *)packet.data)->input = Input_Down;
-            PushBack(&network->packetsToSend, packet);
         }
-        
+
+        PushBack(&network->packetsToSend, packet);
     }
 
     for (int i = 0; i < 2; i++) {
