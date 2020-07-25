@@ -338,13 +338,13 @@ void ClientUpdate() {
         Player *player = &myData->players[i];
 
         vec2 scale = (player->rect.max - player->rect.min) * 0.5f;
-        DrawRect(player->position, scale, player->color);
+        DrawRect(player->position, scale, V4(1));
     }
 
     // @TODO: draw a trail based on velocity
     Ball *ball = &myData->ball;
     vec2 scale = (ball->rect.max - ball->rect.min) * 0.5f;
-    DrawRect(ball->position, scale, ball->color);
+    DrawRect(ball->position, scale, V4(1));
 }
 
 void MyGameUpdate() {
