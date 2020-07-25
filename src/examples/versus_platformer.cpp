@@ -1,9 +1,6 @@
 
 // @TODO: what happens if a client connects after a game is finished? we should be able to restart game
 
-// @BUG: what's going on with the score? its like we transmit 0 every frame except on scoring
-
-// @BUG: The paddle starts to lurch after a while. I dont think this is a packet thing 
 
 // use ipconfig to find this for whatever machine you want to host your server on.
 const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
@@ -102,8 +99,8 @@ void MyInit() {
         PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
     }
 
-    PaddleRect.min = V2(-0.25f, -0.7f);
-    PaddleRect.max = V2(0.25f, 0.7f);
+    PaddleRect.min = V2(-0.2f, -0.8f);
+    PaddleRect.max = V2(0.2f, 0.8f);
 
     BallRect.min = V2(-0.1f, -0.1f);
     BallRect.max = V2(0.1f, 0.1f);
@@ -191,7 +188,7 @@ void ServerUpdate() {
     }
 
     real32 ballMinSpeed = 2.0f;
-    real32 ballMaxSpeed = 4.0f;
+    real32 ballMaxSpeed = 5.0f;
 
     real32 paddleMaxSpeed = 3.6f;
     real32 paddleAccel = 30.0f;
@@ -309,6 +306,7 @@ void ServerUpdate() {
 
             clientData->positions[i] = player->position;
 
+            // @BUG: possible the ball gets stuck on the paddle in some cases?
             vec2 dir;
             if (RectTest(ball->rect, player->rect, ball->position, player->position, &dir)) {
                 clientData->collided[i] = true;
@@ -444,7 +442,11 @@ void ClientUpdate() {
     Ball *ball = &myData->ball;
     ball->rect = BallRect;
     vec2 scale = (ball->rect.max - ball->rect.min) * 0.5f;
-    DrawRect(ball->position, scale, V4(1));
+
+    real32 speedT = Length(ball->velocity) / 4.0f;
+    vec4 ballColor = Lerp(V4(0.3f, 0.8f, 0.0f, 1.0f), V4(0.8f, 0.4f, 0.0f, 1.0f), speedT);
+    
+    DrawRect(ball->position, scale, ballColor);
 
     for (int i = 0; i < 2; i++) {
         Player *player = &myData->players[i];
