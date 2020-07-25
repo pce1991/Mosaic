@@ -138,7 +138,7 @@ void ServerUpdate() {
             if (user != NULL) {
                 user->lastPingTime = Game->time;
 
-                Print("user %d last ping %f", userIndex, user->lastPingTime);
+                //Print("user %d last ping %f", userIndex, user->lastPingTime);
 
                 if (received->packet.data[0]) {
                     user->ready = true;
@@ -193,9 +193,9 @@ void ServerUpdate() {
     real32 ballMinSpeed = 2.0f;
     real32 ballMaxSpeed = 4.0f;
 
-    real32 paddleMaxSpeed = 2.6f;
-    real32 paddleAccel = 20.0f;
-    real32 paddleDecel = 60.0f;
+    real32 paddleMaxSpeed = 3.6f;
+    real32 paddleAccel = 30.0f;
+    real32 paddleDecel = 40.0f;
     
     if (readyCount == 1 && !myData->playing) {
         myData->playing = true;
@@ -323,10 +323,12 @@ void ServerUpdate() {
         // .4 because of the dimensions of the ball
         if (ball->position.y > 4.4) {
             clientData->ballVelocity.y *= -1;
+            Print("hit top wall %f", clientData->ballVelocity.y);
             ball->position.y = 4.4f;
         }
         if (ball->position.y < -4.4) {
             clientData->ballVelocity.y *= -1;
+            Print("hit bottom wall %f", clientData->ballVelocity.y);
             ball->position.y = -4.4f;
         }
 
