@@ -8,7 +8,7 @@
 #if MESSAGING
 #include "examples/messaging_example.cpp"
 
-#elif VERSUS_PLATFORMER
+#elif PONG_BAD
 #include "examples/pong_bad.cpp"
 
 #endif
