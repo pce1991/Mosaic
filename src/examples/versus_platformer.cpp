@@ -344,11 +344,11 @@ void ClientUpdate() {
         packet.type = GamePacketType_Input;
 
         if (InputHeld(Input, Input_Up)) {
-            ((InputPacket *)packet.data).input = Input_Up;
+            ((InputPacket *)packet.data)->input = Input_Up;
             PushBack(&network->packetsToSend, packet);
         }
         if (InputHeld(Input, Input_Down)) {
-            ((InputPacket *)packet.data).input = Input_Down;
+            ((InputPacket *)packet.data)->input = Input_Down;
             PushBack(&network->packetsToSend, packet);
         }
         
