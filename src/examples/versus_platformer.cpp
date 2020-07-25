@@ -3,6 +3,9 @@
 const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
 const uint16 Port = 30000;
 
+// @TODO: is it possible I can run the server on the same machine that a user plays on by changing the port number?
+// like the server is port 30000 and the client app uses port 30001
+
 const uint32 PacketID = Hash("Versus Platformer");
 
 const real64 TICK_HZ = 1.0 / 60.0;
@@ -62,10 +65,12 @@ void MyInit() {
     memset(myData, 0, sizeof(Platformer));
 
     myData->isServer = GetMyAddress() == ServerAddress;
-    
-    Socket sendingSocket = {};
-    InitSocket(&sendingSocket, ServerAddress, Port);
-    PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
+
+    if (!myData->isServer) {
+        Socket sendingSocket = {};
+        InitSocket(&sendingSocket, ServerAddress, Port);
+        PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
+    }
 }
 
 
@@ -109,20 +114,26 @@ void ServerUpdate() {
                 user->lastPingTime = Game->time;
             }
             else {
-                UserInfo user = {};
-                user.address = received->fromAddress;
-                user.lastPingTime = Game->time;
+                UserInfo u = {};
+                u.address = received->fromAddress;
+                u.lastPingTime = Game->time;
 
                 if (received->packet.data[0]) {
-                    user.ready = true;
+                    u.ready = true;
                 }
                 
-                PushBack(&server->users, user);
+                PushBack(&server->users, u);
+
+                Socket socket = {};
+                InitSocket(&socket, received->fromAddress, Port);
+                PushBack(&Game->networkInfo.sendingSockets, socket);
+
+                user = &server->users[server->users.count - 1];
             }
         }
 
         if (received->packet.type == GamePacketType_String) {
-            if (strcmp((char *)received->packet.data, "SpawnedLevel")) {
+            if (strcmp((char *)received->packet.data, "SpawnedLevel") == 0) {
                 user->levelSpawned = true;
             }
         }
@@ -132,14 +143,14 @@ void ServerUpdate() {
         }
     }
 
-    bool allReady = true;
+    int32 readyCount = 0;
     for (int i = 0; i < server->users.count; i++) {
         UserInfo *u = &server->users[i];
 
-        allReady &= u->ready;
+        readyCount++;
     }
 
-    if (allReady) {
+    if (readyCount > 0 && readyCount == server->users.count) {
         // Spawn level on client machines.
 
         GamePacket packet = {};
@@ -166,7 +177,7 @@ void ClientUpdate() {
         ReceivedPacket *received = &network->packetsReceived[i];
 
         if (received->packet.type == GamePacketType_String) {
-            if (strcmp((char *)received->packet.data, "SpawnLevel")) {
+            if (strcmp((char *)received->packet.data, "SpawnLevel") == 0) {
                 SpawnLevel();
 
                 GamePacket packet = {};
@@ -181,6 +192,9 @@ void ClientUpdate() {
         }
     }
 
+    // @TODO: send this every frame in case the server
+    // a) dropped it or b) wasnt started yet (unlikely in production)
+    // @TODO: we also need to ping every frame so that the server knows if we we exist 
     if (InputPressed(Input, Input_Space)) {
         myData->ready = !myData->ready;
 
