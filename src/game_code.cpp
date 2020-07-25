@@ -3,12 +3,12 @@
 
 #define MESSAGING 0
 
-#define VERSUS_PLATFORMER 1
+#define PONG_BAD 1
 
 #if MESSAGING
 #include "examples/messaging_example.cpp"
 
 #elif VERSUS_PLATFORMER
-#include "examples/versus_platformer.cpp"
+#include "examples/pong_bad.cpp"
 
 #endif
