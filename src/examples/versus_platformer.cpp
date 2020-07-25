@@ -303,7 +303,6 @@ void ServerUpdate() {
         for (int i = 0; i < 2; i++) {
             Player *player = &myData->players[i];
             clientData->scores[i] = myData->players[i].score;
-            Print("sending score %d for player %d", clientData->scores[i], i);
 
             clientData->positions[i] = player->position;
 
@@ -372,8 +371,8 @@ void ClientUpdate() {
         ClientPacket *data = (ClientPacket *)received->packet.data;
         if (received->packet.type == GamePacketType_Pong) {
             for (int j = 0; j < 2; j++) {
-                Player *player = &myData->players[i];
-                player->position = data->positions[i];
+                Player *player = &myData->players[j];
+                player->position = data->positions[j];
 
                 if (data->collided[i]) {
                     player->timeLastHit = Game->time;
