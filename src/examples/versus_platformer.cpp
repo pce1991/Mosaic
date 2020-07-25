@@ -21,7 +21,7 @@ struct Player {
     vec4 color;
 
     real32 timeLastHit;
-    int32 score;
+    uint8 score;
 };
 
 struct Ball {
@@ -285,7 +285,7 @@ void ServerUpdate() {
                 ball->position = ball->position + dir;
                 
                 ball->velocity.x *= -1;
-                ball->velocity.y = player->velocity.y * 1.5f;
+                ball->velocity.y = player->velocity.y * 1.1f;
             }
 
             clientData->ballPosition = ball->position;
@@ -293,17 +293,24 @@ void ServerUpdate() {
         }
 
         // .4 because of the dimensions of the ball
-        if (ball->position.y > 4.4 || ball->position.y < -4.4) {
+        if (ball->position.y > 4.4) {
             clientData->ballVelocity.y *= -1;
+            ball->position.y = 4.4f;
+        }
+        if (ball->position.y < -4.4) {
+            clientData->ballVelocity.y *= -1;
+            ball->position.y = -4.4f;
         }
 
         bool resetBall = false;
         if (ball->position.x < -7) {
-            clientData->scores[0]++;
+            myData->players[0].score++;
+            clientData->scores[0] = myData->players[0].score;
             resetBall = true;
         }
         if (ball->position.x > 7) {
-            clientData->scores[1]++;
+            myData->players[1].score++;
+            clientData->scores[1] = myData->players[1].score;
             resetBall = true;
         }
 
