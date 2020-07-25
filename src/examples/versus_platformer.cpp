@@ -227,8 +227,12 @@ void ServerUpdate() {
             if (input.input == Input_Up) {
                 player->velocity.y = paddleSpeed;
             }
-            if (input.input == Input_Down) {
+            else if (input.input == Input_Down) {
                 player->velocity.y = -paddleSpeed;
+            }
+            else {
+                // @TODO:actually slowdown
+                player->velocity.y = 0;
             }
 
             // @TODO: clamp player within screen!
@@ -263,15 +267,17 @@ void ServerUpdate() {
             clientData->ballVelocity = ball->velocity;
         }
 
+        bool resetBall = false;
         if (ball->position.x < -7) {
             clientData->scores[0]++;
+            resetBall = true;
         }
         if (ball->position.x > 7) {
             clientData->scores[1]++;
+            resetBall = true;
         }
 
-        // reset the ball
-        {
+        if (resetBall) {
             ball->position = V2(0);
 
             bool even = RandiRange(0, 10) % 2 == 0;
