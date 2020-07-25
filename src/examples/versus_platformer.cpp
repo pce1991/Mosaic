@@ -204,6 +204,7 @@ void ServerUpdate() {
             Player * player = &myData->players[i];
 
             player->velocity = V2(0);
+            player->score = 0;
 
             if (i == 0) {
                 player->position = V2(-6.5f, 0.0f);
@@ -302,7 +303,9 @@ void ServerUpdate() {
 
         for (int i = 0; i < 2; i++) {
             Player *player = &myData->players[i];
-            clientData->scores[i] = myData->players[i].score;
+            clientData->scores[i] = player->score;
+
+            Print("sending score of %d for player %d", player->score, i);
 
             clientData->positions[i] = player->position;
 
@@ -319,18 +322,17 @@ void ServerUpdate() {
             clientData->ballVelocity = ball->velocity;
         }
 
-        // @BUG: the ball seems to hit the top edge and just go sliding.
-        // .4 because of the dimensions of the ball
         if (ball->position.y > 4.4) {
-            clientData->ballVelocity.y *= -1;
-            Print("hit top wall %f", clientData->ballVelocity.y);
+            ball->velocity.y *= -1;
+            //Print("hit top wall %f", ball->velocity.y);
             ball->position.y = 4.4f;
         }
         if (ball->position.y < -4.4) {
-            clientData->ballVelocity.y *= -1;
-            Print("hit bottom wall %f", clientData->ballVelocity.y);
+            ball->velocity.y *= -1;
+            //Print("hit bottom wall %f", ball->velocity.y);
             ball->position.y = -4.4f;
         }
+
 
         bool resetBall = false;
         if (ball->position.x < -8) {
@@ -354,6 +356,9 @@ void ServerUpdate() {
             ball->velocity = V2(x, 0) * ballMinSpeed;
         }
 
+        clientData->ballPosition = ball->position;
+        clientData->ballVelocity = ball->velocity;
+        
         PushBack(&network->packetsToSend, packet);
     }
 }
@@ -444,10 +449,10 @@ void ClientUpdate() {
     for (int i = 0; i < 2; i++) {
         Player *player = &myData->players[i];
         if (i == 0) {
-            DrawText(&Game->monoFont, V2(-5, 3.75f), 0.6f, V4(1), "%d", player->score);
+            DrawText(&Game->monoFont, V2(5, 3.75f), 0.6f, V4(1), "%d", player->score);
         }
         else {
-            DrawText(&Game->monoFont, V2(5, 3.75f), 0.6f, V4(1), "%d", player->score);
+            DrawText(&Game->monoFont, V2(-5, 3.75f), 0.6f, V4(1), "%d", player->score);
         }
     }
 }
