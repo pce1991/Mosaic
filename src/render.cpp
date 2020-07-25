@@ -593,6 +593,18 @@ void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, r
     va_end(args);
 }
 
+void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    
+    DrawText_(font, pos, size, color, false, str, INFINITY, center, NULL);
+
+    va_end(args);
+}
+
 void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
