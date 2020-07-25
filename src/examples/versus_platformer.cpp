@@ -337,7 +337,22 @@ void ClientUpdate() {
         
         DrawTextScreen(&Game->serifFont, V2(800, 200), 32, V4(1), true, "WAITING ON OTHER PLAYERS");
     }
-    
+
+    {
+        GamePacket packet = {};
+        packet.id = PacketID;
+        packet.type = GamePacketType_Input;
+
+        if (InputHold(Input, Input_Up)) {
+            ((InputPacket *)packet.data).input = Input_Up;
+            PushBack(&network->packetsToSend, packet);
+        }
+        if (InputHold(Input, Input_Down)) {
+            ((InputPacket *)packet.data).input = Input_Down;
+            PushBack(&network->packetsToSend, packet);
+        }
+        
+    }
 
     for (int i = 0; i < 2; i++) {
         Player *player = &myData->players[i];
