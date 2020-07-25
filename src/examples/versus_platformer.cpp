@@ -187,7 +187,12 @@ void ServerUpdate() {
             player->rect.max = V2(0.25f, 0.5f);
         }
 
-        myData->ball.position = V2(0);
+        Ball *ball = &myData->ball;
+        
+        ball->position = V2(0);
+
+        ball->rect.min = V2(-0.1f, -0.1f);
+        ball->rect.max = V2(0.1f, 0.1f);
 
         bool even = RandiRange(0, 10) % 2 == 0;
         real32 x = 1;
@@ -195,7 +200,7 @@ void ServerUpdate() {
             x = -1;
         }
             
-        myData->ball.velocity = V2(x, 0) * ballMinSpeed;
+        ball->velocity = V2(x, 0) * ballMinSpeed;
     }
 
     if (myData->playing) {
@@ -337,12 +342,19 @@ void ClientUpdate() {
     for (int i = 0; i < 2; i++) {
         Player *player = &myData->players[i];
 
+        // @GACK: kinda gross we set this on the client and on the server, but there's no reason to send it
+        // every server tick. It should really just be defined as globals.
+        player->rect.min = V2(-0.25f, -0.5f);
+        player->rect.max = V2(0.25f, 0.5f);
+        
         vec2 scale = (player->rect.max - player->rect.min) * 0.5f;
         DrawRect(player->position, scale, V4(1));
     }
 
-    // @TODO: draw a trail based on velocity
+    // @TODO: draw a trail based on velocity.
     Ball *ball = &myData->ball;
+    ball->rect.min = V2(-0.1f, -0.1f);
+    ball->rect.max = V2(0.1f, 0.1f);
     vec2 scale = (ball->rect.max - ball->rect.min) * 0.5f;
     DrawRect(ball->position, scale, V4(1));
 }
