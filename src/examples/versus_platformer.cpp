@@ -343,11 +343,11 @@ void ClientUpdate() {
         packet.id = PacketID;
         packet.type = GamePacketType_Input;
 
-        if (InputHold(Input, Input_Up)) {
+        if (InputHeld(Input, Input_Up)) {
             ((InputPacket *)packet.data).input = Input_Up;
             PushBack(&network->packetsToSend, packet);
         }
-        if (InputHold(Input, Input_Down)) {
+        if (InputHeld(Input, Input_Down)) {
             ((InputPacket *)packet.data).input = Input_Down;
             PushBack(&network->packetsToSend, packet);
         }
