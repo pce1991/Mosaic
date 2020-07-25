@@ -137,6 +137,10 @@ void ServerUpdate() {
         if (received->packet.type == GamePacketType_Ping) {
             if (user != NULL) {
                 user->lastPingTime = Game->time;
+
+                if (received->packet.data[0]) {
+                    user->ready = true;
+                }
             }
             else {
                 UserInfo u = {};
@@ -176,10 +180,10 @@ void ServerUpdate() {
         UserInfo *u = &server->users[i];
 
         if (Game->time - u->lastPingTime > 5.0f) {
-            // myData->playing = false;
-            // RemoveAtIndex(&server->users, i);
+            myData->playing = false;
+            RemoveAtIndex(&server->users, i);
         }
-        else {
+        else if (u->ready) {
             readyCount++;
         }
     }
