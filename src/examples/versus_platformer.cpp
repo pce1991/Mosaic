@@ -219,8 +219,9 @@ void MyGameUpdate() {
     if (myData->isServer) {
         myData->server.timeAccumulator += Game->deltaTime;
 
-        if (myData->server.timeAccumulator >= TICK_HZ) {
+        while (myData->server.timeAccumulator >= TICK_HZ) {
             ServerUpdate();
+            
             myData->server.timeAccumulator -= TICK_HZ;
             Print("tick server at %f accum: %f dt: %f", Game->time, myData->server.timeAccumulator, Game->deltaTime);
         }
