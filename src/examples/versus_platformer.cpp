@@ -380,7 +380,7 @@ void ClientUpdate() {
                     player->timeLastHit = Game->time;
                 }
 
-                player->score = data->scores[i];
+                player->score = data->scores[j];
             }
 
             myData->ball.position = data->ballPosition;
