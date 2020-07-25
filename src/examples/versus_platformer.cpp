@@ -276,6 +276,7 @@ void ServerUpdate() {
 
         for (int i = 0; i < 2; i++) {
             Player *player = &myData->players[i];
+            clientData->scores[i] = myData->players[i].score;
 
             clientData->positions[i] = player->position;
 
@@ -305,12 +306,10 @@ void ServerUpdate() {
         bool resetBall = false;
         if (ball->position.x < -7) {
             myData->players[0].score++;
-            clientData->scores[0] = myData->players[0].score;
             resetBall = true;
         }
         if (ball->position.x > 7) {
             myData->players[1].score++;
-            clientData->scores[1] = myData->players[1].score;
             resetBall = true;
         }
 
@@ -418,10 +417,10 @@ void ClientUpdate() {
     for (int i = 0; i < 2; i++) {
         Player *player = &myData->players[i];
         if (i == 0) {
-            DrawText(&Game->monoFont, V2(-5, -4), 0.1f, V4(1), "%d", player->score);
+            DrawText(&Game->monoFont, V2(-5, 4), 1.5f, V4(1), "%d", player->score);
         }
         else {
-            DrawText(&Game->monoFont, V2(5, -4), 0.1f, V4(1), "%d", player->score);
+            DrawText(&Game->monoFont, V2(5, 4), 1.5f, V4(1), "%d", player->score);
         }
     }
 }
