@@ -417,10 +417,10 @@ void ClientUpdate() {
     for (int i = 0; i < 2; i++) {
         Player *player = &myData->players[i];
         if (i == 0) {
-            DrawText(&Game->monoFont, V2(-5, 4), 1.5f, V4(1), "%d", player->score);
+            DrawText(&Game->monoFont, V2(-5, 4), 0.4f, V4(1), "%d", player->score);
         }
         else {
-            DrawText(&Game->monoFont, V2(5, 4), 1.5f, V4(1), "%d", player->score);
+            DrawText(&Game->monoFont, V2(5, 4), 0.4f, V4(1), "%d", player->score);
         }
     }
 }
