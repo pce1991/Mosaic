@@ -81,6 +81,9 @@ struct Pong {
 
 Pong *myData = NULL;
 
+Rect PaddleRect = {};
+Rect BallRect = {};
+
 void MyInit() {
     Game->myData = malloc(sizeof(Pong));
 
@@ -94,6 +97,12 @@ void MyInit() {
         InitSocket(&sendingSocket, ServerAddress, Port);
         PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
     }
+
+    PaddleRect.min = V2(-0.25f, -0.7f);
+    PaddleRect.max = V2(0.25f, 0.7f);
+
+    BallRect.min = V2(-0.1f, -0.1f);
+    BallRect.max = V2(0.1f, 0.1f);
 }
 
 
@@ -187,16 +196,14 @@ void ServerUpdate() {
                 player->position = V2(6.5f, 0.0f);
             }
 
-            player->rect.min = V2(-0.25f, -0.5f);
-            player->rect.max = V2(0.25f, 0.5f);
+            player->rect = PaddleRect;
         }
 
         Ball *ball = &myData->ball;
         
         ball->position = V2(0);
 
-        ball->rect.min = V2(-0.1f, -0.1f);
-        ball->rect.max = V2(0.1f, 0.1f);
+        ball->rect = BallRect;
 
         bool even = RandiRange(0, 10) % 2 == 0;
         real32 x = 1;
@@ -235,13 +242,18 @@ void ServerUpdate() {
             else if (input.input == Input_None) {
                 if (player->velocity.y != 0.0f) {
                     real32 startVel = player->velocity.y;
-                    
-                    player->velocity.y -= paddleDecel * TICK_HZ;
-                
-                    if (player->velocity.y < 0 && startVel > 0) {
-                        player->velocity.y = 0;
+
+                    if (startVel > 0) {
+                        player->velocity.y -= paddleDecel * TICK_HZ;
+
+                        if (player->velocity.y < 0) {
+                            player->velocity.y = 0;
+                        }
                     }
-                    else if (player->velocity.y > 0 && startVel < 0) {
+                    else if (startVel < 0) {
+                        if (player->velocity.y > 0) {
+                            player->velocity.y = 0;
+                        }
                         player->velocity.y = 0;
                     }
                 }
@@ -357,11 +369,11 @@ void ClientUpdate() {
     if (!myData->ready) {
         DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "PRESS SPACE TO READY");
     }
-    else {
-        DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "PRESS SPACE TO UNREADY");
+    // else {
+    //     DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "PRESS SPACE TO UNREADY");
         
-        DrawTextScreen(&Game->serifFont, V2(800, 200), 32, V4(1), true, "WAITING ON OTHER PLAYERS");
-    }
+    //     DrawTextScreen(&Game->serifFont, V2(800, 200), 32, V4(1), true, "WAITING ON OTHER PLAYERS");
+    // }
 
     {
         GamePacket packet = {};
@@ -384,10 +396,7 @@ void ClientUpdate() {
     for (int i = 0; i < 2; i++) {
         Player *player = &myData->players[i];
 
-        // @GACK: kinda gross we set this on the client and on the server, but there's no reason to send it
-        // every server tick. It should really just be defined as globals.
-        player->rect.min = V2(-0.25f, -0.5f);
-        player->rect.max = V2(0.25f, 0.5f);
+        player->rect = PaddleRect;
         
         vec2 scale = (player->rect.max - player->rect.min) * 0.5f;
         DrawRect(player->position, scale, V4(1));
@@ -395,10 +404,19 @@ void ClientUpdate() {
 
     // @TODO: draw a trail based on velocity.
     Ball *ball = &myData->ball;
-    ball->rect.min = V2(-0.1f, -0.1f);
-    ball->rect.max = V2(0.1f, 0.1f);
+    ball->rect = BallRect;
     vec2 scale = (ball->rect.max - ball->rect.min) * 0.5f;
     DrawRect(ball->position, scale, V4(1));
+
+    for (int i = 0; i < 2; i++) {
+        Player *player = &myData->players[i];
+        if (i == 0) {
+            DrawText(&Game->monoFont, V2(-5, -4), 0.1f, V4(1), false, "%d", player->score);
+        }
+        else {
+            DrawText(&Game->monoFont, V2(5, -4), 0.1f, V4(1), false, "%d", player->score);
+        }
+    }
 }
 
 void MyGameUpdate() {
