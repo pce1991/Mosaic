@@ -11,3 +11,14 @@
 #define STRIDED_READ(type, buffer, stride, index) (*(type *)((uint8 *)(buffer) + (stride) * (index)))
 
 #define ARRAY_LENGTH(type, array) (sizeof(array) / sizeof(type))
+
+
+uint32 Hash(const char *str) {
+    uint32 result = 0;
+    uint32 len = strlen(str);
+    for (int i = 0; i < len; i++) {
+        result = result * 33 + str[i];
+    }
+
+    return result;
+}

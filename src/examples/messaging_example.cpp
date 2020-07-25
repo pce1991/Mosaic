@@ -1,7 +1,4 @@
 
-// TODO: do a think like scenes. We'll just manually add them. it'll be a lot easier to just switch between
-// what scene is running and get the data.
-
 // use ipconfig to find this for whatever machine you want to host your server on.
 const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
 const uint16 Port = 30000;
@@ -66,13 +63,6 @@ void MyInit() {
     myData.isServer = GetMyAddress() == ServerAddress;
 }
 
-// @TODO: show the last time stamp of message
-//        send messages notifying activity, and when they've signed off (n seconds since ping)
-//        multiple users connected to a server.
-
-// @BUG: we're getting 31 packets every frame from ReceivePackets which seems excessive:
-// since we're a server and a client its a bit tricky I guess...
-// But whatever is happening we're never getting any messages after the first.
 void ServerUpdate() {
     NetworkInfo *networking = &Game->networkInfo;
     ServerData *server = &myData.server;
@@ -85,7 +75,6 @@ void ServerUpdate() {
     }
 
     {
-        // Ping the users
         GamePacket toSend = {};
         toSend.type = GamePacketType_Ping;
         PushBack(&networking->packetsToSend, toSend);
@@ -172,12 +161,6 @@ void MyGameUpdate() {
         ServerUpdate();
     }
 
-    // @TODO: now we have users connected to a server, so we need to display messages sent to the server
-    // back to the users.
-    // Client A sends message to server, now client B needs to see it.
-    // I think its fine for the clients to keep the data on whats been sent right?
-
-    // Ping the server
     GamePacket packet = {};
     packet.type = GamePacketType_Ping;
     PushBack(&networking->packetsToSend, packet);
@@ -266,20 +249,22 @@ void MyGameUpdate() {
 
     DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "MESSENGER APPETIZER");
 
-    // @BUG: have to pass in false, why arent we getting an overload for that?
-    // @BUG: DrawText() with a false for centered crashes????
     vec2 entryCursor = V2(300, 800);
 
+    vec2 *positionsBuffer = NULL;
+    int32 charCount = 0;
     if (!myData.enteredName) {
-        DrawTextScreen(&Game->monoFont, entryCursor, 16.0f, V4(1), false, "Enter your name and press enter: %s", myData.message);
+        charCount = DrawTextScreen(&Game->monoFont, entryCursor, 16.0f, V4(1), false, &positionsBuffer, "Enter your name and press enter: %s", myData.message);
     }
     else {
-        DrawTextScreen(&Game->monoFont, entryCursor, 16.0f, V4(1), false, "to send: %s", myData.message);
+        charCount = DrawTextScreen(&Game->monoFont, entryCursor, 16.0f, V4(1), false, &positionsBuffer, "to send: %s", myData.message);
     }
 
-    // @TODO: It'd be nice to get the position of the last glyph so we can draw a quad there,
-    // and to know how big each glyph is so we can advance properly.
-    //DrawRectScreen(V2(400, 400), V2(24, 32), V4(0.0f, 0.6f + (0.2f * sinf(Game->time * 8)), 0.4f, 0.8f));    
+    // @HACK: this is not exactly the position we'd want to draw the cursor.
+    // I'm fudging the numbers a bit so it looks right but it isnt really.
+    vec2 lastPosition = positionsBuffer[charCount - 1];
+    lastPosition.y = 0;
+    DrawRectScreen(lastPosition + entryCursor + V2(12, 4), V2(24, 32), V4(0.0f, 0.6f + (0.2f * sinf(Game->time * 8)), 0.4f, 0.8f));
 
     vec2 cursor = V2(300, 720);
     for (int i = myData.messages.count - 1; i >= 0; i--) {
@@ -299,6 +284,6 @@ void MyGameUpdate() {
     
     real32 timeSincePing = Game->time - myData.lastTimeGotPing;
     if (!myData.gotPing || timeSincePing > 5.0) {
-        DrawText(&Game->monoFont, V2(-4.0f, -1.5f), 0.2, V4(1, 0, 0, 1), "No user connected");
+        DrawTextScreen(&Game->monoFont, V2(1000, 200), 32.0f, V4(1, 0, 0, 1), "No user connected");
     }
 }

@@ -15,6 +15,7 @@ enum GamePacketType {
      GamePacketType_Ping,
      GamePacketType_String,
 
+     GamePacketType_Input,
      
      GamePacketType_Message,
      GamePacketType_Username,

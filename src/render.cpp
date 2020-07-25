@@ -538,7 +538,12 @@ void LayoutGlyphs(FontTable *font, const char *string, int32 count, real32 size,
 
 
 // @TODO: version of this that just takes GlyphData so we can do custom stuff like set the color of each glyph.
-void DrawText_(FontTable *font, vec2 pos, real32 size, vec4 color, bool screen, const char *str, real32 width, bool center) {
+// @NOTE
+// Its interesting that we pass in a pointer to a buffer that we allocate in here. On the one hand I dont like
+// hidden allocations but frameMem makes it no hassle.
+// The issue comes from the fact that we want to be able to call DrawText(format, arguments) which means that
+// the caller doesnt know how long the string is.
+void DrawText_(FontTable *font, vec2 pos, real32 size, vec4 color, bool screen, const char *str, real32 width, bool center, vec2 **positionsBuffer) {
     GlyphBuffer *buffer = &Game->glyphBuffers[Game->currentGlyphBufferIndex];
     buffer->screen = screen;
 
@@ -567,6 +572,10 @@ void DrawText_(FontTable *font, vec2 pos, real32 size, vec4 color, bool screen, 
         buffer->data[i].dimensions = V2(corners.z - corners.x, corners.w - corners.y) * size * emSize;
     }
 
+    if (positionsBuffer != NULL) {
+        *positionsBuffer = positions;
+    }
+
     Game->currentGlyphBufferIndex++;
 }
 
@@ -579,7 +588,7 @@ void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, r
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
     
-    DrawText_(font, pos, size, color, false, str, width, center);
+    DrawText_(font, pos, size, color, false, str, width, center, NULL);
 
     va_end(args);
 }
@@ -591,7 +600,7 @@ void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fm
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
     
-    DrawText_(font, pos, size, color, false, str, INFINITY, false);
+    DrawText_(font, pos, size, color, false, str, INFINITY, false, NULL);
 
     va_end(args);
 }
@@ -606,7 +615,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
     // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, width, center);
+    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, width, center, NULL);
     
     va_end(args);
 }
@@ -621,7 +630,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
     // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, center);
+    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, center, NULL);
     
     va_end(args);
 }
@@ -636,9 +645,27 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const ch
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
     // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, false);
+    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, false, NULL);
     
     va_end(args);
+}
+
+
+int32 DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, vec2 **positionsBuffer, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    // @BUG
+    // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
+    // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
+    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, center, positionsBuffer);
+    
+    va_end(args);
+
+    return strlen(str);
 }
 
 
