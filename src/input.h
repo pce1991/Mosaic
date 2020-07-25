@@ -1,7 +1,7 @@
 
 // @TODO: number keys, arrow keys, modifier keys
 
-typedef enum {
+enum InputID {
     Input_None,
 
     Input_Escape,
@@ -27,7 +27,7 @@ typedef enum {
     Input_MouseRight,
 
     Input_Count,
-} InputID;
+};
 
 struct InputEvent {
     int32 deviceID;

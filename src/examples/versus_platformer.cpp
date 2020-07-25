@@ -1,12 +1,14 @@
 
+// @TODO: just make this pong? Less game code and focuses more on the networking stuff
+
 // use ipconfig to find this for whatever machine you want to host your server on.
 const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
 const uint16 Port = 30000;
-
 // @TODO: is it possible I can run the server on the same machine that a user plays on by changing the port number?
 // like the server is port 30000 and the client app uses port 30001
+// If so then we'd need to compare the IP address and the port number
 
-const uint32 PacketID = Hash("Versus Platformer");
+const uint32 PacketID = Hash("Pong");
 
 const real64 TICK_HZ = 1.0 / 60.0;
 
@@ -17,13 +19,17 @@ struct Player {
     vec2 velocity;
     Rect rect;
     vec4 color;
+
+    real32 timeLastHit;
+    int32 score;
 };
 
-struct Slab {
-    int32 id;
-    
+struct Ball {
     vec2 position;
+    vec2 velocity;
+
     Rect rect;
+    vec4 color;
 };
 
 struct UserInfo {
@@ -34,35 +40,52 @@ struct UserInfo {
     bool levelSpawned;
 };
 
+// @NOTE: we use these structs for conveinent casting of packet.data
+struct InputPacket {
+    // @GACK: sorta odd that the client doesnt send their id and we figure it out based on IP address on server
+    int32 id;
+    InputID input;
+};
 
+struct ClientPacket {
+    vec2 positions[2];
+    uint8 scores[2];
+    bool collided[2];
+
+    vec2 ballPosition;
+    vec2 ballVelocity;
+};
+
+// @TODO: allow multiple servers per instance of game so you could have N players playing M games of pong
 struct Server {
     DynamicArray<UserInfo> users;
 
-    // @TODO: buffer of inputs per user
+    DynamicArray<InputPacket> inputs;
 
     real32 timeAccumulator;
 };
 
-struct Platformer {
+struct Pong {
     bool ready;
     bool levelCreated;
-    
-    DynamicArray<Player> players;
-    int32 playerID; // instead of an index in case we want drop in/out
 
-    DynamicArray<Slab> slabs;
+    bool playing;
+
+    Ball ball;
+    Player players[2];
+    int32 playerID; // this tells the client which player it is
 
     bool isServer;
     Server server;
 };
 
-Platformer *myData = NULL;
+Pong *myData = NULL;
 
 void MyInit() {
-    Game->myData = malloc(sizeof(Platformer));
+    Game->myData = malloc(sizeof(Pong));
 
-    myData = (Platformer *)Game->myData;
-    memset(myData, 0, sizeof(Platformer));
+    myData = (Pong *)Game->myData;
+    memset(myData, 0, sizeof(Pong));
 
     myData->isServer = GetMyAddress() == ServerAddress;
 
@@ -70,19 +93,6 @@ void MyInit() {
         Socket sendingSocket = {};
         InitSocket(&sendingSocket, ServerAddress, Port);
         PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
-    }
-}
-
-
-void SpawnLevel() {
-    {
-        Slab slab = {};
-
-        slab.position = V2(0);
-        slab.rect.min = V2(-1, -1);
-        slab.rect.min = V2(1, 1);
-
-        PushBack(&myData->slabs, slab);
     }
 }
 
@@ -101,10 +111,12 @@ void ServerUpdate() {
         }
 
         UserInfo *user = NULL;
+        int32 userIndex = 0;
         for (int j = 0; j < server->users.count; j++) {
             UserInfo *u = &server->users[j];
             if (received->fromAddress == u->address) {
                 user = u;
+                userIndex = j;
                 break;
             }
         }
@@ -129,6 +141,7 @@ void ServerUpdate() {
                 PushBack(&Game->networkInfo.sendingSockets, socket);
 
                 user = &server->users[server->users.count - 1];
+                userIndex = server->users.count - 1;
             }
         }
 
@@ -139,7 +152,9 @@ void ServerUpdate() {
         }
 
         if (received->packet.type == GamePacketType_Input) {
-            
+            InputPacket packet = *(InputPacket *)received->packet.data;
+            packet.id = userIndex;
+            PushBack(&server->inputs, packet);
         }
     }
 
@@ -150,21 +165,119 @@ void ServerUpdate() {
         readyCount++;
     }
 
-    if (readyCount > 0 && readyCount == server->users.count) {
-        // Spawn level on client machines.
+    real32 ballMinSpeed = 5;
+    real32 ballMaxSpeed = 10;
+    
+    if (readyCount == 2) {
+        myData->playing = true;
+
+        for (int i = 0; i < 2; i++) {
+            Player * player = &myData->players[i];
+
+            player->velocity = V2(0);
+
+            if (i == 0) {
+                player->position = V2(-6.5f, 0.0f);
+            }
+            else {
+                player->position = V2(6.5f, 0.0f);
+            }
+
+            player->rect.min = V2(-0.25f, -0.5f);
+            player->rect.max = V2(0.25f, 0.5f);
+        }
+
+        myData->ball.position = V2(0);
+
+        bool even = RandiRange(0, 10) % 2 == 0;
+        real32 x = 1;
+        if (even) {
+            x = -1;
+        }
+            
+        myData->ball.velocity = V2(x, 0) * ballMinSpeed;
+    }
+
+    if (myData->playing) {
+        // @TODO: detect if its been too long and we've lost connection with a player.
 
         GamePacket packet = {};
         packet.id = PacketID;
-        packet.type = GamePacketType_String;
+        packet.type = GamePacketType_Pong;
 
-        const char *str = "SpawnLevel";
-        memcpy(packet.data, str, strlen(str));
+        ClientPacket *clientData = (ClientPacket *)packet.data;
+        
+        for (int i = 0; i < server->inputs.count; i++) {
+            InputPacket input = server->inputs[i];
+
+            Player *player = NULL;
+            for (int j = 0; j < 2; j++) {
+                if (input.id == myData->players[j].id) {
+                    player = &myData->players[j];
+                }
+            }
+
+            real32 speed = 5;
+            if (input.input == Input_Up) {
+                player->velocity.y = speed;
+            }
+            if (input.input == Input_Down) {
+                player->velocity.y = -speed;
+            }
+
+            // @TODO: clamp player within screen!
+        }
+
+        for (int i = 0; i < 2; i++) {
+            Player * player = &myData->players[i];
+
+            player->position = player->position + player->velocity * TICK_HZ;
+        }
+
+        Ball *ball = &myData->ball;
+        ball->position = ball->position + ball->velocity * TICK_HZ;
+
+
+        for (int i = 0; i < 2; i++) {
+            Player *player = &myData->players[i];
+
+            clientData->positions[i] = player->position;
+
+            vec2 dir;
+            if (RectTest(player->rect, ball->rect, player->position, ball->position, &dir)) {
+                clientData->collided[i] = true;
+                ball->position = ball->position + dir;
+            }
+
+            // @HACK: actually compute the reflection vector.
+            ball->velocity.x *= -1;
+            ball->velocity.y *= -1;
+
+            clientData->ballPosition = ball->position;
+            clientData->ballVelocity = ball->velocity;
+        }
+
+        if (ball->position.x < -7) {
+            clientData->scores[0]++;
+        }
+        if (ball->position.x > 7) {
+            clientData->scores[1]++;
+        }
+
+        // reset the ball
+        {
+            ball->position = V2(0);
+
+            bool even = RandiRange(0, 10) % 2 == 0;
+            real32 x = 1;
+            if (even) {
+                x = -1;
+            }
+            
+            ball->velocity = V2(x, 0) * ballMinSpeed;
+        }
 
         PushBack(&network->packetsToSend, packet);
-
-        SpawnLevel();
-        // @TODO: need to tell the clients which player they are.
-        //        that suggests we want something more than just a string message for this.
     }
 }
 
@@ -176,19 +289,21 @@ void ClientUpdate() {
     for (int i = 0; i < network->packetsReceived.count; i++) {
         ReceivedPacket *received = &network->packetsReceived[i];
 
-        if (received->packet.type == GamePacketType_String) {
-            if (strcmp((char *)received->packet.data, "SpawnLevel") == 0) {
-                SpawnLevel();
+        ClientPacket *data = (ClientPacket *)received->packet.data;
+        if (received->packet.type == GamePacketType_Pong) {
+            for (int j = 0; j < 2; j++) {
+                Player *player = &myData->players[i];
+                player->position = data->positions[i];
 
-                GamePacket packet = {};
-                packet.id = PacketID;
-                packet.type = GamePacketType_String;
+                if (data->collided[i]) {
+                    player->timeLastHit = Game->time;
+                }
 
-                const char *str = "SpawnedLevel";
-                memcpy(packet.data, str, strlen(str));
-
-                PushBack(&network->packetsToSend, packet);
+                player->score = data->scores[i];
             }
+
+            myData->ball.position = data->ballPosition;
+            myData->ball.velocity = data->ballVelocity;
         }
     }
 
@@ -207,7 +322,8 @@ void ClientUpdate() {
             PushBack(&network->packetsToSend, packet);
         }
     }
-    
+
+    // @TODO: instead we should draw one paddle and let you move around to signal readiness
     if (!myData->ready) {
         DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "PRESS SPACE TO READY");
     }
@@ -217,19 +333,18 @@ void ClientUpdate() {
         DrawTextScreen(&Game->serifFont, V2(800, 200), 32, V4(1), true, "WAITING ON OTHER PLAYERS");
     }
     
-    for (int i = 0; i < myData->slabs.count; i++) {
-        Slab *plat = &myData->slabs[i];
 
-        vec2 scale = (plat->rect.max - plat->rect.min) * 0.5f;
-        DrawRect(plat->position, scale, V4(0.3f, 0.3f, 0.3f, 1.0f));
-    }
-    
-    for (int i = 0; i < myData->players.count; i++) {
+    for (int i = 0; i < 2; i++) {
         Player *player = &myData->players[i];
 
         vec2 scale = (player->rect.max - player->rect.min) * 0.5f;
         DrawRect(player->position, scale, player->color);
     }
+
+    // @TODO: draw a trail based on velocity
+    Ball *ball = &myData->ball;
+    vec2 scale = (ball->rect.max - ball->rect.min) * 0.5f;
+    DrawRect(ball->position, scale, ball->color);
 }
 
 void MyGameUpdate() {
