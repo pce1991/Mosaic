@@ -138,6 +138,8 @@ void ServerUpdate() {
             if (user != NULL) {
                 user->lastPingTime = Game->time;
 
+                Print("user %d last ping %f", userIndex, user->lastPingTime);
+
                 if (received->packet.data[0]) {
                     user->ready = true;
                 }
