@@ -146,9 +146,12 @@ void ServerUpdate() {
 
                 if (received->packet.data[0]) {
                     user->ready = true;
+
+                    Log("user %d at address %u set to ready", userIndex, user->address);
                 }
             }
             else {
+                
                 UserInfo u = {};
                 u.address = received->fromAddress;
                 u.lastPingTime = Game->time;
@@ -166,6 +169,8 @@ void ServerUpdate() {
 
                 user = &server->users[server->users.count - 1];
                 userIndex = server->users.count - 1;
+
+                Log("Connected user %d at address %u", userIndex, u.address);
             }
         }
 
@@ -187,8 +192,11 @@ void ServerUpdate() {
         UserInfo *u = &server->users[i];
 
         if (Game->time - u->lastPingTime > 5.0f) {
+            Log("Disconnected user %d at address %u from idle", i, u->address);
+            
             myData->playing = false;
             RemoveAtIndex(&server->users, i);
+
         }
         else if (u->ready) {
             readyCount++;
@@ -203,6 +211,8 @@ void ServerUpdate() {
     real32 paddleDecel = 40.0f;
     
     if (readyCount == 1 && !myData->playing) {
+        Log("Started playing at %f", Game->time);
+        
         myData->playing = true;
 
         for (int i = 0; i < 2; i++) {

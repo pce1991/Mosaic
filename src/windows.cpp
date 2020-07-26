@@ -642,6 +642,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
         ReleaseDC(window, deviceContext);
     }
 
+    GameDeinit();
+
     WSACleanup();
     
     return 0;

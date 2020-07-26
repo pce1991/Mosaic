@@ -43,6 +43,8 @@ uint32 InitSocket(Socket *socketPtr, uint32 address, uint16 port, bool bindSocke
         if (bindSuccess != 0) {
             int32 error = WSAGetLastError();
             Print("failed to bind socket! %d", error);
+
+            Log("Failed to bind socket for %u on port %d error: %d", address, port, error);
         }
     }
 
@@ -50,7 +52,8 @@ uint32 InitSocket(Socket *socketPtr, uint32 address, uint16 port, bool bindSocke
     int32 nonBlockingSuccess = ioctlsocket(socketPtr->handle, FIONBIO, &nonBlocking);
 
     if (nonBlockingSuccess != 0) {
-        Print("Failed to set non-blocking!");
+        Log("Failed to set socket nonblocking for %u on port %d to non blocking", address, port);
+        Print("Failed to set socket nonblocking for %u on port %d to non blocking", address, port);
     }
 
     return address;
@@ -147,7 +150,6 @@ void SendPackets() {
         for (int j = 0; j < Game->networkInfo.sendingSockets.count; j++) {
             int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[j], &info->packetsToSend[i], packetSize);
         }
-        
     }
 
     DynamicArrayClear(&info->packetsToSend);

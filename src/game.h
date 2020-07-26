@@ -11,6 +11,7 @@
 #include "dynamic_array.h"
 
 
+#include "log.h"
 #include "network.h"
 
 #include "math/math.h"
@@ -60,6 +61,7 @@ struct GameMemory {
     uint32 screenHeight;
     uint32 pitch;
 
+    DebugLog log;
     MemoryArena frameMem;
 
     NetworkInfo networkInfo;

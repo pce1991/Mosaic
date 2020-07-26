@@ -4,6 +4,8 @@
 #include "game.h"
 #include "input.cpp"
 
+#include "log.cpp"
+
 #include "render.cpp"
 #include "audio.cpp"
 
@@ -11,6 +13,7 @@
 
 #include "mesh.cpp"
 #include "entity.cpp"
+
 
 #include "ui.cpp"
 
@@ -137,6 +140,11 @@ void GameInit(GameMemory *gameMem) {
     Game->screenHeight = screenHeight;
 
     AllocateMemoryArena(&Game->frameMem, Megabytes(1024));
+
+    Game->log.head = (DebugLogNode *)malloc(sizeof(DebugLogNode));
+    AllocateDebugLogNode(Game->log.head, LOG_BUFFER_CAPACITY);
+    Game->log.current = Game->log.head;
+    Game->log.head->next = NULL;
 
     // @TODO: super weird and bad we allocate the queue in the game and not the platform because
     // that's where we know how many devices we have obviously
@@ -271,6 +279,10 @@ void GameInit(GameMemory *gameMem) {
     MosaicInit(gameMem);
 
     MyInit();
+}
+
+void GameDeinit() {
+    WriteLogToFile("log.txt");
 }
 
 
