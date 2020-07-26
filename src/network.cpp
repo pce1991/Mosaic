@@ -36,7 +36,8 @@ uint32 InitSocket(Socket *socketPtr, uint32 address, int16 port) {
     socketPtr->address = address;
 
     addr->sin_family = AF_INET;
-    addr->sin_addr.s_addr = htonl(address);
+    //addr->sin_addr.s_addr = htonl(address);
+    addr->sin_addr.s_addr = address;
     addr->sin_port = htons(port);
 
     int32 bindSuccess = bind(socketPtr->handle, (const sockaddr*)addr, sizeof(sockaddr_in));
