@@ -304,8 +304,7 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
     glDisableVertexAttribArray(texcoord);    
 }
 
-
-void DrawRect(vec2 pos, vec2 scale, vec4 color) {
+void DrawRect(vec2 pos, vec2 scale, real32 angle, vec4 color) {
     Shader *shader = &Game->shader;
     SetShader(shader);
 
@@ -314,7 +313,7 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
 
     Mesh *mesh = &Game->quad;
     
-    mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 0.0f));
+    mat4 model = TRS(V3(pos.x, pos.y, 0), AxisAngle(V3(0, 0, 1), angle), V3(scale.x, scale.y, 0.0f));
 
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
@@ -332,6 +331,10 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
     glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
 
     glDisableVertexAttribArray(vert);
+}
+
+void DrawRect(vec2 pos, vec2 scale, vec4 color) {
+    DrawRect(pos, scale, 0, color);
 }
 
 // @NOTE: origin of rect and screen are both top left

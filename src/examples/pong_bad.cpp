@@ -189,7 +189,7 @@ void ServerUpdate() {
     real32 paddleAccel = 30.0f;
     real32 paddleDecel = 40.0f;
     
-    if (readyCount == 1 && !myData->playing) {
+    if (readyCount == 2 && !myData->playing) {
         myData->playing = true;
 
         for (int i = 0; i < 2; i++) {
