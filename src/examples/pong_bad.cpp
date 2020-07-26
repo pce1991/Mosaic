@@ -94,17 +94,8 @@ void MyInit() {
     InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), ReceivingPort, true);
 
     Socket sendingSocket = {};
-    InitSocket(&sendingSocket, GetMyAddress(), Port + 1);
+    InitSocket(&sendingSocket, GetMyAddress(), Port + 1, true);
     PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
-
-    // if (!myData->isServer) {
-    //     Socket sendingSocket = {};
-    //     // InitSocket(&sendingSocket, ServerAddress, Port);
-    //     // PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
-
-    //     InitSocket(&sendingSocket, GetMyAddress(), Port + 1);
-    //     PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
-    // }
 
     PaddleRect.min = V2(-0.2f, -0.8f);
     PaddleRect.max = V2(0.2f, 0.8f);
@@ -161,11 +152,6 @@ void ServerUpdate() {
                 }
                 
                 PushBack(&server->users, u);
-
-                // Socket socket = {};
-                // //InitSocket(&socket, received->fromAddress, SendingPort);
-                // InitSocket(&socket, GetMyAddress(), SendingPort);
-                // PushBack(&Game->networkInfo.sendingSockets, socket);
 
                 user = &server->users[server->users.count - 1];
                 userIndex = server->users.count - 1;
