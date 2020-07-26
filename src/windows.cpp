@@ -641,6 +641,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
         SwapBuffers(deviceContext);
         ReleaseDC(window, deviceContext);
     }
+
+    WSACleanup();
     
     return 0;
 }

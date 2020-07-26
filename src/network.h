@@ -3,7 +3,7 @@ struct Socket {
     int32 handle;
 
     uint32 address;
-    int32 port;
+    uint16 port;
 
     sockaddr_in socketAddress;
 };

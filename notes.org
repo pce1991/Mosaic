@@ -1,4 +1,6 @@
 
+BUG: failing to bind socket in pong.
+     We seem to fail to bind socket in messenging_example tho, but we still manage to send and receive packets from server...
 
 
 BUG: screen text doesnt work at all!!! Not really sure why, at sizes bigger than 32 we stop seeing it. I think its got something to do with calculating the model position. 

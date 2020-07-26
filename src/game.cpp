@@ -138,14 +138,6 @@ void GameInit(GameMemory *gameMem) {
 
     AllocateMemoryArena(&Game->frameMem, Megabytes(1024));
 
-
-    int16 port = 30000;
-    // @NOTE: always set this automatically because we never want to not have a socket for receiving.
-    // MyInit will handle setting up any additional sockets depending on what the game needs.
-    // We have a socket to ourself and we're looking for things that get sent to us.
-
-    InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), port);
-
     // @TODO: super weird and bad we allocate the queue in the game and not the platform because
     // that's where we know how many devices we have obviously
     gameMem->inputQueue = AllocateInputQueue(32, 2);

@@ -8,7 +8,7 @@
   How you'd build your game if there is a server that feeds data to clients
  */
 
-int32 InitAddress(sockaddr_in *addr, u8 a, u8 b, u8 c, u8 d, int16 port) {
+int32 InitAddress(sockaddr_in *addr, u8 a, u8 b, u8 c, u8 d, uint16 port) {
     uint32 address = (a << 24) | (b << 16) | (c << 8) | d;
 
     addr->sin_family = AF_INET;
@@ -26,23 +26,24 @@ inline uint32 StringToIPv4(char *s) {
     
 }
 
-uint32 InitSocket(Socket *socketPtr, uint32 address, int16 port) {
+uint32 InitSocket(Socket *socketPtr, uint32 address, uint16 port, bool bindSocket = false) {
     socketPtr->handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     socketPtr->port = port;
+    socketPtr->address = address;
 
     sockaddr_in *addr = &socketPtr->socketAddress;
 
-    socketPtr->address = address;
-
-    addr->sin_family = AF_INET;
-    addr->sin_addr.s_addr = htonl(address);
-    addr->sin_port = htons(port);
-
-    int32 bindSuccess = bind(socketPtr->handle, (const sockaddr*)addr, sizeof(sockaddr_in));
-    if (bindSuccess != 0) {
-        int32 error = WSAGetLastError();
-        Print("failed to bind socket! %d", error);
+    if (bindSocket) {
+        addr->sin_family = AF_INET;
+        addr->sin_addr.s_addr = htonl(address);
+        addr->sin_port = htons(port);
+    
+        int32 bindSuccess = bind(socketPtr->handle, (const sockaddr*)addr, sizeof(sockaddr_in));
+        if (bindSuccess != 0) {
+            int32 error = WSAGetLastError();
+            Print("failed to bind socket! %d", error);
+        }
     }
 
     DWORD nonBlocking = 1;
@@ -55,12 +56,26 @@ uint32 InitSocket(Socket *socketPtr, uint32 address, int16 port) {
     return address;
 }
 
-uint32 InitSocket(Socket *socketPtr, u8 a, u8 b, u8 c, u8 d, int16 port) {
+uint32 InitSocket(Socket *socketPtr, u8 a, u8 b, u8 c, u8 d, uint16 port) {
     return InitSocket(socketPtr, MakeAddressIPv4(a, b, c, d), port);
 }
 
+int32 SendPacket(Socket *socket, uint32 address, uint16 port, void *packetData, uint32 packetSize) {
+    sockaddr_in addr = {};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(address);
+    addr.sin_port = htons(port);
+    
+    return sendto(socket->handle, (char *)packetData, packetSize, 0, (sockaddr *)&addr, sizeof(sockaddr_in));
+}
+
 int32 SendPacket(Socket *socket, void *packetData, uint32 packetSize) {
-    return sendto(socket->handle, (char *)packetData, packetSize, 0, (sockaddr *)&socket->socketAddress, sizeof(sockaddr_in));
+    sockaddr_in addr = {};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(socket->address);
+    addr.sin_port = htons(socket->port);
+    
+    return sendto(socket->handle, (char *)packetData, packetSize, 0, (sockaddr *)&addr, sizeof(sockaddr_in));
 }
 
 int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fromSocket) {

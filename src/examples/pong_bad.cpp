@@ -1,7 +1,10 @@
 
 // use ipconfig to find this for whatever machine you want to host your server on.
 const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
-const uint16 Port = 40000;
+
+const uint16 Port = 30000;
+const uint16 ReceivingPort = 30000;
+const uint16 SendingPort = 30001;
 
 const uint32 PacketID = Hash("PongBad");
 
@@ -88,11 +91,20 @@ void MyInit() {
 
     myData->isServer = GetMyAddress() == ServerAddress;
 
-    if (!myData->isServer) {
-        Socket sendingSocket = {};
-        InitSocket(&sendingSocket, ServerAddress, Port);
-        PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
-    }
+    InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), ReceivingPort, true);
+
+    Socket sendingSocket = {};
+    InitSocket(&sendingSocket, GetMyAddress(), Port + 1);
+    PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
+
+    // if (!myData->isServer) {
+    //     Socket sendingSocket = {};
+    //     // InitSocket(&sendingSocket, ServerAddress, Port);
+    //     // PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
+
+    //     InitSocket(&sendingSocket, GetMyAddress(), Port + 1);
+    //     PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
+    // }
 
     PaddleRect.min = V2(-0.2f, -0.8f);
     PaddleRect.max = V2(0.2f, 0.8f);
@@ -147,9 +159,10 @@ void ServerUpdate() {
                 
                 PushBack(&server->users, u);
 
-                Socket socket = {};
-                InitSocket(&socket, received->fromAddress, Port);
-                PushBack(&Game->networkInfo.sendingSockets, socket);
+                // Socket socket = {};
+                // //InitSocket(&socket, received->fromAddress, SendingPort);
+                // InitSocket(&socket, GetMyAddress(), SendingPort);
+                // PushBack(&Game->networkInfo.sendingSockets, socket);
 
                 user = &server->users[server->users.count - 1];
                 userIndex = server->users.count - 1;
@@ -356,6 +369,20 @@ void ServerUpdate() {
         
         PushBack(&network->packetsToSend, packet);
     }
+
+    for (int i = 0; i < network->packetsToSend.count; i++) {
+        int32 packetSize = sizeof(GamePacket);
+        GamePacket *p = &network->packetsToSend[i];
+
+        // We just need one sending socket which sends to all the users
+
+        for (int j = 0; j < server->users.count; j++) {
+            UserInfo *u = &server->users[j];
+            int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[0], u->address, ReceivingPort, p, packetSize);
+        }
+        
+    }
+        
 }
 
 
@@ -454,6 +481,17 @@ void ClientUpdate() {
             DrawText(&Game->monoFont, V2(-5, 3.75f), 0.6f, V4(1), "%d", player->score);
         }
     }
+
+
+    for (int i = 0; i < network->packetsToSend.count; i++) {
+        GamePacket *p = &network->packetsToSend[i];
+
+        int32 packetSize = sizeof(GamePacket);
+
+        int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[0], ServerAddress, ReceivingPort, p, packetSize);
+    }
+
+    DynamicArrayClear(&network->packetsToSend);
 }
 
 void MyGameUpdate() {
