@@ -41,7 +41,8 @@ uint32 InitSocket(Socket *socketPtr, uint32 address, int16 port) {
 
     int32 bindSuccess = bind(socketPtr->handle, (const sockaddr*)addr, sizeof(sockaddr_in));
     if (bindSuccess != 0) {
-        Print("failed to bind socket!");
+        int32 error = WSAGetLastError();
+        Print("failed to bind socket! %d", error);
     }
 
     DWORD nonBlocking = 1;

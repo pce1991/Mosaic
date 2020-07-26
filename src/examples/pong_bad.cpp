@@ -1,7 +1,7 @@
 
 // use ipconfig to find this for whatever machine you want to host your server on.
 const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
-const uint16 Port = 30000;
+const uint16 Port = 40000;
 
 const uint32 PacketID = Hash("PongBad");
 
