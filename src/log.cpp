@@ -53,7 +53,7 @@ void WriteLogToFile(char *path) {
 
     DebugLog *log = &Game->log;
 
-    int32 frame = 0;
+    int32 frame = -1;
 
     if (file != NULL) {
         for (int i = 0; i < log->logs.count; i++) {

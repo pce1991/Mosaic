@@ -1,6 +1,14 @@
 
 // use ipconfig to find this for whatever machine you want to host your server on.
-const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
+const uint32 ServerAddress = MakeAddressIPv4(76, 183, 120, 224);
+
+// @NOTE:
+// We setup port forwarding. Our sockets need to use our local IP address.
+// But when someone sends a packet to our public IP address we need it to be
+// sent to our socket.
+// The way you setup port forwarding depends on your router.
+// What you want to do is tell the router to take anything sent to the public IP address
+// on your selected port to be sent to your local machine on that port.
 
 const uint16 Port = 30000;
 const uint16 ReceivingPort = 30000;
@@ -89,11 +97,14 @@ void MyInit() {
     myData = (Pong *)Game->myData;
     memset(myData, 0, sizeof(Pong));
 
-    myData->isServer = GetMyAddress() == ServerAddress;
+    // @TODO: pass this in
+    myData->isServer = true;
 
+    //InitSocket(&Game->networkInfo.receivingSocket, ServerAddress, ReceivingPort, true);
     InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), ReceivingPort, true);
 
     Socket sendingSocket = {};
+    //InitSocket(&sendingSocket, ServerAddress, Port + 1, true);
     InitSocket(&sendingSocket, GetMyAddress(), Port + 1, true);
     PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
 
@@ -306,7 +317,7 @@ void ServerUpdate() {
             Player *player = &myData->players[i];
             clientData->scores[i] = player->score;
 
-            Print("sending score of %d for player %d", player->score, i);
+            //Print("sending score of %d for player %d", player->score, i);
 
             clientData->positions[i] = player->position;
 
