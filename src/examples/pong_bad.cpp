@@ -10,6 +10,8 @@ const uint32 ServerAddress = MakeAddressIPv4(76, 183, 120, 224);
 // What you want to do is tell the router to take anything sent to the public IP address
 // on your selected port to be sent to your local machine on that port.
 
+// Turned telnet on by going to program->turn on/off features->select telnet
+
 const uint16 Port = 30000;
 const uint16 ReceivingPort = 30000;
 const uint16 SendingPort = 30001;
