@@ -101,12 +101,9 @@ void MyInit() {
 
     // @TODO: pass this in
     myData->isServer = true;
-
-    //InitSocket(&Game->networkInfo.receivingSocket, ServerAddress, ReceivingPort, true);
     InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), ReceivingPort, true);
 
     Socket sendingSocket = {};
-    //InitSocket(&sendingSocket, ServerAddress, Port + 1, true);
     InitSocket(&sendingSocket, GetMyAddress(), Port + 1, true);
     PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
 
@@ -151,7 +148,7 @@ void ServerUpdate() {
                 if (received->packet.data[0]) {
                     user->ready = true;
 
-                    Log("user %d at address %u set to ready", userIndex, user->address);
+                    Log("user %d at address %u:%u set to ready", userIndex, user->address, received->fromPort);
                 }
             }
             else {
@@ -169,7 +166,7 @@ void ServerUpdate() {
                 user = &server->users[server->users.count - 1];
                 userIndex = server->users.count - 1;
 
-                Log("Connected user %d at address %u", userIndex, u.address);
+                Log("Connected user %d at address %u:%u", userIndex, u.address, received->fromPort);
             }
         }
 

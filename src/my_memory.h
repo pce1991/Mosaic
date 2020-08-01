@@ -33,9 +33,3 @@ void ClearMemoryArena(MemoryArena *arena) {
 
 #define PushSize(arena, type, count) (type *)PushSizeMemoryArena(arena, sizeof(type) * count)
 
-
-struct Str {
-    int32 count;
-    char *str;
-};
-

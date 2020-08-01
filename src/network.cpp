@@ -132,6 +132,7 @@ void ReceivePackets() {
         int32 fromPort = ntohs(fromSocket.socketAddress.sin_port);
 
         packet.fromAddress = fromAddress;
+        packet.fromPort = fromPort;
 
         PushBack(&network->packetsReceived, packet);
     }

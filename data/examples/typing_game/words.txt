@@ -1,0 +1,8 @@
+Ah the world, O the world!
+
+To be or not to be.
+
+int x = 5 + y;
+
+print("%f", pi);
+

@@ -13,3 +13,16 @@
   Make sure grid lines are drawn at the center, so a tile should be inset on all sides evenly
 * Architecture
   Probably could reorganize things a bit to dissolve the layer between Game and Mosaic. It's a layer that isnt needed, but maybe it's good because its clear that the engine can do more than just draw tiles.
+
+
+  Raylib hides the platform layer to be totally internal, and then you write your own main function that starts like
+  InitPlatform();
+  InitWindow();
+  while (running) {
+     do my game
+  }
+
+  One advantage of that is you can be very fine-grained about what happens. You can reorder things as you want per game. 
+  What I don't like is a) I wouldnt write an actual game this way so I dont want to write a toy game this way either.
+  b) it makes the entry point someplace other than the platform which seems odd.
+  

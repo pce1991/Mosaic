@@ -50,6 +50,7 @@ struct ReceivedPacket {
     // @NOTE: rather than make sender responsible for their address, whoever is looking receiving packets
     // writes out the address.
     uint32 fromAddress;
+    uint16 fromPort;
 
     GamePacket packet;
 };

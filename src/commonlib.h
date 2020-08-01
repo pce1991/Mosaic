@@ -12,6 +12,11 @@
 
 #define ARRAY_LENGTH(type, array) (sizeof(array) / sizeof(type))
 
+struct Str {
+    int32 length;
+    char *string;
+};
+
 
 uint32 Hash(const char *str) {
     uint32 result = 0;
