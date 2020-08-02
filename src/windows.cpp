@@ -1,10 +1,10 @@
 #define WINDOWS 1
 
 #include <ws2tcpip.h>
+#include <Mstcpip.h>
 
 #include <windows.h>
 #include <windowsx.h>
-
 
 
 #include <mmdeviceapi.h>

@@ -13,9 +13,13 @@ const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
 
 // Turned telnet on by going to program->turn on/off features->select telnet
 
+// @NOTE: whatever socket we use to send a packet will record the port number.
+
 const uint16 Port = 30000;
 const uint16 ReceivingPort = 30000;
 const uint16 SendingPort = 30001;
+const uint16 ServerPort = 30000;
+const uint16 ClientPort = 30000;
 
 const uint32 PacketID = Hash("PongBad");
 
@@ -102,11 +106,11 @@ void MyInit() {
     memset(myData, 0, sizeof(Pong));
 
     // @TODO: pass this in
-    myData->isServer = false;
+    myData->isServer = true;
     InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), ReceivingPort, true);
 
     Socket sendingSocket = {};
-    InitSocket(&sendingSocket, GetMyAddress(), Port + 4, true);
+    InitSocket(&sendingSocket, GetMyAddress(), Port + 1, true);
     PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
 
     PaddleRect.min = V2(-0.2f, -0.8f);

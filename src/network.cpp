@@ -48,6 +48,15 @@ uint32 InitSocket(Socket *socketPtr, uint32 address, uint16 port, bool bindSocke
         }
     }
 
+    // enable promiscuous mode
+    {
+        DWORD dwValue = RCVALL_ON;
+        DWORD dwBytesReturned = 0;
+        if (WSAIoctl(socketPtr->handle, SIO_RCVALL, &dwValue, sizeof(dwValue), NULL, 0, &dwBytesReturned, NULL, NULL) == SOCKET_ERROR) {
+            printf("Ioctl failed with error code : %d", WSAGetLastError());
+        }
+    }
+
     DWORD nonBlocking = 1;
     int32 nonBlockingSuccess = ioctlsocket(socketPtr->handle, FIONBIO, &nonBlocking);
 
