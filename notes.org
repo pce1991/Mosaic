@@ -149,3 +149,13 @@ Sprites: I don't like how sprites can occupy one tile because it kinda lies abou
 * Normalized or Pixels
   We pretty much always calculate the pixels as ratios of the dimensions anyway so it just makes sense to convert to normalized every where.
   
+* Principles
+  A guiding design is that it should be sophisticated enough to do the bare minimum reasonably well. 
+  Simple enough to easily modify. 
+  Bare enough to prompt questions, "what if I want to do X".
+  -- give examples of this.
+  Straightforward enough that you can walk the callstack and see where things are happening. That's one reason its single-threaded
+  Dont hide details. That's why there isnt just a "physics tick". I want students to think about what happens when.
+  
+  To a degree limitations help you create, but I think it has more to do with specifications. Being familiar with the details and the intracacies of an implementation.
+  A limitation is "only make a game with boxes" which isnt necessarily fruitful. But understanding boxes, the type of operations you can use them for lets you do a lot of things. It makes you think of the properties of your tools and how they can be used in interesting ways. The limitations can push you towards familiarity, and that's the goal.

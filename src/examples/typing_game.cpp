@@ -15,6 +15,7 @@ struct Typing {
     int32 stringIndex;
     int32 charIndex;
     int32 score;
+    int32 maxScore;
 };
 
 Typing *typing = NULL;
@@ -79,19 +80,22 @@ void MyInit() {
             if (currStr.length == 0) {
                 currStr.string = &typing->document[i];
             }
-            
-            currStr.length++;
+
+            if (c != '\n') {
+                currStr.length++;    
+            }
         }
     }
 }
 
 void MyGameUpdate() {
 
-
     if (typing->stringIndex < 0) {
         if (typing->timeSubmitted > 0) {
             r32 timeElapsed = typing->timeSubmitted - typing->timeStarted;
             DrawTextScreen(&Game->monoFont, V2(800, 100), 24, V4(1), true, "last time %.2f", timeElapsed);
+
+            DrawTextScreen(&Game->monoFont, V2(800, 180), 24, V4(1), true, "score %d/%d %.1f", typing->score, typing->maxScore, 100.0f * (typing->score / (1.0f * typing->maxScore)));
         }
         
         DrawTextScreen(&Game->monoFont, V2(400, 400), 24, V4(1), false, "Press any key to begin");
@@ -106,9 +110,22 @@ void MyGameUpdate() {
         }
     }
     else {
+        Str *inputStr = &typing->inputString;
+        Str currStr = typing->strings[typing->stringIndex];
+        
         if (InputPressed(Input, Input_Return)) {
             typing->timeSubmitted = Game->time;
             typing->stringIndex = -1;
+
+            typing->score = 0;
+
+            for (int i = 0; i < currStr.length; i++) {
+                if (inputStr->string[i] == currStr.string[i]) {
+                    typing->score++;
+                }
+            }
+
+            typing->maxScore = currStr.length;
         }
         else if (InputPressed(Input, Input_Backspace)) {
             if (typing->inputString.length > 0) {
@@ -125,10 +142,10 @@ void MyGameUpdate() {
         r32 timeElapsed = Game->time - typing->timeStarted;
         DrawTextScreen(&Game->monoFont, V2(800, 100), 24, V4(1), true, "%.2f", timeElapsed);
     
-        Str currStr = typing->strings[typing->stringIndex];
+        
         DrawTextScreen(&Game->monoFont, V2(400, 400), 24, V4(1), false, "%.*s", currStr.length, currStr.string);
 
-        Str *inputStr = &typing->inputString;
+
         DrawTextScreen(&Game->monoFont, V2(400, 500), 24, V4(1), false, "%.*s", inputStr->length, inputStr->string);
 
         // This is a pretty hacked in version. For a more robust implementation look at LayoutGlyphs
@@ -141,8 +158,4 @@ void MyGameUpdate() {
 
         DrawRectScreen(cursorPos, V2(24.0f, 48.0f), V4(0.5f, 0.5f, 0.5f, 0.5f));        
     }
-
-
-    // @TODO: draw cursor
-    // To do that we need to sprintf what we're typing.
 }

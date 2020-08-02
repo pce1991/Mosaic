@@ -154,7 +154,6 @@ void ServerUpdate() {
 }
 
 void MyGameUpdate() {
-
     NetworkInfo *networking = &Game->networkInfo;
 
     if (myData.isServer) {
