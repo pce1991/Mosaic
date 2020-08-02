@@ -1,6 +1,7 @@
 
 // use ipconfig to find this for whatever machine you want to host your server on.
-const uint32 ServerAddress = MakeAddressIPv4(76, 183, 120, 224);
+//const uint32 ServerAddress = MakeAddressIPv4(76, 183, 120, 224);
+const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
 
 // @NOTE:
 // We setup port forwarding. Our sockets need to use our local IP address.
@@ -43,6 +44,7 @@ struct Ball {
 
 struct UserInfo {
     uint32 address;
+    uint16 port;
     real32 lastPingTime;
 
     bool ready;
@@ -100,11 +102,11 @@ void MyInit() {
     memset(myData, 0, sizeof(Pong));
 
     // @TODO: pass this in
-    myData->isServer = true;
+    myData->isServer = false;
     InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), ReceivingPort, true);
 
     Socket sendingSocket = {};
-    InitSocket(&sendingSocket, GetMyAddress(), Port + 1, true);
+    InitSocket(&sendingSocket, GetMyAddress(), Port + 4, true);
     PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
 
     PaddleRect.min = V2(-0.2f, -0.8f);
@@ -148,13 +150,13 @@ void ServerUpdate() {
                 if (received->packet.data[0]) {
                     user->ready = true;
 
-                    Log("user %d at address %u:%u set to ready", userIndex, user->address, received->fromPort);
+                    Log("user %d at address %u:%u set to ready", userIndex, user->address, user->port);
                 }
             }
             else {
-                
                 UserInfo u = {};
                 u.address = received->fromAddress;
+                u.port = received->fromPort;
                 u.lastPingTime = Game->time;
 
                 if (received->packet.data[0]) {
@@ -166,7 +168,7 @@ void ServerUpdate() {
                 user = &server->users[server->users.count - 1];
                 userIndex = server->users.count - 1;
 
-                Log("Connected user %d at address %u:%u", userIndex, u.address, received->fromPort);
+                Log("Connected user %d at address %u:%u", userIndex, u.address, u.port);
             }
         }
 
