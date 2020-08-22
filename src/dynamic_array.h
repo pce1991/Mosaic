@@ -101,36 +101,6 @@ inline void DynamicArrayEnsureCapacity(uint32 *arrayCapacity, uint32 arrayCount,
 
 
 template <typename T>
-void OverwriteDynamicArray(DynamicArray<T> *array, void *ptr, uint32 count) {
-    if (array->capacity < count) {
-        DynamicArrayEnsureCapacity(array, count + 1);
-    }
-    
-    array->count = count;
-    memcpy(array->data, ptr, sizeof(T) * count);
-}
-
-template <typename T>
-void OverwriteDynamicArray(DynamicArray<T> *array, DynamicArray<T> *from) {
-    OverwriteDynamicArray(array, from->data, from->count);
-}
-
-template <typename T>
-void ExtendDynamicArray(DynamicArray<T> *array, void *ptr, uint32 count) {
-    if (array->capacity < array->count + count) {
-        DynamicArrayEnsureCapacity(array, Max(array->count + count, 1u));
-    }
-
-    memcpy(array->data + array->count, ptr, sizeof(T) * count);
-    array->count += count;
-}
-
-template <typename T>
-void ExtendDynamicArray(DynamicArray<T> *array, DynamicArray<T> *from) {
-    ExtendDynamicArray(array, from->data, from->count);
-}
-
-template <typename T>
 inline void DynamicArrayClear(DynamicArray<T> *array) {
     array->count = 0;
 }
@@ -258,16 +228,6 @@ inline T *InsertAtIndexPtr(DynamicArray<T> *array, uint32 index) {
 }
 
 template <typename T>
-inline void SwapAtIndex(DynamicArray<T> *array, uint32 indexA, uint32 indexB) {
-    ASSERT(indexA < array->count);
-    ASSERT(indexB < array->count);
-
-    T temp = array->data[indexA];
-    array->data[indexA] = array->data[indexB];
-    array->data[indexB] = temp;
-}
-
-template <typename T>
 inline void RemoveAtIndex(DynamicArray<T> *array, uint32 index) {
     ASSERT(index < array->count);
 
@@ -299,33 +259,6 @@ inline void RemoveAtIndexBySwap(DynamicArray<T> *array, uint32 index) {
     }
 
     array->count--;
-}
-
-template <typename T>
-// @NOTE: end is exclusive
-inline void RemoveRange(DynamicArray<T> *array, uint32 start, uint32 end) {
-    ASSERT(end > start);
-    uint32 elementsToMove = end - start;
-    if (elementsToMove > 0) {
-        memmove(array->data + start, array->data + end, sizeof(T) * elementsToMove);        
-    }
-
-    array->count -= elementsToMove;
-}
-
-template <typename T>
-inline bool DynamicArrayEquals(DynamicArray<T> a, DynamicArray<T> b) {
-    if (a.count != b.count) {
-        return false;
-    }
-
-    for (int i = 0; i < a.count; i++) {
-        if (!(a[i] == b[i])) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 template <typename T>
@@ -377,43 +310,3 @@ inline T *LastPtr(DynamicArray<T> *array) {
     T *result = &array->data[array->count - 1];
     return result;
 }
-
-template <typename T>
-inline void RemoveLast(DynamicArray<T> *array) {
-    ASSERT(array->count > 0);
-
-    RemoveAtIndex(array, array->count - 1);
-}
-
-template <typename T>
-void ReverseDynamicArray(DynamicArray<T> *array) {
-
-    u32 last = array->count - 1;
-    for (int i = 0; i < array->count / 2; i++) {
-        T temp = array->data[i];
-        array->data[i] = array->data[last];
-        array->data[last] = temp;
-        last--;
-    }
-}
-
-template <typename T>
-void QuicksortDynamicArray(DynamicArray<T> *array) {
-    Quicksort(array->data, sizeof(T), array->count);
-}
-
-template <typename T>
-void QuicksortDynamicArray(DynamicArray<T> *array, int32 (*comparator)(const void *a, const void *b)) {
-    Quicksort(array->data, sizeof(T), array->count, comparator);
-}
-
-template <typename T>
-void QuicksortDynamicArray(DynamicArray<T> *array, int32 (*comparator)(const void *a, const void *b, void *data), void *data) {
-    Quicksort(array->data, sizeof(T), array->count, comparator, data);
-}
-
-template <typename T>
-void QuicksortDynamicArray(DynamicArray<T> *array, uint32 count, int32 (*comparator)(const void *a, const void *b, void *data), void *data) {
-    Quicksort(array->data, sizeof(T), count, comparator, data);
-}
-

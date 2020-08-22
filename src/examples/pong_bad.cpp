@@ -11,15 +11,17 @@ const uint32 ServerAddress = MakeAddressIPv4(76, 183, 120, 224);
 // What you want to do is tell the router to take anything sent to the public IP address
 // on your selected port to be sent to your local machine on that port.
 
-// Turned telnet on by going to program->turn on/off features->select telnet
-
 // @NOTE: whatever socket we use to send a packet will record the port number.
+
+// @TODO: To get multiple instances running on one machine you want to have each client use its own port,
+// otherwise there is no way to distinguish which client the server is sending data to.
+// If the machine is on a different network its fine to give it the same port number as another client.
+// Could pass this is thru commandline argument, or get it from a config file.
 
 const uint16 Port = 30000;
 const uint16 ReceivingPort = 30000;
 const uint16 SendingPort = 30001;
 const uint16 ServerPort = 30000;
-const uint16 ClientPort = 30000;
 
 const uint32 PacketID = Hash("PongBad");
 
@@ -105,7 +107,7 @@ void MyInit() {
     myData = (Pong *)Game->myData;
     memset(myData, 0, sizeof(Pong));
 
-    // @TODO: pass this in
+    // @TODO: pass this in from the compiler.
     myData->isServer = true;
     InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), ReceivingPort, true);
 

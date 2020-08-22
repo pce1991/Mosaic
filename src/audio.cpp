@@ -17,6 +17,7 @@ enum WavFormat {
     WAV_Extensible         = 0xFFFE
 };
 
+// Sound clip must be a .wav file and must be a mono track (or a stereo I forget lol)
 bool LoadSoundClip(const char *audioPath, SoundClip *sound) {
 
     bool success = true;
@@ -148,7 +149,7 @@ void GenerateSineWaveClip(SoundClip *clip) {
 
 
 int32 PlaySound(AudioPlayer *player, SoundClip clip, bool loop) {
-    // FREELIST
+    // TODO: FREELIST
     
     PlayingSound sound = {};
     sound.playing = true;

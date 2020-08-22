@@ -1,0 +1,63 @@
+* Mosaic
+** Tile
+  The tile is the basic unit.
+  active: a boolean representing if the tile is to be drawn or not.
+  position: the 2D integer coordinates of its position on the canvas.
+  color: a vec4 representing its current color.
+  state: an enum for specifying custom state.
+  
+  Tiles are stored in a buffer sized to be gridWidth * gridHeight
+** GetTile()
+  GetTile(int x, int y)
+  GetTile(vec2i pos)
+
+  Returns a pointer to the tile at the specified position.
+  
+** GetTileBlock()
+** ComputeGridSize()
+  This reallocates the buffer of tiles.
+
+  Since the dimensions change the tiles are completely wiped, so any state stored on the tiles is lost, and any pointers to tiles are invalidated.
+  
+
+* Engine
+** DrawText(position, size, color, string) [render.cpp]
+  This will start drawing text at the position you specified, moving right to left.
+  The size is a scalar which multiplies the the font's default pixel size. For instance if the font's height in pixels is 64, then drawing with a size of 8 will make the height of the rendered glyph 256.
+  
+** Creating a new game
+   Create a new game by creating a new c++ file in the src directory (or any subdirectory).
+
+   That file needs to define a MyInit() and MyGameUpdate() function.
+   
+   Go into game_code.h and include the new file. It is important that only one game file is included since they each define a MyGameUpdate() and MyInit(). You can use the preprocessor to set flags on which files to compile with.
+
+** MyGameUpdate()
+   This function is called every frame by the game engine. This is where you want to put all your game code.
+
+** MyInit()
+   This function is called when the engine starts (vrooom). 
+
+   Typically you'll allocate some memory for your game here (look at typing_game.cpp for an example).
+** GameMemory [game.h]
+   This struct has all the platform-independent data for the engine.
+
+   For game-specific data it has a pointer called myData that you can allocate yourself.
+*** Frame Memory
+    This memory arena gets allocated by the engine, and cleared every frame. You can call PushSize() [my_memory.h] to allocate more space on it.
+
+    Its a very handy way to allocate memory easily and efficiently if you know you don't need it longer than a frame.
+
+    Consider the case where you want to loop over bunch of entities and collect some data about them for processing. You could create a DynamicArray (heap allocated), but then you'd need to make sure to free that memory at the end of the frame. Instead you could just PushSize onto the frame memory and not have to think about it.
+** DynamicArray [dynamic_array.h]
+   This is a heap-allocated array which can grow in size. 
+
+   You access elements just like an array using [].
+
+   PushBack() adds an element to the end of the array.
+
+   RemoveAtIndex() removes on element from the index specified and then shifts all the elements to the right of it to fill the gap.
+
+   Whenever you try to add an element it will see if there is enough space. If there isn't it will allocate a new chunk of memory double the current capacity to ensure the new element fits.
+** Debug Log
+   

@@ -304,7 +304,6 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     Game->rectBuffer.count = 0;
     
     DrawGlyphs(gameMem->glyphBuffers);
-
     
     DeleteEntities(&Game->entityDB);
 

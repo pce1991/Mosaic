@@ -100,8 +100,6 @@ struct GameMemory {
 
     int32 gameIndex;
 
-    MosaicMem mosaic;
-
     bool inputStringActive;
     char inputString[255];
 

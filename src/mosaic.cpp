@@ -46,6 +46,8 @@ int32 CellIndex(int32 x, int32 y) {
 // Other things like setting the gridWidth can be customized.
 void MyInit() {
     Game->myData = malloc(sizeof(MosaicMem));
+    memset(Game->myData, 0, sizeof(MosaicMem));
+    
     Mosaic = (MosaicMem *)Game->myData;
     
     Data = &Mosaic->myData;
