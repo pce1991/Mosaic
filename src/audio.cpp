@@ -148,13 +148,14 @@ void GenerateSineWaveClip(SoundClip *clip) {
 }
 
 
-int32 PlaySound(AudioPlayer *player, SoundClip clip, bool loop) {
+int32 PlaySound(AudioPlayer *player, SoundClip clip, real32 volume, bool loop) {
     // TODO: FREELIST
     
     PlayingSound sound = {};
     sound.playing = true;
     sound.clip = clip;
     sound.loop = loop;
+    sound.volume = volume;
 
     // @MAYBE: is this right?
     sound.samplesInBuffer = clip.sampleCount;
@@ -162,6 +163,11 @@ int32 PlaySound(AudioPlayer *player, SoundClip clip, bool loop) {
 
     return index;
 }
+
+int32 PlaySound(AudioPlayer *player, SoundClip clip, real32 volume) {
+    return PlaySound(player, clip, volume, false);
+}
+
 
 void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
     memset(output, 0, sizeof(real32) * samplesToRender * 2);
@@ -176,8 +182,8 @@ void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
         }
 
         for (int i = 0; i < samplesToRenderForSound; i++) {
-            output[2 * i] += sound->clip.data[i + sound->samplesRendered];
-            output[(2 * i) + 1] += sound->clip.data[i + sound->samplesRendered];
+            output[2 * i] += sound->clip.data[i + sound->samplesRendered] * sound->volume;
+            output[(2 * i) + 1] += sound->clip.data[i + sound->samplesRendered] * sound->volume;
         }
 
         sound->samplesRendered += samplesToRender;

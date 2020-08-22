@@ -1,6 +1,7 @@
 
 #define EX_MOSAIC_CLEAN 0
-#define EX_MOSAIC_BASIC 1
+#define EX_MOSAIC_BASIC 0
+#define EX_MOSAIC_AUDIO 1
 #define EX_MOSAIC_RANDOM_TILES 0
 
 #if EX_MOSAIC_CLEAN
@@ -11,6 +12,9 @@
 
 #elif EX_MOSAIC_RANDOM_TILES
 #include "examples/mosaic_random_tiles.cpp"
+
+#elif EX_MOSAIC_AUDIO
+#include "examples/mosaic_audio.cpp"
 
 //#elif MACRO_NAME
 //#include "file_name.cpp"
