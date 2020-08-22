@@ -1,3 +1,13 @@
+
+#define MOSAIC_EXAMPLE_CLEAN 1
+
+#if MOSAIC_EXAMPLE_CLEAN
+#include "my_mosaic.cpp"
+
+//#elif
+
+#endif
+
 MosaicMem *Mosaic = NULL;
 MyData *Data = NULL;
 Tile *Tiles = NULL;
@@ -233,17 +243,6 @@ void MosaicUpdateInternal() {
     
     Mosaic->hoveredTilePrev = Mosaic->hoveredTile;
     Mosaic->hoveredTile = GetHoveredTile();
-}
-
-// This is where you put the code you want to run every update.
-void MosaicUpdate() {
-    Tile *tiles = Mosaic->tiles;
-    
-    Tile* hoveredTile = Mosaic->hoveredTile;
-
-    if (hoveredTile != NULL) {
-        hoveredTile->color = V4(1, 0, 0, 1);
-    }
 }
 
 // This function gets called by our game engine every frame.
