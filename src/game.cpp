@@ -17,10 +17,6 @@
 
 #include "ui.cpp"
 
-// @TODO: get this into game_code so we can just disable it.
-// Mosaic is really just a custom game. 
-#include "mosaic.cpp"
-
 #include "game_code.cpp"
 
 const uint32 screenWidth = 1600;
@@ -275,9 +271,6 @@ void GameInit(GameMemory *gameMem) {
     // }
 #endif
 
-    // @TODO: make an init for this.
-    MosaicInit(gameMem);
-
     MyInit();
 }
 
@@ -304,10 +297,6 @@ void GameUpdateAndRender(GameMemory *gameMem) {
 
     // Want to get them all before we decide what to do in our frame.
     ReceivePackets();
-
-    // MosaicUpdateInternal();
-    // MosaicUpdate();
-    // MosaicRender();
 
     MyGameUpdate();
 

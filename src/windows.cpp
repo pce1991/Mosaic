@@ -1,7 +1,7 @@
 #define WINDOWS 1
 
 #include <ws2tcpip.h>
-#include <Mstcpip.h>
+#include <Mstcpip.h> // only need this if turning on promiscuous mode for socket.
 
 #include <windows.h>
 #include <windowsx.h>

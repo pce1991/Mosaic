@@ -1,7 +1,7 @@
 
 // use ipconfig to find this for whatever machine you want to host your server on.
-//const uint32 ServerAddress = MakeAddressIPv4(76, 183, 120, 224);
-const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
+const uint32 ServerAddress = MakeAddressIPv4(76, 183, 120, 224);
+//const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
 
 // @NOTE:
 // We setup port forwarding. Our sockets need to use our local IP address.
@@ -331,6 +331,11 @@ void ServerUpdate() {
             if (RectTest(ball->rect, player->rect, ball->position, player->position, &dir)) {
                 clientData->collided[i] = true;
                 ball->position = ball->position + dir;
+
+                // If it hits the top or bottom we want its y direction to flip
+                if (Abs(dir.y) > 0) {
+                    ball->velocity.y *= -1;
+                }
                 
                 ball->velocity.x *= -1;
                 ball->velocity.y += player->velocity.y * 1.1f;
@@ -500,7 +505,8 @@ void ClientUpdate() {
 
         int32 packetSize = sizeof(GamePacket);
 
-        int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[0], ServerAddress, ReceivingPort, p, packetSize);
+        // @NOTE: when the server contacts us it needs to send us data on the same port that we sent our packets from.
+        int32 bytesSent = SendPacket(&Game->networkInfo.receivingSocket, ServerAddress, ReceivingPort, p, packetSize);
     }
 
     DynamicArrayClear(&network->packetsToSend);

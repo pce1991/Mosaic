@@ -1,7 +1,6 @@
 
-BUG: failing to bind socket in pong.
-     We seem to fail to bind socket in messenging_example tho, but we still manage to send and receive packets from server...
-
+TODO: networking needs to be able to run multiple instances of the game on the same machine. You should be able to host the server and N clients on the same machine. 
+-- only issue there is that the clients each need a unique port that we send to.
 
 BUG: screen text doesnt work at all!!! Not really sure why, at sizes bigger than 32 we stop seeing it. I think its got something to do with calculating the model position. 
 Its also really annoying that we dont have an emsize or anything, so our sizes are totally random.

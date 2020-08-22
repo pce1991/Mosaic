@@ -41,8 +41,13 @@ int32 CellIndex(int32 x, int32 y) {
     return x + (y * Mosaic->gridWidth);
 }
 
-void MosaicInit(GameMemory *mem) {
-    Mosaic = &mem->mosaic;
+// @NOTE: Some of this stuff is internal and you don't ever want it to change.
+// Things like allocating the RectBuffer or calculating the levelAspect.
+// Other things like setting the gridWidth can be customized.
+void MyInit() {
+    Game->myData = malloc(sizeof(MosaicMem));
+    Mosaic = (MosaicMem *)Game->myData;
+    
     Data = &Mosaic->myData;
 
     Mosaic->gridWidth = 16;
@@ -228,7 +233,7 @@ void MosaicUpdateInternal() {
     Mosaic->hoveredTile = GetHoveredTile();
 }
 
-
+// This is where you put the code you want to run every update.
 void MosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
     
@@ -237,5 +242,12 @@ void MosaicUpdate() {
     if (hoveredTile != NULL) {
         hoveredTile->color = V4(1, 0, 0, 1);
     }
-
 }
+
+// This function gets called by our game engine every frame.
+void MyGameUpdate() {
+    MosaicUpdateInternal();
+    MosaicUpdate();
+    MosaicRender();
+}
+

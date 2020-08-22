@@ -22,9 +22,6 @@ inline uint32 MakeAddressIPv4(u8 a, u8 b, u8 c, u8 d) {
     return (a << 24) | (b << 16) | (c << 8) | d;
 }
 
-inline uint32 StringToIPv4(char *s) {
-    
-}
 
 uint32 InitSocket(Socket *socketPtr, uint32 address, uint16 port, bool bindSocket = false) {
     socketPtr->handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -48,14 +45,14 @@ uint32 InitSocket(Socket *socketPtr, uint32 address, uint16 port, bool bindSocke
         }
     }
 
-    // enable promiscuous mode
-    {
-        DWORD dwValue = RCVALL_ON;
-        DWORD dwBytesReturned = 0;
-        if (WSAIoctl(socketPtr->handle, SIO_RCVALL, &dwValue, sizeof(dwValue), NULL, 0, &dwBytesReturned, NULL, NULL) == SOCKET_ERROR) {
-            printf("Ioctl failed with error code : %d", WSAGetLastError());
-        }
-    }
+    // enable promiscuous mode. Maybe not necessary. This lets you receive all packets on network, not just to machine.
+    // {
+    //     DWORD dwValue = RCVALL_ON;
+    //     DWORD dwBytesReturned = 0;
+    //     if (WSAIoctl(socketPtr->handle, SIO_RCVALL, &dwValue, sizeof(dwValue), NULL, 0, &dwBytesReturned, NULL, NULL) == SOCKET_ERROR) {
+    //         Print("Ioctl failed with error code : %d", WSAGetLastError());
+    //     }
+    // }
 
     DWORD nonBlocking = 1;
     int32 nonBlockingSuccess = ioctlsocket(socketPtr->handle, FIONBIO, &nonBlocking);
