@@ -6,9 +6,6 @@ struct Tile {
     vec4 color;
 };
 
-struct MyData {
-};
-
 struct MosaicMem {
     // @TODO: separate this stuff out into internal state that the user doesnt touch
     real32 lineThickness;
@@ -25,7 +22,8 @@ struct MosaicMem {
     vec4 lineColor;
     vec4 textColor;
 
-    bool onlyDrawBorder;
+    bool drawBorder;
+    bool drawGrid;
     
     uint8 gridWidth;
     uint8 gridHeight;
@@ -36,5 +34,12 @@ struct MosaicMem {
     Tile *hoveredTile;
     Tile *hoveredTilePrev;
 
-    MyData myData;
+    void *myData;
 };
+
+MosaicMem *Mosaic = NULL;
+Tile *Tiles = NULL;
+
+
+Tile *GetTile(int32 x, int32 y);
+void SetMosaicGridSize(uint8 newWidth, uint8 newHeight);

@@ -1,22 +1,26 @@
 
-#define MOSAIC_EXAMPLE_CLEAN 1
+#define EX_MOSAIC_CLEAN 0
+#define EX_MOSAIC_RANDOM_TILES 1
 
-#if MOSAIC_EXAMPLE_CLEAN
-#include "my_mosaic.cpp"
+#if EX_MOSAIC_CLEAN
+#include "examples/mosaic_clean.cpp"
 
-//#elif
+#elif EX_MOSAIC_RANDOM_TILES
+#include "examples/mosaic_random_tiles.cpp"
+
+//#elif MACRO_NAME
+//#include "file_name.cpp"
 
 #endif
 
-MosaicMem *Mosaic = NULL;
-MyData *Data = NULL;
-Tile *Tiles = NULL;
-
-void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
+// @BUG: this doesnt guarantee that it fits inside the camera if the height is bigger than the width! 
+void SetMosaicGridSize(uint8 newWidth, uint8 newHeight) {
     Mosaic->gridWidth = Clamp(newWidth, 1, 255);
     Mosaic->gridHeight = Clamp(newHeight, 1, 255);
 
-    free(Mosaic->tiles);
+    if (Mosaic->tiles != NULL) {
+        free(Mosaic->tiles);
+    }
     
     Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
     Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
@@ -24,6 +28,7 @@ void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
     memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
     Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridWidth;
+    Mosaic->lineThickness = Mosaic->tileSize * 0.04f;
 
     // @TODO: add the line sizes
     Mosaic->gridSize.x = Mosaic->tileSize * Mosaic->gridWidth;
@@ -31,19 +36,15 @@ void ComputeGridSize(uint8 newWidth, uint8 newHeight) {
     
     Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
 
+    AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
+
     Tile *tiles = Mosaic->tiles;
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
-            int32 index = (y * Mosaic->gridWidth) + x;
-
-            Tile *tile = &tiles[index];
-
+            Tile *tile = GetTile(x, y);
             tile->position = V2i(x, y);
         }
     }
-}
-
-void MosaicMyDataInit(MyData *myData) {
 }
 
 
@@ -59,55 +60,18 @@ void MyInit() {
     memset(Game->myData, 0, sizeof(MosaicMem));
     
     Mosaic = (MosaicMem *)Game->myData;
-    
-    Data = &Mosaic->myData;
-
-    Mosaic->gridWidth = 16;
-    Mosaic->gridHeight = 16;
-
-    Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
-    Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
-
-    memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
     MoveMouse(Game->screenWidth / 2.0f, Game->screenHeight / 2.0f);
 
     Mosaic->padding = 1.5f;
 
-    AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
-
-    real32 screenAspect = 16.0f / 9.0f;
-    real32 levelAspect = Mosaic->gridWidth / (Mosaic->gridHeight * 1.0f);
-
-    Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridHeight;
-
-    // Note: proportional to tileSize so the grid doesn't take up more room proportionally
-    Mosaic->lineThickness = Mosaic->tileSize * 0.04f;
-
-    // @TODO: add the line sizes
-    Mosaic->gridSize.x = Mosaic->tileSize * Mosaic->gridWidth;
-    Mosaic->gridSize.y = Mosaic->tileSize * Mosaic->gridHeight;
-    
-    Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
+    SetMosaicGridSize(16, 16);
 
     Mosaic->screenColor = V4(0.2f, 0.2f, 0.2f, 1.0f);
     Mosaic->boardColor = V4(0, 0, 0, 1.0f);
     Mosaic->lineColor = V4(0.8f, 0.8f, 0.8f, 1.0f);
 
-    Mosaic->onlyDrawBorder = true;
-
-    Tile *tiles = Mosaic->tiles;
-    for (int y = 0; y < Mosaic->gridHeight; y++) {
-        for (int x = 0; x < Mosaic->gridWidth; x++) {
-            int32 index = (y * Mosaic->gridWidth) + x;
-
-            Tile *tile = &tiles[index];
-
-            tile->position = V2i(x, y);
-        }
-    }
-
-    MosaicMyDataInit(&Mosaic->myData);
+    MyMosaicInit();
 }
 
 
@@ -224,11 +188,11 @@ void MosaicRender() {
         DrawTile(tile->position, tile->color);
     }
 
-    if (Mosaic->onlyDrawBorder) {
-        DrawBorder();    
-    }
-    else {
+    if (Mosaic->drawGrid) {
         DrawGrid();        
+    }
+    else if (Mosaic->drawBorder) {
+        DrawBorder();
     }
 
     //Instancing
@@ -248,7 +212,7 @@ void MosaicUpdateInternal() {
 // This function gets called by our game engine every frame.
 void MyGameUpdate() {
     MosaicUpdateInternal();
-    MosaicUpdate();
+    MyMosaicUpdate();
     MosaicRender();
 }
 
