@@ -18,6 +18,7 @@
 #include "math/matrix.h"
 #include "math/rand.h"
 #include "math/geometry.h"
-#include "math/bezier.h"
+
+#include "math/color.h"
 
 #endif

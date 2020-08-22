@@ -1,9 +1,13 @@
 
 #define EX_MOSAIC_CLEAN 0
-#define EX_MOSAIC_RANDOM_TILES 1
+#define EX_MOSAIC_BASIC 1
+#define EX_MOSAIC_RANDOM_TILES 0
 
 #if EX_MOSAIC_CLEAN
 #include "examples/mosaic_clean.cpp"
+
+#elif EX_MOSAIC_BASIC
+#include "examples/mosaic_basic.cpp"
 
 #elif EX_MOSAIC_RANDOM_TILES
 #include "examples/mosaic_random_tiles.cpp"
@@ -68,8 +72,7 @@ void MyInit() {
     SetMosaicGridSize(16, 16);
 
     Mosaic->screenColor = V4(0.2f, 0.2f, 0.2f, 1.0f);
-    Mosaic->boardColor = V4(0, 0, 0, 1.0f);
-    Mosaic->lineColor = V4(0.8f, 0.8f, 0.8f, 1.0f);
+    Mosaic->gridColor = V4(0.8f, 0.8f, 0.8f, 1.0f);
 
     MyMosaicInit();
 }
@@ -95,7 +98,7 @@ void DrawBorder() {
 
         if (y > 0 && y < Mosaic->gridHeight) { continue; }
         vec2 rowLineCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), 0) + V2(0, -y * Mosaic->tileSize);
-        DrawRect(rowLineCenter, V2(Mosaic->gridSize.x * 0.5f, Mosaic->lineThickness), Mosaic->lineColor);
+        DrawRect(rowLineCenter, V2(Mosaic->gridSize.x * 0.5f, Mosaic->lineThickness), Mosaic->gridColor);
         
     }
 
@@ -103,7 +106,7 @@ void DrawBorder() {
         if (x > 0 && x < Mosaic->gridWidth) { continue; }
         
         vec2 colLineCenter = Mosaic->gridOrigin + V2(0, (-Mosaic->gridSize.y * 0.5f)) + V2(x * Mosaic->tileSize, 0);
-        DrawRect(colLineCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f), Mosaic->lineColor);
+        DrawRect(colLineCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f), Mosaic->gridColor);
     }
 }
 
@@ -111,13 +114,13 @@ void DrawGrid() {
     for (int y = 0; y < Mosaic->gridHeight + 1; y++) {
 
         vec2 rowLineCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), 0) + V2(0, -y * Mosaic->tileSize);
-        DrawRect(rowLineCenter, V2(Mosaic->gridSize.x * 0.5f, Mosaic->lineThickness), Mosaic->lineColor);
+        DrawRect(rowLineCenter, V2(Mosaic->gridSize.x * 0.5f, Mosaic->lineThickness), Mosaic->gridColor);
         
     }
 
     for (int x = 0; x < Mosaic->gridWidth + 1; x++) {
         vec2 colLineCenter = Mosaic->gridOrigin + V2(0, (-Mosaic->gridSize.y * 0.5f)) + V2(x * Mosaic->tileSize, 0);
-        DrawRect(colLineCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f), Mosaic->lineColor);
+        DrawRect(colLineCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f), Mosaic->gridColor);
     }
 }
 
@@ -179,7 +182,7 @@ void MosaicRender() {
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
     Mosaic->rectBuffer.count = 0;
     {
-        DrawRect(V2(0), Mosaic->gridSize * 0.5f, Mosaic->boardColor);
+        DrawRect(V2(0), Mosaic->gridSize * 0.5f, V4(0, 0, 0, 1));
     }
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {

@@ -18,8 +18,7 @@ struct MosaicMem {
     RectBuffer rectBuffer;
     
     vec4 screenColor;
-    vec4 boardColor;
-    vec4 lineColor;
+    vec4 gridColor;
     vec4 textColor;
 
     bool drawBorder;
