@@ -1,0 +1,173 @@
+
+TODO: define colors
+TODO: RGB(r g b, 1.0)
+
+TODO: Mosaic examples. 
+-- the less code you see the clearer things are.
+-- need to be able to set the grid size 
+-- I dont like that its a mirror of the general game engine architecture. 
+
+
+TODO: config file for window dimensions, volume
+
+BUG: fix RectTest!!!
+
+TODO: networking needs to be able to run multiple instances of the game on the same machine. You should be able to host the server and N clients on the same machine. 
+-- only issue there is that the clients each need a unique port that we send to.
+
+BUG: screen text doesnt work at all!!! Not really sure why, at sizes bigger than 32 we stop seeing it. I think its got something to do with calculating the model position. 
+Its also really annoying that we dont have an emsize or anything, so our sizes are totally random.
+
+TODO over summer:
+networking
+UI
+DebugDrawing
+Logging (both to file and to screen)
+
+
+Radically simplify and remove a lot of unused code. I just want a really simple 2D engine students can use. I bet 12 API calls is the sweetspot.
+
+Implement basic UI:
+buttons (with string and with png)
+input string
+input handles
+Scroll regions
+DebugDrawLine/Circle/Rect
+
+
+Sprites (access the pixel and then set the colors)
+Animations
+
+Create a simple menu
+
+Create sprites
+
+Create a scene architecture for moving between different types of games.
+
+A good exercise for the Engine class would be to see something like how to load OpenGL shaders, and then have to improve on it. For instance, storing the uniform and attribute locations.
+
+
+Get the tile to move and go up or down everytime it hits the edge.
+
+
+"Then comes the hard part: what is worth doing?"
+I love you Brian Moriarty
+
+Something I love about his style is making metaphors/allegories to a lot of different fields: 
+Music
+Sports
+Games
+Movies
+Writing
+
+
+My question is: is this a useful way to learn how to program and do game design? 
+
+
+
+Games are:
+input data
+operations on that data
+output data
+
+
+Overload V4() so we don't get those obnoxious errors when not everything is a floating point. 
+
+
+Write a clear API and documentation. 
+
+DynamicArray is probably necessary, especially for tiles 
+
+Clearly separate things because it's very easy to mess up by moving the grid rendering code, or checking for input in the wrong place, etc. Especially so they can easily create a new game by copy-pasting the directory and not needing to easily segmenting their code from the other stuff. Like we could have 
+Tile {
+   basic;
+   custom;
+};
+
+Possible to teach math stuff with this? 
+
+
+Oh this could be really cool for Gray Matter!
+
+
+DESIGN: 
+I think we need the tiles to record some time information: last time changed position
+
+If you change the grid size do we delete tiles out of bounds? 
+
+GlobalVars file Thekla style? Could move things like screen/board/line color in there, but that isn't really a huge barrier to entry...
+        
+Things like repeat key rate might be something we want internal...
+
+I'd rather not pass in input to InputPressed
+
+Do we do thins GOL style and say each tile is just on or off, there is no such thing as deletion or moving? That seems counterintuitive for a lot of games (moving a pawn is actually turning this thing to nothing and this tile to a pawn)
+
+I kinda like the animation system used in GOL, might be nice to implement that here. This depends on whether tiles/cells have positions, or are simply coordinates in space
+
+Wow this is a lot like Changes...
+
+
+TODO: 
+audio
+Font rendering
+custom sprites on a tile? Kinda flies in the face of the idea but Perlenspiel has it...
+path finding?
+Saving/loading games state?
+Animations (like start lerping between these colors or something?)
+Debug log (kinda weird to implement a sophisticated text rendering system in something that doesn't let you do anything more advanced than a line at the top...)
+
+
+
+TODO: figure out whats up with glTexParameter and why its necessary
+      Frame buffers
+
+We should have a text region on the right, and the graph on the left, when you select certain things it'll pop up some text on the right.
+
+
+I want to start drawing passing in colors so we'll build up buffers, copy the data, and then draw with color as a vertex attrib
+
+
+Create a library for interactive math experiments
+
+Needs to require very little programming knowledge (but could be good testing ground for basic logic/control flow)
+
+Puzzle game: could be make the dot product < 0. Make it 0, etc. Make this face a diffrent way from this object (using dot product). 
+Move vectors into different spaces, like transforming the direction into normalized space. 
+Is this thing's coordinates in world or local space? 
+
+Set t value so the point reaches the destination. Write a calculation for t so that it arrives in 2 seconds
+Change the values of the easing function so the curves match
+
+
+Lerp
+Rotations
+Easing functions
+Dot product
+Cross Product
+Quaternions
+Geometry
+
+Importantly need to be able to solve equations like "I want this to arrive in n seconds, how do I do that" or "it moves this fast, what time will it arrive"
+  Basic algebraic equations like that
+
+
+
+Perlenspiel Thoughts
+I don't like how data is associated with tiles. That leads to a weird thing where the tiles have associated data but they dont move, so you move data from one tile to another. I much prefer the idea that the data is the data and you just access it however you want and use the tiles as rendering.
+
+Sprites: I don't like how sprites can occupy one tile because it kinda lies about what's going on. On the other hand my approach makes doing any grid-based thing with sprites painful because the student has to make their own grid.
+
+* Normalized or Pixels
+  We pretty much always calculate the pixels as ratios of the dimensions anyway so it just makes sense to convert to normalized every where.
+  
+* Principles
+  A guiding design is that it should be sophisticated enough to do the bare minimum reasonably well. 
+  Simple enough to easily modify. 
+  Bare enough to prompt questions, "what if I want to do X".
+  -- give examples of this.
+  Straightforward enough that you can walk the callstack and see where things are happening. That's one reason its single-threaded
+  Dont hide details. That's why there isnt just a "physics tick". I want students to think about what happens when.
+  
+  To a degree limitations help you create, but I think it has more to do with specifications. Being familiar with the details and the intracacies of an implementation.
+  A limitation is "only make a game with boxes" which isnt necessarily fruitful. But understanding boxes, the type of operations you can use them for lets you do a lot of things. It makes you think of the properties of your tools and how they can be used in interesting ways. The limitations can push you towards familiarity, and that's the goal.

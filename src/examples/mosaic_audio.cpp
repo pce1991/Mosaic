@@ -19,7 +19,6 @@ void MyMosaicInit() {
     LoadSoundClip("data/sfx/flute_breathy_c4.wav", &Data->sound);
 }
 
-// This is where you put the code you want to run every update.
 void MyMosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
 

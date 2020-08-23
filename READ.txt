@@ -1,0 +1,24 @@
+
+To compile this program you need Visual Studio and the C++ development tools installed.
+
+To compile this program goto your Windows Search Bar and type
+"x64 Native Tools Command"
+
+Navigate to this project directory using the "cd" command.
+
+Once you are in this directory type "win_compile.bat" (you can use TAB for auto-completion)
+
+Once it has compiled you should see a new directory called "build" with a "game.exe" inside.
+
+To run it from your command prompt you can type "build\game.exe"
+
+
+
+If the game runs very slowly you may not be using your graphics card. Right click the "game.exe" and select "run with graphics processor" and choose the graphics card instead of the "integrated graphics" which is sometimes the default on laptops.
+
+
+If you're using the Mosaic features then look in src/mosaic.cpp. See at the top there is a list of #defines. You can toggle those between 1 and 0 to compile certain example games. Make sure everything is set to 0 except for the game you want to compile.
+
+If you want to make your own game, simply set all of them to 0, and include your own file that has a
+
+MyMosaicInit() function and a MyMosaicUpdate() function (see src/examples/mosaic_clean.cpp for an example of these).
