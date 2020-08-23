@@ -3,8 +3,6 @@ struct MyData {
     /*
       Put all your game specific data in here.
      */
-
-    SoundClip sound;
 };
 
 MyData *Data = NULL;
@@ -28,8 +26,9 @@ void MyMosaicInit() {
     Mosaic->gridColor = RGB(0.2f, 0.2f, 0.2f);
     Mosaic->screenColor = RGB(0.1f, 0.1f, 0.1f);
 
-    
-    LoadSoundClip("data/sfx/flute_breathy_c4.wav", &Data->sound);
+    Mosaic->screenColor = PASTEL_PURPLE;
+
+    Log("color r %f g %f b %f", Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b);
 }
 
 // This is where you put the code you want to run every update.
@@ -45,9 +44,5 @@ void MyMosaicUpdate() {
 
     if (Mosaic->hoveredTile) {
         Mosaic->hoveredTile->color = V4(1, 1, 1, 1);
-    }
-
-    if (InputPressed(Input, Input_Space)) {
-        PlaySound(&Game->audioPlayer, Data->sound, false);
     }
 }
