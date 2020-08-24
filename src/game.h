@@ -47,6 +47,8 @@
 
 struct GameMemory {
     bool running;
+    bool paused;
+    bool steppingFrame;
 
     real32 systemTime;
     real32 time;
@@ -112,3 +114,4 @@ GameMemory *Game = NULL;
 InputQueue *Input = NULL;
 
 #define ArrayLength(array, type) sizeof(array)/sizeof(type)
+

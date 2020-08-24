@@ -275,7 +275,7 @@ void GameInit(GameMemory *gameMem) {
 }
 
 void GameDeinit() {
-    WriteLogToFile("log.txt");
+    WriteLogToFile("output/log.txt");
 }
 
 
@@ -298,7 +298,14 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     // Want to get them all before we decide what to do in our frame.
     ReceivePackets();
 
-    MyGameUpdate();
+    // @TODO: pick a key to step frame and then check if that's pressed
+    // We want to do this before the update obviously
+
+    if (!Game->paused || Game->steppingFrame) {
+        MyGameUpdate();
+    }
+
+    Game->steppingFrame = false;
 
     RenderRectBuffer(&Game->rectBuffer);
     Game->rectBuffer.count = 0;
