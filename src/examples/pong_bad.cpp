@@ -1,7 +1,7 @@
 
-// use ipconfig to find this for whatever machine you want to host your server on.
-const uint32 ServerAddress = MakeAddressIPv4(76, 183, 120, 224);
-//const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
+// This is the local ip address so only computers on the local network can connect.
+// Use ip4.me to find your public IP address, BUT make sure to keep it private.
+const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
 
 // @NOTE:
 // We setup port forwarding. Our sockets need to use our local IP address.

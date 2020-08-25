@@ -446,7 +446,7 @@ void WindowsGetInput(InputQueue *inputQueue) {
                 int posY = GET_Y_LPARAM(msg.lParam);
 
                 inputQueue->mousePos.x = posX;
-                inputQueue->mousePos.y = screenHeight - posY;
+                inputQueue->mousePos.y = Game->screenHeight - posY;
             } break;
 
                     
@@ -495,7 +495,32 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     SetCurrentDirectory(newWorkingDirectory);
 
 
+    
+    WindowsPlatform plat = {};
 
+    Platform = &plat;
+    
+    // Init Game Memomry
+    GameMemory *gameMem = &platform.gameMem;
+    memset(gameMem, 0, sizeof(GameMemory));
+
+    Game = gameMem;
+
+
+    plat.screenWidth = gameMem->screenWidth;
+    plat.screenHeight = gameMem->screenHeight;
+
+    bool gotConfigFile = ReadConfigFile("config.m_txt");
+
+    if (!gotConfigFile) {
+        Game->screenWidth = 1600;
+        Game->screenHeight = 900;
+
+        Game->audioPlayer.volume = 1.0f;
+        Game->networkInfo.serverIPString = "192.0.0.1"; // @NOTE: this is just the IP address referring to yourself
+
+        // @TODO: write out a config file if there isnt one already
+    }
 
     WNDCLASS windowClass;
     memset(&windowClass, 0, sizeof(WNDCLASS));
@@ -519,9 +544,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
     RECT windowRect;
     windowRect.left = 0;
-    windowRect.right = screenWidth;
+    windowRect.right = Game->screenWidth;
     windowRect.top = 0;
-    windowRect.bottom = screenHeight; 
+    windowRect.bottom = Game->screenHeight; 
     
     HWND window = CreateWindowEx(dwExStyle, windowClass.lpszClassName, "GAME",
                                  WS_CLIPSIBLINGS | WS_CLIPCHILDREN | dwStyle,
@@ -530,6 +555,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
                                  0, 0,
                                  NULL, NULL,
                                  hInstance, NULL);
+
+    plat.window = &window;
 
     // @NOTE: the reason we do right - left, and bottom - top, is because AdjustWindowRect may change the
     // left/right/top/bottom coordinates of the rect, so the proper size is the difference between coordinates
@@ -541,14 +568,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
                  SWP_NOZORDER);
     ShowWindow(window, SW_SHOW);
     UpdateWindow(window);
-
-    WindowsPlatform plat = {};
-
-    Platform = &plat;
-    plat.window = &window;
-    plat.screenWidth = screenWidth;
-    plat.screenHeight = screenHeight;
-
 
 
     OpenGLInfo glInfo;
@@ -570,12 +589,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     
     WSAStartup(MAKEWORD(2,2), &Platform->wsaData);
 
-    // UDP 
-
-    // Init Game Memomry
-    GameMemory *gameMem = &platform.gameMem;
-    memset(gameMem, 0, sizeof(GameMemory));
-
     // @GACK: need this for seeding the random number generator in GameInit
     // @BUG: It seems like the seeded value is almost always exactly the same tho?
     gameMem->systemTime = (real32)systemTime.QuadPart;
@@ -590,15 +603,15 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183376(v=vs.85).aspx
     BITMAPINFO bitmapInfo;
     bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
-    bitmapInfo.bmiHeader.biWidth = screenWidth;
-    bitmapInfo.bmiHeader.biHeight = -screenHeight;
+    bitmapInfo.bmiHeader.biWidth = Game->screenWidth;
+    bitmapInfo.bmiHeader.biHeight = -Game->screenHeight;
     bitmapInfo.bmiHeader.biPlanes = 1;
     bitmapInfo.bmiHeader.biBitCount = 32;
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
     // ALLOCATION/POINTERS
-    int bitmapWidth = screenWidth;
-    int bitmapHeight = screenHeight;
+    int bitmapWidth = Game->screenWidth;
+    int bitmapHeight = Game->screenHeight;
     int pixelCount = (bitmapWidth * bitmapHeight);
     int bytesPerPixel = 4; // one byte for each color
     int bitmapMemorySize = bytesPerPixel * pixelCount;
@@ -611,7 +624,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     HCURSOR cursor = LoadCursor(NULL, IDC_ARROW);
     SetCursor(cursor);
     //ShowCursor(false);
-    WinMoveMouse(window, screenWidth / 2.0f, screenHeight / 2.0f, screenHeight);
+    WinMoveMouse(window, Game->screenWidth / 2.0f, Game->screenHeight / 2.0f, Game->screenHeight);
 
     while(gameMem->running && PlatformRunning) {
 

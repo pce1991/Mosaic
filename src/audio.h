@@ -29,6 +29,8 @@ struct PlayingSound {
 };
 
 struct AudioPlayer {
+    real32 volume;
+    
     DynamicArray<PlayingSound> playingSounds;
     DynamicArray<int32> freeList;
 };

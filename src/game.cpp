@@ -19,9 +19,6 @@
 
 #include "game_code.cpp"
 
-const uint32 screenWidth = 1600;
-const uint32 screenHeight = 900;
-
 void InitFont(FontTable *font, char *path) {
     int32 fontBitmapWidth = 1024;
     int32 fontBitmapHeight = 1024;
@@ -128,12 +125,156 @@ void InitFont(FontTable *font, char *path) {
     OpenGL_InitFontTable(font);
 }
 
+bool ReadConfigFile(char *path) {
+    FILE *file = fopen(path, "r");
+
+    if (file != NULL) {
+        int c = fgetc(file);
+
+        enum ConfigState {
+            ConfigState_Invalid,
+            ConfigState_ScreenWidth,
+            ConfigState_ScreenHeight,
+            ConfigState_Volume,
+            ConfigState_ServerIP,
+        };
+
+        ConfigState state = ConfigState_ScreenWidth;
+
+        char currentToken[64];
+        memset(currentToken, 0, 64);
+        
+        int32 tokenLength = 0;
+        bool parsedToken = false;
+
+        // @NOTE: this is not an elegant way to do this
+        // It would be much nicer if we broke it into tokens first.
+        // It would also be nice if we had more file reading features
+        while (c != EOF) {
+            if (c == '\n' || c == ' ') {
+                goto nextChar;
+            }
+                
+            if (state == ConfigState_ScreenWidth) {
+
+                if (c != ';') {
+                    currentToken[tokenLength++] = c;
+                }
+
+                if (!parsedToken) {
+                    if (strcmp(currentToken, "screenWidth:") == 0) {
+                        tokenLength = 0;
+                        parsedToken = true;
+
+                        memset(currentToken, 0, 64);
+                    }
+                }
+                else {
+                    if (c == ';') {
+                        Game->screenWidth = atoi(currentToken);
+                        state = ConfigState_ScreenHeight;
+                        tokenLength = 0;
+                        memset(currentToken, 0, 64);
+                        parsedToken = false;
+                    }
+                }
+            }
+
+            if (state == ConfigState_ScreenHeight) {
+
+                if (c != ';') {
+                    currentToken[tokenLength++] = c;
+                }
+                
+                if (!parsedToken) {
+                    if (strcmp(currentToken, "screenHeight:") == 0) {
+                        tokenLength = 0;
+                        parsedToken = true;
+
+                        memset(currentToken, 0, 64);
+                    }
+                }
+                else {
+                    if (c == ';') {
+                        Game->screenHeight = atoi(currentToken);
+                        state = ConfigState_Volume;
+
+                        state = ConfigState_Volume;
+                        tokenLength = 0;
+                        memset(currentToken, 0, 64);
+                        parsedToken = false;
+                    }
+                }
+                
+            }
+
+            if (state == ConfigState_Volume) {
+
+                if (c != ';') {
+                currentToken[tokenLength++] = c;
+                }
+                
+                if (!parsedToken) {
+                    if (strcmp(currentToken, "volume:") == 0) {
+                        tokenLength = 0;
+                        parsedToken = true;
+
+                        memset(currentToken, 0, 64);
+                    }
+                }
+                else {
+                    if (c == ';') {
+                    Game->audioPlayer.volume = atof(currentToken);
+
+                    state = ConfigState_ServerIP;
+                    tokenLength = 0;
+                    memset(currentToken, 0, 64);
+                    parsedToken = false;
+                    }
+                }
+            }
+
+            if (state == ConfigState_ServerIP) {
+
+                if (c != ';') {
+                    currentToken[tokenLength++] = c;
+                }
+                
+                if (!parsedToken) {
+                    if (strcmp(currentToken, "server_ip:") == 0) {
+                        tokenLength = 0;
+                        parsedToken = true;
+
+                        memset(currentToken, 0, 64);
+                    }
+                }
+                else {
+                    if (c == ';') {
+                        Game->networkInfo.serverIPString = (char *)malloc(tokenLength + 1);
+                        memcpy(Game->networkInfo.serverIPString, currentToken, tokenLength + 1);
+
+                        state = ConfigState_Volume;
+                        tokenLength = 0;
+                        memset(currentToken, 0, 64);
+                        parsedToken = false;
+                    }
+                }
+            }
+
+        nextChar:
+            c = fgetc(file);
+        }
+
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 void GameInit(GameMemory *gameMem) {
     Game = gameMem;
     Input = &Game->inputQueue;
-
-    Game->screenWidth = screenWidth;
-    Game->screenHeight = screenHeight;
 
     AllocateMemoryArena(&Game->frameMem, Megabytes(1024));
 

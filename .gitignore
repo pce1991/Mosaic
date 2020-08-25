@@ -1,6 +1,8 @@
 build/
 output/
 
+config.m_txt
+
 # Prerequisites
 *.d
 

@@ -65,6 +65,8 @@ struct NetworkInfo {
     // @TODO: specify the ip address of the server in a file. Need to be able to run instance of engine
     // as a server.
 
+    char *serverIPString;
+
     Socket receivingSocket;
 
     DynamicArray<Socket> sendingSockets;
