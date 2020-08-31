@@ -4,6 +4,8 @@
 #define EX_MOSAIC_AUDIO 0
 #define EX_MOSAIC_RANDOM_TILES 0
 
+#define EX_MOSAIC_WEEK_1 0
+
 #if EX_MOSAIC_CLEAN
 #include "examples/mosaic_clean.cpp"
 
@@ -15,6 +17,9 @@
 
 #elif EX_MOSAIC_AUDIO
 #include "examples/mosaic_audio.cpp"
+
+#elif EX_MOSAIC_WEEK_1
+#include "examples/mosaic_week1.cpp"
 
 //#elif MACRO_NAME
 //#include "file_name.cpp"

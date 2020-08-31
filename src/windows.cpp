@@ -600,6 +600,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
     InputQueue *inputQueue = &gameMem->inputQueue;
 
+    // Used for software rendering.
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183376(v=vs.85).aspx
     BITMAPINFO bitmapInfo;
     bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);

@@ -4,7 +4,16 @@ To compile this program you need Visual Studio and the C++ development tools ins
 To compile this program goto your Windows Search Bar and type
 "x64 Native Tools Command"
 
-Navigate to this project directory using the "cd" command.
+Navigate to this project directory using the "cd" command. The cd command works like this:
+"cd path_of_directory_i_want_to_go_to"
+You can go back a directory like this
+"cd ..\"
+And you can go to the c:\ drive like this
+"cd c:\"
+
+So for instance if you download the game engine and put it in your c:\ drive you could go to it like
+
+"cd c:\mosaic"
 
 Once you are in this directory type "win_compile.bat" (you can use TAB for auto-completion)
 
