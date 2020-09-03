@@ -1,7 +1,8 @@
 
 // use ipconfig to find this for whatever machine you want to host your server on.
 const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
-const uint16 Port = 30000;
+const uint16 ServerPort = 30000;
+const uint16 ClientPort = 30001;
 
 struct UserInfo {
     uint32 address;
@@ -56,18 +57,24 @@ struct MessagingExample {
 MessagingExample myData = {};
 
 void MyInit() {
-    Socket sendingSocket = {};
-    InitSocket(&sendingSocket, ServerAddress, Port);
-    PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
+    myData.isServer = IS_SERVER == 1;
+    
+    Socket socket = {};
+    if (myData.isServer) {
+        InitSocket(&socket, GetMyAddress(), ServerPort, true);
+    }
+    else {
+        InitSocket(&socket, GetMyAddress(), ClientPort, true);
+    }
 
-    myData.isServer = GetMyAddress() == ServerAddress;
+    Game->networkInfo.socket = socket;
 }
 
 void ServerUpdate() {
-    NetworkInfo *networking = &Game->networkInfo;
+    NetworkInfo *network = &Game->networkInfo;
     ServerData *server = &myData.server;
 
-    Print("packets received %u", networking->packetsReceived.count);
+    Print("packets received %u", network->packetsReceived.count);
 
     Print("user count %u", server->users.count);
     for (int i = 0; i < server->users.count; i++) {
@@ -77,11 +84,11 @@ void ServerUpdate() {
     {
         GamePacket toSend = {};
         toSend.type = GamePacketType_Ping;
-        PushBack(&networking->packetsToSend, toSend);
+        PushBack(&network->packetsToSend, toSend);
     }
     
-    for (int i = 0; i < networking->packetsReceived.count; i++) {
-        ReceivedPacket received = networking->packetsReceived[i];
+    for (int i = 0; i < network->packetsReceived.count; i++) {
+        ReceivedPacket received = network->packetsReceived[i];
 
         UserInfo *user = NULL;
         for (int j = 0; j < server->users.count; j++) {
@@ -103,15 +110,6 @@ void ServerUpdate() {
                 user.lastPingTime = Game->time;
                 
                 PushBack(&server->users, user);
-
-                // @HACK: really shouldnt need to check to make sure we didnt get a message from ourselves.
-                if (received.fromAddress != networking->receivingSocket.address) {
-                    // @MAYBE: need 
-                    Socket socket = {};
-                    InitSocket(&socket, received.fromAddress, Port);
-
-                    PushBack(&Game->networkInfo.sendingSockets, socket);
-                }
             }
         }
 
@@ -150,19 +148,27 @@ void ServerUpdate() {
         }
     }
 
-    Print("packets sent from server %u", networking->packetsToSend.count);
+    Print("packets sent from server %u", network->packetsToSend.count);
+
+    for (int i = 0; i < network->packetsToSend.count; i++) {
+        int32 packetSize = sizeof(GamePacket);
+        GamePacket *p = &network->packetsToSend[i];
+
+        for (int j = 0; j < server->users.count; j++) {
+            UserInfo *u = &server->users[j];
+            int32 bytesSent = SendPacket(&Game->networkInfo.socket, u->address, ClientPort, p, packetSize);
+        }
+    }
 }
 
-void MyGameUpdate() {
-    NetworkInfo *networking = &Game->networkInfo;
+void ClientUpdate() {
+    NetworkInfo *network = &Game->networkInfo;
 
-    if (myData.isServer) {
-        ServerUpdate();
+    {
+        GamePacket toSend = {};
+        toSend.type = GamePacketType_Ping;
+        PushBack(&network->packetsToSend, toSend);
     }
-
-    GamePacket packet = {};
-    packet.type = GamePacketType_Ping;
-    PushBack(&networking->packetsToSend, packet);
 
     if (InputPressed(Input, Input_Return)) {
 
@@ -171,7 +177,7 @@ void MyGameUpdate() {
             packet.type = GamePacketType_String;
             memcpy(packet.data, myData.message, strlen(myData.message));
 
-            PushBack(&networking->packetsToSend, packet);
+            PushBack(&network->packetsToSend, packet);
 
             myData.messageCount = 0;
             memset(myData.message, 0, 64);
@@ -181,7 +187,7 @@ void MyGameUpdate() {
             packet.type = GamePacketType_Username;
             memcpy(packet.data, myData.message, strlen(myData.message));
 
-            PushBack(&networking->packetsToSend, packet);
+            PushBack(&network->packetsToSend, packet);
 
             myData.messageCount = 0;
             memset(myData.message, 0, 64);
@@ -214,9 +220,9 @@ void MyGameUpdate() {
     }
 
 #if 1
-    if (networking->packetsReceived.count > 0) {
-        for (int i = 0; i < networking->packetsReceived.count; i++) {
-            GamePacket packet = networking->packetsReceived[i].packet;
+    if (network->packetsReceived.count > 0) {
+        for (int i = 0; i < network->packetsReceived.count; i++) {
+            GamePacket packet = network->packetsReceived[i].packet;
 
             if (packet.type == GamePacketType_Message) {
                 Message m = {};
@@ -245,6 +251,13 @@ void MyGameUpdate() {
         }
     }
 #endif
+
+    for (int i = 0; i < network->packetsToSend.count; i++) {
+        int32 packetSize = sizeof(GamePacket);
+        GamePacket *p = &network->packetsToSend[i];
+
+        int32 bytesSent = SendPacket(&Game->networkInfo.socket, ServerAddress, ServerPort, p, packetSize);
+    }
 
     DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "MESSENGER APPETIZER");
 
@@ -284,5 +297,19 @@ void MyGameUpdate() {
     real32 timeSincePing = Game->time - myData.lastTimeGotPing;
     if (!myData.gotPing || timeSincePing > 5.0) {
         DrawTextScreen(&Game->monoFont, V2(1000, 200), 32.0f, V4(1, 0, 0, 1), "No user connected");
+    }
+}
+
+void MyGameUpdate() {
+    NetworkInfo *network = &Game->networkInfo;
+
+    DynamicArrayClear(&network->packetsToSend);
+    ReceivePackets(&network->socket);
+
+    if (myData.isServer) {
+        ServerUpdate();
+    }
+    else {
+        ClientUpdate();
     }
 }

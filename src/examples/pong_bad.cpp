@@ -92,6 +92,7 @@ struct Pong {
     Player players[2];
     int32 playerID; // this tells the client which player it is
 
+    bool isClient;
     bool isServer;
     Server server;
 };
@@ -108,6 +109,7 @@ void MyInit() {
     memset(myData, 0, sizeof(Pong));
 
     // @TODO: pass this in from the compiler.
+    myData->isClient = true;
     myData->isServer = true;
     InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), ReceivingPort, true);
 
@@ -399,7 +401,6 @@ void ServerUpdate() {
             UserInfo *u = &server->users[j];
             int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[0], u->address, ReceivingPort, p, packetSize);
         }
-        
     }
         
 }
@@ -525,7 +526,8 @@ void MyGameUpdate() {
             //Print("tick server at %f accum: %f dt: %f", Game->time, myData->server.timeAccumulator, Game->deltaTime);
         }
     }
-    else {
+    
+    if (myData->isClient) {
         ClientUpdate();
     }
 }

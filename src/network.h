@@ -1,5 +1,6 @@
 
 struct Socket {
+    // This is a handle to the socket in the win32 layer
     int32 handle;
 
     uint32 address;
@@ -40,6 +41,7 @@ struct GamePacket {
     int8 partID;
     int8 partIndex;
 
+    // use memcpy to fill this data
     u8 data[256];
 };
 
@@ -66,6 +68,8 @@ struct NetworkInfo {
     // as a server.
 
     char *serverIPString;
+
+    Socket socket;
 
     Socket receivingSocket;
 

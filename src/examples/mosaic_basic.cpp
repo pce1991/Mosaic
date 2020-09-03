@@ -18,7 +18,7 @@ void MyMosaicInit() {
       Look at mosaic.h for the MosaicMem struct to see various parameters you can set
      */
 
-    SetMosaicGridSize(9, 9);
+    SetMosaicGridSize(16, 16);
 
     // We have a global pointer to the MosaicMem data so you can set things like this.
     Mosaic->drawGrid = true;

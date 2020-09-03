@@ -8,6 +8,7 @@
   How you'd build your game if there is a server that feeds data to clients
  */
 
+// An example of an IP address looks like: 192.0.0.1
 int32 InitAddress(sockaddr_in *addr, u8 a, u8 b, u8 c, u8 d, uint16 port) {
     uint32 address = (a << 24) | (b << 16) | (c << 8) | d;
 
@@ -112,7 +113,7 @@ uint32 GetMyAddress() {
 // This way the server can send out the chunky information and clients know what to receieve.
 
 
-void ReceivePackets() {
+void ReceivePackets(Socket *socket) {
     NetworkInfo *network = &Game->networkInfo;
     
     DynamicArrayClear(&network->packetsReceived);
@@ -121,7 +122,7 @@ void ReceivePackets() {
         ReceivedPacket packet = {};
         
         Socket fromSocket;
-        int32 bytesReceived = ReceivePacket(&Game->networkInfo.receivingSocket, (u8 *)&packet.packet, sizeof(GamePacket), &fromSocket);
+        int32 bytesReceived = ReceivePacket(socket, (u8 *)&packet.packet, sizeof(GamePacket), &fromSocket);
 
         if (bytesReceived <= 0) {
             // @WINDOWS
@@ -144,20 +145,3 @@ void ReceivePackets() {
     }
 }
 
-void SendPackets() {
-    NetworkInfo *info = &Game->networkInfo;
-
-    //PushBack(&info->packetsToSend, packet);
-
-    for (int i = 0; i < info->packetsToSend.count; i++) {
-        int32 packetSize = sizeof(GamePacket);
-
-        // @TODO: we want the packet to specify where it go.
-        // The server shouldnt send all the same data to all the clients (i think)
-        for (int j = 0; j < Game->networkInfo.sendingSockets.count; j++) {
-            int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[j], &info->packetsToSend[i], packetSize);
-        }
-    }
-
-    DynamicArrayClear(&info->packetsToSend);
-}

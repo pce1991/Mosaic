@@ -15,6 +15,10 @@ So for instance if you download the game engine and put it in your c:\ drive you
 
 "cd c:\mosaic"
 
+You might have put it in your downloads in which case you'd try
+
+cd "c:\Users\my_name\Downloads"
+
 Once you are in this directory type "win_compile.bat" (you can use TAB for auto-completion)
 
 Once it has compiled you should see a new directory called "build" with a "game.exe" inside.

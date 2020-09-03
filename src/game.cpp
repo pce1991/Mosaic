@@ -416,7 +416,12 @@ void GameInit(GameMemory *gameMem) {
 }
 
 void GameDeinit() {
-    WriteLogToFile("output/log.txt");
+    if (IS_SERVER) {
+        WriteLogToFile("output/server_log.txt");    
+    }
+    else {
+        WriteLogToFile("output/log.txt");    
+    }
 }
 
 
@@ -436,9 +441,6 @@ void GameUpdateAndRender(GameMemory *gameMem) {
 
     Game->currentGlyphBufferIndex = 0;
 
-    // Want to get them all before we decide what to do in our frame.
-    ReceivePackets();
-
     // @TODO: pick a key to step frame and then check if that's pressed
     // We want to do this before the update obviously
 
@@ -454,10 +456,7 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     DrawGlyphs(gameMem->glyphBuffers);
     
     DeleteEntities(&Game->entityDB);
-
-    // Send all the packets we've accumulated. 
-    SendPackets();
-
+    
     Game->fps = (real32)Game->frame / (Game->time - Game->startTime);
 
     gameMem->frame++;
