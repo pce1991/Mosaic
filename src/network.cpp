@@ -79,15 +79,6 @@ int32 SendPacket(Socket *socket, uint32 address, uint16 port, void *packetData, 
     return sendto(socket->handle, (char *)packetData, packetSize, 0, (sockaddr *)&addr, sizeof(sockaddr_in));
 }
 
-int32 SendPacket(Socket *socket, void *packetData, uint32 packetSize) {
-    sockaddr_in addr = {};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(socket->address);
-    addr.sin_port = htons(socket->port);
-    
-    return sendto(socket->handle, (char *)packetData, packetSize, 0, (sockaddr *)&addr, sizeof(sockaddr_in));
-}
-
 int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fromSocket) {
     int32 fromSize = sizeof(sockaddr_in);
     

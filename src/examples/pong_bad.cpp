@@ -18,10 +18,8 @@ const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
 // If the machine is on a different network its fine to give it the same port number as another client.
 // Could pass this is thru commandline argument, or get it from a config file.
 
-const uint16 Port = 30000;
-const uint16 ReceivingPort = 30000;
-const uint16 SendingPort = 30001;
 const uint16 ServerPort = 30000;
+const uint16 ClientPort = 30001;
 
 const uint32 PacketID = Hash("PongBad");
 
@@ -108,14 +106,13 @@ void MyInit() {
     myData = (Pong *)Game->myData;
     memset(myData, 0, sizeof(Pong));
 
-    // @TODO: pass this in from the compiler.
-    myData->isClient = true;
-    myData->isServer = true;
-    InitSocket(&Game->networkInfo.receivingSocket, GetMyAddress(), ReceivingPort, true);
-
-    Socket sendingSocket = {};
-    InitSocket(&sendingSocket, GetMyAddress(), Port + 1, true);
-    PushBack(&Game->networkInfo.sendingSockets, sendingSocket);
+    if (IS_SERVER) {
+        InitSocket(&Game->networkInfo.socket, GetMyAddress(), ServerPort, true);    
+    }
+    else {
+        InitSocket(&Game->networkInfo.socket, GetMyAddress(), ClientPort, true);    
+    }
+    
 
     PaddleRect.min = V2(-0.2f, -0.8f);
     PaddleRect.max = V2(0.2f, 0.8f);
@@ -260,6 +257,10 @@ void ServerUpdate() {
 
         ClientPacket *clientData = (ClientPacket *)packet.data;
         
+        Ball *ball = &myData->ball;
+        ball->position = ball->position + ball->velocity * TICK_HZ;
+
+        
         for (int i = 0; i < server->inputs.count; i++) {
             InputPacket input = server->inputs[i];
 
@@ -299,6 +300,15 @@ void ServerUpdate() {
             player->velocity.y = Clamp(player->velocity.y, -paddleMaxSpeed, paddleMaxSpeed);
         }
 
+        if (server->users.count == 1) {
+            // Why is the player userIndex 1???
+            Player *player = &myData->players[0];
+
+            r32 yDiff = ball->position.y - player->position.y;
+            
+            player->velocity.y = Signum(yDiff) * paddleMaxSpeed;
+        }
+
         for (int i = 0; i < 2; i++) {
             Player * player = &myData->players[i];
 
@@ -317,10 +327,6 @@ void ServerUpdate() {
                 player->position.y += diff;
             }
         }
-
-        Ball *ball = &myData->ball;
-        ball->position = ball->position + ball->velocity * TICK_HZ;
-
 
         for (int i = 0; i < 2; i++) {
             Player *player = &myData->players[i];
@@ -342,7 +348,7 @@ void ServerUpdate() {
                 }
                 
                 ball->velocity.x *= -1;
-                ball->velocity.y += player->velocity.y * 1.1f;
+                ball->velocity.y += player->velocity.y * 1.25f;
             }
 
             clientData->ballPosition = ball->position;
@@ -399,10 +405,9 @@ void ServerUpdate() {
 
         for (int j = 0; j < server->users.count; j++) {
             UserInfo *u = &server->users[j];
-            int32 bytesSent = SendPacket(&Game->networkInfo.sendingSockets[0], u->address, ReceivingPort, p, packetSize);
+            int32 bytesSent = SendPacket(&Game->networkInfo.socket, u->address, ClientPort, p, packetSize);
         }
     }
-        
 }
 
 
@@ -509,14 +514,19 @@ void ClientUpdate() {
         int32 packetSize = sizeof(GamePacket);
 
         // @NOTE: when the server contacts us it needs to send us data on the same port that we sent our packets from.
-        int32 bytesSent = SendPacket(&Game->networkInfo.receivingSocket, ServerAddress, ReceivingPort, p, packetSize);
+        int32 bytesSent = SendPacket(&Game->networkInfo.socket, ServerAddress, ServerPort, p, packetSize);
     }
 
     DynamicArrayClear(&network->packetsToSend);
 }
 
 void MyGameUpdate() {
-    if (myData->isServer) {
+    NetworkInfo *network = &Game->networkInfo;
+
+    DynamicArrayClear(&network->packetsToSend);
+    ReceivePackets(&network->socket);
+    
+    if (IS_SERVER) {
         myData->server.timeAccumulator += Game->deltaTime;
 
         while (myData->server.timeAccumulator >= TICK_HZ) {
@@ -526,8 +536,7 @@ void MyGameUpdate() {
             //Print("tick server at %f accum: %f dt: %f", Game->time, myData->server.timeAccumulator, Game->deltaTime);
         }
     }
-    
-    if (myData->isClient) {
+    else {
         ClientUpdate();
     }
 }

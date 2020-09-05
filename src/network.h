@@ -71,11 +71,6 @@ struct NetworkInfo {
 
     Socket socket;
 
-    Socket receivingSocket;
-
-    DynamicArray<Socket> sendingSockets;
-    
     DynamicArray<ReceivedPacket> packetsReceived;
-
     DynamicArray<GamePacket> packetsToSend;
 };
