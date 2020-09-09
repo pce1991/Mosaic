@@ -2,6 +2,7 @@
 // @TODO: I want to be able to specity a game to run in this file so I can provide numerous examples.
 
 #define MOSAIC 1
+#define NETWORK_SIMPLE 1
 #define MESSAGING 0
 #define PONG_BAD 1
 #define PARTICLES 0
@@ -10,6 +11,9 @@
 
 #if MOSAIC
 #include "mosaic.cpp"
+
+#elif NETWORK_SIMPLE
+#include "examples/network_simple.cpp"
 
 #elif MESSAGING
 #include "examples/messaging_example.cpp"

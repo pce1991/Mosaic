@@ -137,6 +137,7 @@ bool ReadConfigFile(char *path) {
             ConfigState_ScreenHeight,
             ConfigState_Volume,
             ConfigState_ServerIP,
+            ConfigState_Port,
         };
 
         ConfigState state = ConfigState_ScreenWidth;
@@ -253,7 +254,33 @@ bool ReadConfigFile(char *path) {
                         Game->networkInfo.serverIPString = (char *)malloc(tokenLength + 1);
                         memcpy(Game->networkInfo.serverIPString, currentToken, tokenLength + 1);
 
-                        state = ConfigState_Volume;
+                        state = ConfigState_Port;
+                        tokenLength = 0;
+                        memset(currentToken, 0, 64);
+                        parsedToken = false;
+                    }
+                }
+            }
+
+            if (state == ConfigState_Port) {
+
+                if (c != ';') {
+                    currentToken[tokenLength++] = c;
+                }
+                
+                if (!parsedToken) {
+                    if (strcmp(currentToken, "socket_port:") == 0) {
+                        tokenLength = 0;
+                        parsedToken = true;
+
+                        memset(currentToken, 0, 64);
+                    }
+                }
+                else {
+                    if (c == ';') {
+                        Game->networkInfo.configPort = atoi(currentToken);
+
+                        state = ConfigState_Invalid;
                         tokenLength = 0;
                         memset(currentToken, 0, 64);
                         parsedToken = false;

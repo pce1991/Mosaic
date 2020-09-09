@@ -1,4 +1,6 @@
 
+* Compiling
+  Pass in a flag telling it what code to compile. Much better than the #if stuff, tho it might require editing the compile script if you want to change the code so there's a tradeoff there.
 * Tech
   DrawText() should be based on normalized screen coordinates, not the worldspace coordinates since that's weird with our camera.
 

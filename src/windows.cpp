@@ -494,7 +494,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 #endif
     SetCurrentDirectory(newWorkingDirectory);
 
-
     
     WindowsPlatform plat = {};
 
@@ -505,7 +504,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     memset(gameMem, 0, sizeof(GameMemory));
 
     Game = gameMem;
-
 
     plat.screenWidth = gameMem->screenWidth;
     plat.screenHeight = gameMem->screenHeight;

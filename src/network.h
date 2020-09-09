@@ -49,8 +49,9 @@ struct GamePacket {
 // instead break it up into multiple packets, attach an id which tells the server how to construct it. 
 
 struct ReceivedPacket {
-    // @NOTE: rather than make sender responsible for their address, whoever is looking receiving packets
-    // writes out the address.
+    // @NOTE: rather than make sender responsible for their address,
+    // whoever is looking receiving packets writes out the address.
+    // This saves sending redundant data.
     uint32 fromAddress;
     uint16 fromPort;
 
@@ -68,6 +69,12 @@ struct NetworkInfo {
     // as a server.
 
     char *serverIPString;
+
+    // @NOTE: this comes from the config file. Its use is so you can open multiple
+    // instances of the game on one local machine and allow them each communicate
+    // on different ports. In some cases it might be preferable to simple using 0 port
+    // and letting OS pick one for us.
+    uint16 configPort;
 
     Socket socket;
 
