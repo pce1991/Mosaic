@@ -2,6 +2,7 @@
 // This is my IP address on the local network.
 // Only machines on my local network are able to communicate
 // with this address.
+// open up command prompt and type ipconfig to find out your machine's local IP address
 const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
 const uint16 ServerPort = 30000;
 

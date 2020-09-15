@@ -32,16 +32,61 @@ void MyMosaicInit() {
     Log("color r %f g %f b %f", Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b);
 }
 
+
+
+// Globals variables
+int32 keyframeIndex = 0;
+real32 lastTimeKeyframeChanged = 0.0f;
+
+real32 blue = 0.0f;
+
 // This is where you put the code you want to run every update.
 // This function is called every frame, and its what tells us what colors to draw
 // all the tiles at, along with all the other state changes in our game.
 void MyMosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
 
+    real32 timeSinceKeyframeChanged = Game->time - lastTimeKeyframeChanged;
+
+    
+    // With the spacebar example the input was what we recorded
+    // But here we use the time since to detect when its time to record
+    // a change in the keyframe.
+    if (timeSinceKeyframeChanged >= 1.0f) {
+        keyframeIndex++;
+
+        lastTimeKeyframeChanged = Game->time;
+
+        if (keyframeIndex > 3) {
+            keyframeIndex = 0;
+        }
+    }
+
+    if (InputPressed(Input, Input_RightArrow)) {
+        blue += 0.1f;
+    }
+    
+    if (InputPressed(Input, Input_LeftArrow)) {
+        blue -= 0.1f;
+    }
+
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *tile = GetTile(x, y);
             tile->color = RGB(0.0f, 0.0f, 0.0f);
+
+            if (keyframeIndex == 0) {
+                tile->color = RGB(0.8f, 0.5f, 0.0f + blue);
+            }
+            if (keyframeIndex == 1) {
+                tile->color = RGB(1.0f, 0.0f, 0.0f + blue);
+            }
+            if (keyframeIndex == 2) {
+                tile->color = RGB(1.0f, 0.6f, 0.6f + blue);
+            }
+            if (keyframeIndex == 3) {
+                tile->color = RGB(0.0f, 0.6f, 0.6f + blue);
+            }
         }
     }
 
