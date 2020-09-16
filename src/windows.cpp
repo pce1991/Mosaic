@@ -250,6 +250,8 @@ void InitWASAPI(WinAudioOutput *audio) {
         }
     }
 
+    // @TODO: LOG errors if there were any!!!
+
     audio->device = pDevice;
     audio->audioClient = pAudioClient;
     audio->renderClient = pRenderClient;
@@ -264,6 +266,10 @@ void WASAPIThreadProc(void *data) {
 
     GamePlatform *platform = (GamePlatform *)data;
     WinAudioOutput *audio = &platform->audio;
+
+    if (audio->audioClient == NULL) {
+        return;
+    }
 
     audio->audioClient->Start();
 
