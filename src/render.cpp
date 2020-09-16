@@ -226,6 +226,7 @@ void LoadSprite(Sprite *sprite, char *path) {
     free(data);
 }
 
+// This must be called before we can draw a sprite.
 void OpenGL_InitTexture(Sprite *texture) {
     glGenTextures(1, (GLuint *)&texture->textureID);
     glCheckError();

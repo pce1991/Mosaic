@@ -11,10 +11,10 @@ enum InputID {
     Input_Z,
     Input_R,
     
-    Input_Up,
-    Input_Down,
-    Input_Left,
-    Input_Right,
+    Input_Up,    // W
+    Input_Down,  // S
+    Input_Left,  // A 
+    Input_Right, // D
 
     Input_UpArrow,
     Input_DownArrow,

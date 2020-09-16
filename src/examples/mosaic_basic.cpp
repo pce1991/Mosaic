@@ -40,6 +40,9 @@ real32 lastTimeKeyframeChanged = 0.0f;
 
 real32 blue = 0.0f;
 
+vec2i guyPosition = V2i(12, 5);
+
+
 // This is where you put the code you want to run every update.
 // This function is called every frame, and its what tells us what colors to draw
 // all the tiles at, along with all the other state changes in our game.
@@ -90,7 +93,41 @@ void MyMosaicUpdate() {
         }
     }
 
-    if (Mosaic->hoveredTile) {
-        Mosaic->hoveredTile->color = V4(1, 1, 1, 1);
+    // If we do this with InputHeld we probably want to use a timer
+    // so that we can enforce that it only moves 1 square per
+    // n seconds
+    if (InputPressed(Input, Input_Up)) {
+        guyPosition.y -= 1;
+
+        // Lets clamp onto the screen:
+        if (guyPosition.y < 0) {
+            guyPosition.y = 0;
+        }
+    }
+
+    if (InputPressed(Input, Input_Down)) {
+        guyPosition.y += 1;
+
+        // Lets clamp onto the screen:
+        // This variable stores the current value of gridHeight
+        if (guyPosition.y > Mosaic->gridHeight - 1) {
+            guyPosition.y = Mosaic->gridHeight - 1;
+        }
+    }
+
+    
+
+    // Get the tile at a certain position, and then set the color of that tile
+
+    // guyTile is a "pointer" to the location of one of our tiles
+    // If we ask for a tile that is outside our board, then
+    // guyTile will be NULL
+    Tile *guyTile = GetTile(guyPosition.x, guyPosition.y);
+    // This "dot" operator "." this gives us the "member value"
+    // of our vec2i value
+
+    // This checks to make sure that guyTile is not NULL
+    if (guyTile != NULL) {
+        guyTile->color = RGB(1, 1, 1);
     }
 }
