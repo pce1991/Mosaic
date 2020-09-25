@@ -82,7 +82,10 @@ void ClientUpdate() {
     // Here we send the packets where we want to.
     for (int i = 0; i < network->packetsToSend.count; i++) {
         GamePacket *p = &network->packetsToSend[i];
-        SendPacket(&network->socket, ServerAddress, ServerPort, p, sizeof(GamePacket));
+        uint32 bytesSent = SendPacket(&network->socket, ServerAddress, ServerPort, p, sizeof(GamePacket));
+        if (bytesSent != sizeof(GamePacket)) {
+            Print("Failed to send %d bytes, sent %d instead", sizeof(GamePacket), bytesSent);
+        }
     }
 
     // TODO: We should probably check to make sure the packet id is from our game.
@@ -176,7 +179,11 @@ void ServerUpdate() {
 
             for (int j = 0; j < 2; j++) {
                 ClientInfo *client = &server->clients[j];
-                SendPacket(&network->socket, client->address, client->port, p, sizeof(GamePacket));
+                uint32 bytesSent = SendPacket(&network->socket, client->address, client->port, p, sizeof(GamePacket));
+
+                if (bytesSent != sizeof(GamePacket)) {
+                    Print("Failed to send %d bytes, sent %d instead", sizeof(GamePacket), bytesSent);
+                }
             }
         }
     }
@@ -189,7 +196,7 @@ void MyGameUpdate() {
     // We want to clear everything from the array so we only ever send packets
     // that we created this frame. 
     DynamicArrayClear(&network->packetsToSend);
-    
+
     // Whether client or server we always want to receive packets.
     ReceivePackets(&network->socket);
 

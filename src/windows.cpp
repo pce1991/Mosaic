@@ -320,7 +320,6 @@ void StartWASAPIThread(GamePlatform *platform) {
 }
 
 
-
 void WindowsGetInput(InputQueue *inputQueue) {
 
     MSG msg;

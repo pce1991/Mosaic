@@ -34,13 +34,7 @@ void MyMosaicInit() {
 
 
 
-// Globals variables
-int32 keyframeIndex = 0;
-real32 lastTimeKeyframeChanged = 0.0f;
-
-real32 blue = 0.0f;
-
-vec2i guyPosition = V2i(12, 5);
+vec2 guyPosition = V2(12.0f, 5.0f);
 
 
 // This is where you put the code you want to run every update.
@@ -49,73 +43,57 @@ vec2i guyPosition = V2i(12, 5);
 void MyMosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
 
-    real32 timeSinceKeyframeChanged = Game->time - lastTimeKeyframeChanged;
 
+    // This uses time and a duration to calculate a percentage.
+    real32 t = Game->time / 10.0f;
+
+    // Here is an example of calculating t using the position,
+    // and subtracting it from 1 so that 0% is at position 16,
+    // and 100% is at position 0
+    //real32 t = 1 - (guyPosition.y / 16.0f);
     
-    // With the spacebar example the input was what we recorded
-    // But here we use the time since to detect when its time to record
-    // a change in the keyframe.
-    if (timeSinceKeyframeChanged >= 1.0f) {
-        keyframeIndex++;
-
-        lastTimeKeyframeChanged = Game->time;
-
-        if (keyframeIndex > 3) {
-            keyframeIndex = 0;
-        }
-    }
-
-    if (InputPressed(Input, Input_RightArrow)) {
-        blue += 0.1f;
-    }
-    
-    if (InputPressed(Input, Input_LeftArrow)) {
-        blue -= 0.1f;
-    }
+    // Lerp stands for "linear interpolation"
+    real32 red = Lerp(0.0f, 1.0f, t);
 
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *tile = GetTile(x, y);
-            tile->color = RGB(0.0f, 0.0f, 0.0f);
-
-            if (keyframeIndex == 0) {
-                tile->color = RGB(0.8f, 0.5f, 0.0f + blue);
-            }
-            if (keyframeIndex == 1) {
-                tile->color = RGB(1.0f, 0.0f, 0.0f + blue);
-            }
-            if (keyframeIndex == 2) {
-                tile->color = RGB(1.0f, 0.6f, 0.6f + blue);
-            }
-            if (keyframeIndex == 3) {
-                tile->color = RGB(0.0f, 0.6f, 0.6f + blue);
-            }
-        }
-    }
-
-    // If we do this with InputHeld we probably want to use a timer
-    // so that we can enforce that it only moves 1 square per
-    // n seconds
-    if (InputPressed(Input, Input_Up)) {
-        guyPosition.y -= 1;
-
-        // Lets clamp onto the screen:
-        if (guyPosition.y < 0) {
-            guyPosition.y = 0;
-        }
-    }
-
-    if (InputPressed(Input, Input_Down)) {
-        guyPosition.y += 1;
-
-        // Lets clamp onto the screen:
-        // This variable stores the current value of gridHeight
-        if (guyPosition.y > Mosaic->gridHeight - 1) {
-            guyPosition.y = Mosaic->gridHeight - 1;
+            tile->color = RGB(red, 0.0f, 0.0f);
         }
     }
 
     
+    
+    if (InputPressed(Input, Input_Down)) {
+        guyPosition.y += 1.0f;
+    }
+        
+    if (InputPressed(Input, Input_Up)) {
+        guyPosition.y -= 1.0f;
+    }
+
+
+    {
+        real32 t = Game->time / 15.0f;
+        // Its very important that we keep our t values between 0 and 1
+        // So in this case since time will presumably get > 15 eventually
+        // what we want to do is put a "clamp" on it and say
+        if (t > 1) {
+            t = 1;
+        }
+
+        real32 x = Lerp(0.0f, 15.0f, t);
+
+        // One thing to note about GetTile is it expects integers right?
+        // So what happens if we give it a number like 8.1583?
+        // What it does it is "casts" that real number to an integer
+        // which means it chops off the decimal part and its just 8.
+        Tile *otherTile = GetTile(x, 7);
+
+        if (otherTile != NULL) {
+            otherTile->color = RGB(0.8f, 0.5f, 1.0f);
+        }
+    }
 
     // Get the tile at a certain position, and then set the color of that tile
 
@@ -129,5 +107,9 @@ void MyMosaicUpdate() {
     // This checks to make sure that guyTile is not NULL
     if (guyTile != NULL) {
         guyTile->color = RGB(1, 1, 1);
+    }
+
+    if (InputHeldSeconds(Input, Input_MouseLeft, 2.0f)) {
+        guyTile->color = RGB(1, 0, 0);
     }
 }

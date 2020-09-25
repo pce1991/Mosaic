@@ -77,6 +77,9 @@ int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fro
     return recvfrom(socket->handle, (char *)buffer, bufferSize, 0, (sockaddr *)&fromSocket->socketAddress, &fromSize);
 }
 
+// @BUG: this sometimes returns something different than the IP address that ipconfig gets.
+//       Might have something to with virtual machines and computers having multiple IP addresses!
+//       NOT ROBUST!!!!
 uint32 GetMyAddress() {
     char hostName[64];
     int32 gotName = gethostname(hostName, sizeof(hostName));

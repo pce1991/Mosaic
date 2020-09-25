@@ -39,6 +39,7 @@ struct InputDeviceState{
     int32 *framesHeld;
     bool *released;
     bool *pressed;
+    real32 *timePressed;
 };
 
 struct InputQueue {
