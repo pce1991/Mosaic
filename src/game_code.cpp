@@ -8,7 +8,8 @@
 #define PARTICLES 0
 #define TYPING 0
 #define COLLISION 0
-#define SPRITE 0
+#define SPRITE 1
+#define ENTITY 0
 
 #if MOSAIC
 #include "mosaic.cpp"
@@ -33,6 +34,9 @@
 
 #elif SPRITE
 #include "examples/sprite_basics.cpp"
+
+#elif ENTITY
+#include "examples/entity_example.cpp"
 
 
 #endif

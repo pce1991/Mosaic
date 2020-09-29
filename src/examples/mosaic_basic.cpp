@@ -36,6 +36,8 @@ void MyMosaicInit() {
 
 vec2 guyPosition = V2(12.0f, 5.0f);
 
+vec2 obstaclePosition = V2(8.0f, 5.0f);
+vec2 obstacleVelocity = V2(4.0f, 0.0f);
 
 // This is where you put the code you want to run every update.
 // This function is called every frame, and its what tells us what colors to draw
@@ -43,73 +45,66 @@ vec2 guyPosition = V2(12.0f, 5.0f);
 void MyMosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
 
-
-    // This uses time and a duration to calculate a percentage.
-    real32 t = Game->time / 10.0f;
-
-    // Here is an example of calculating t using the position,
-    // and subtracting it from 1 so that 0% is at position 16,
-    // and 100% is at position 0
-    //real32 t = 1 - (guyPosition.y / 16.0f);
-    
-    // Lerp stands for "linear interpolation"
-    real32 red = Lerp(0.0f, 1.0f, t);
-
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *tile = GetTile(x, y);
-            tile->color = RGB(red, 0.0f, 0.0f);
+            tile->color = RGB(0.0f, 0.0f, 0.0f);
         }
     }
 
+    vec2 prevPosition = guyPosition;
+
+    if (InputPressed(Input, Input_Left)) {
+        guyPosition.x -= 1;
+    }
+    if (InputPressed(Input, Input_Right)) {
+        guyPosition.x += 1;
+    }
+
+    // You can add 2D vectors together, this will just add the x of velocity to the x of position
+    // and the same for y.
+    obstaclePosition = obstaclePosition + obstacleVelocity * Game->deltaTime;
+
+    if (obstaclePosition.x > Mosaic->gridWidth - 1) {
+        obstacleVelocity.x *= -1;
+        // RandfRange just gives us a new number between the min and the max
+        obstacleVelocity.y = RandfRange(-4.0f, 4.0f);
+    }
+    // TODO: set this up for other sides of the screen
+
+    // After we make our move, check to see if we collide with anything,
+    // and if we do collide, then go ahead and fix our position.
+
+    // To handle the fact that our positions are real numbers, and that
+    // means they might be close to equal but not actually equal,
+    // we're going use the fact that everything is a Tile to make collisions
+    // easier to detect.
     
-    
-    if (InputPressed(Input, Input_Down)) {
-        guyPosition.y += 1.0f;
-    }
-        
-    if (InputPressed(Input, Input_Up)) {
-        guyPosition.y -= 1.0f;
-    }
-
-
-    {
-        real32 t = Game->time / 15.0f;
-        // Its very important that we keep our t values between 0 and 1
-        // So in this case since time will presumably get > 15 eventually
-        // what we want to do is put a "clamp" on it and say
-        if (t > 1) {
-            t = 1;
-        }
-
-        real32 x = Lerp(0.0f, 15.0f, t);
-
-        // One thing to note about GetTile is it expects integers right?
-        // So what happens if we give it a number like 8.1583?
-        // What it does it is "casts" that real number to an integer
-        // which means it chops off the decimal part and its just 8.
-        Tile *otherTile = GetTile(x, 7);
-
-        if (otherTile != NULL) {
-            otherTile->color = RGB(0.8f, 0.5f, 1.0f);
-        }
-    }
-
-    // Get the tile at a certain position, and then set the color of that tile
-
-    // guyTile is a "pointer" to the location of one of our tiles
-    // If we ask for a tile that is outside our board, then
-    // guyTile will be NULL
+    // Remember that this might give us a NULL pointer,
+    // meaning that there is no tile to be found at this position.
     Tile *guyTile = GetTile(guyPosition.x, guyPosition.y);
-    // This "dot" operator "." this gives us the "member value"
-    // of our vec2i value
+    
+    Tile *obstacleTile = GetTile(obstaclePosition.x, obstaclePosition.y);
 
-    // This checks to make sure that guyTile is not NULL
-    if (guyTile != NULL) {
-        guyTile->color = RGB(1, 1, 1);
+    // 
+    if (guyTile == obstacleTile) {
+        guyPosition = prevPosition;
+        // our position is now (7, 5). Have we gotten the tile at position (7, 5)?
+        // guyPosition was (8, 5) when we called GetTile() above.
+        // guyTile is still pointing the tile at (8, 5), which means we need to update it
+        // since that is definitely not the tile that we want to color.
+        // Now that we updated the position we want to update what tile we're talking about
+        // because the tile we had was for our invalid position.
+        guyTile = GetTile(guyPosition.x, guyPosition.y);
+    }
+    
+
+    if (obstacleTile) {
+        obstacleTile-> color = RGB(1.0f, 0.0f, 0.0f);
     }
 
-    if (InputHeldSeconds(Input, Input_MouseLeft, 2.0f)) {
-        guyTile->color = RGB(1, 0, 0);
+
+    if (guyTile) {
+        guyTile->color = RGB(0.0f, 0.6f, 0.2f);
     }
 }

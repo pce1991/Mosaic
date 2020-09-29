@@ -12,7 +12,7 @@
 #include "network.cpp"
 
 #include "mesh.cpp"
-#include "entity.cpp"
+//#include "entity.cpp"
 
 
 #include "ui.cpp"
@@ -482,7 +482,7 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     
     DrawGlyphs(gameMem->glyphBuffers);
     
-    DeleteEntities(&Game->entityDB);
+    //DeleteEntities(&Game->entityDB);
     
     Game->fps = (real32)Game->frame / (Game->time - Game->startTime);
 

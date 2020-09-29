@@ -24,7 +24,7 @@
 
 #include "camera.h"
 #include "mesh.h"
-#include "entity.h"
+//#include "entity.h"
 
 #include "mosaic.h"
 
@@ -98,7 +98,7 @@ struct GameMemory {
 
     InputQueue inputQueue;
 
-    EntityDB entityDB;
+    //EntityDB entityDB;
 
     int32 gameIndex;
 

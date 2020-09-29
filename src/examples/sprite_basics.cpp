@@ -18,5 +18,5 @@ void MyInit() {
 
 void MyGameUpdate() {
 
-    DrawSprite(V2(0), V2(1), &Data->sprite);
+    DrawSprite(V2(0), V2(1), Game->time, &Data->sprite);
 }

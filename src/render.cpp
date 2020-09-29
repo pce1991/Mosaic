@@ -215,6 +215,8 @@ void OpenGL_InitMesh(Mesh *mesh) {
     
 }
 
+void OpenGL_InitTexture(Sprite *texture);
+    
 void LoadSprite(Sprite *sprite, char *path) {
     int32 x, y, n;
     uint8 *data = stbi_load(path, &x, &y, &n, 4);
@@ -224,6 +226,8 @@ void LoadSprite(Sprite *sprite, char *path) {
     memcpy(sprite->data, data, sprite->size);
 
     free(data);
+
+    OpenGL_InitTexture(sprite);
 }
 
 // This must be called before we can draw a sprite.
@@ -265,8 +269,7 @@ void OpenGL_InitFontTable(FontTable *font) {
 }
 
 
-void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
-        
+void DrawSprite(vec2 position, vec2 scale, real32 angle, Sprite *texture) {
     Shader *shader = &Game->texturedQuadShader;
     SetShader(shader);
 
@@ -276,7 +279,9 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
     Mesh *mesh = &Game->quad;
 
     //mat4 model = TRS(V3(position.x - radius * 0.5f, position.y + radius * 0.5f, 0), IdentityQuaternion(), V3(radius));
-    mat4 model = TRS(V3(position.x, position.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 1));
+    mat4 model = TRS(V3(position.x, position.y, 0), AxisAngle(V3(0, 0, 1), angle), V3(scale.x, scale.y, 1.0f));
+        
+    //mat4 model = TRS(V3(position.x, position.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 1));
 
     //vec4 topLeft = mvp * V4(gameMem->quad.verts[0], 1.0f);
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
@@ -303,6 +308,10 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
 
     glDisableVertexAttribArray(vert);
     glDisableVertexAttribArray(texcoord);    
+}
+
+void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
+    DrawSprite(position, scale, 0.0f, texture);
 }
 
 void DrawRect(vec2 pos, vec2 scale, real32 angle, vec4 color) {
