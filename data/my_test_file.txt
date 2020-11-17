@@ -1,0 +1,4 @@
+
+Buffalo, 8, 8,
+Seahorse, 6, 7,
+Buffalo, 5, 9,

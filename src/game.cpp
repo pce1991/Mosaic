@@ -19,6 +19,7 @@
 
 #include "game_code.cpp"
 
+
 void InitFont(FontTable *font, char *path) {
     int32 fontBitmapWidth = 1024;
     int32 fontBitmapHeight = 1024;

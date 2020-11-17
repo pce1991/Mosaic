@@ -378,6 +378,9 @@ void WindowsGetInput(InputQueue *inputQueue) {
                     PushInputPress(inputQueue, Input_R, 0);
                 }
 
+                // @TODO: look up the keycode values for the number row
+                // and push events for those
+
                 if (keycode == VK_SPACE) {
                     PushInputPress(inputQueue, Input_Space, 0);
                 }
@@ -638,6 +641,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
         gameMem->deltaTime = ((real64)systemTime.QuadPart - (real64)prevSystemTime.QuadPart) / (real64)systemFrequency.QuadPart;
 
         gameMem->time += gameMem->deltaTime;
+
+        Time = gameMem->time;
 
         timeSinceRender += gameMem->deltaTime;
 

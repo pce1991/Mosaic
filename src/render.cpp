@@ -194,6 +194,11 @@ vec2 NormToPixel(vec2 norm) {
 }
 
 
+void ClearColor(vec4 color) {
+    glClearColor(color.r, color.g, color.b, color.a);
+}
+
+
 void OpenGL_InitMesh(Mesh *mesh) {
     GLuint vertexBuffer;
 
@@ -212,7 +217,6 @@ void OpenGL_InitMesh(Mesh *mesh) {
 
     mesh->vertBufferID = vertexBuffer;
     mesh->indexBufferID = indexBuffer;
-    
 }
 
 void OpenGL_InitTexture(Sprite *texture);

@@ -4,6 +4,23 @@
 #define EX_MOSAIC_AUDIO 0
 #define EX_MOSAIC_RANDOM_TILES 0
 
+#define EX_MOSAIC_PARTICLES 0
+
+#define EX_MOSAIC_MIA 0
+
+#define EX_MOSAIC_LERP_COLORS 0
+
+#define EX_MOSAIC_DYNAMIC_ARRAYS 1
+
+#define EX_MOSAIC_1 0
+#define EX_MOSAIC_2 0
+
+#define EX_MOSAIC_VARIABLES 0
+
+#define EX_MOSAIC_MOUSE_DRAWING 1
+
+
+
 #if EX_MOSAIC_CLEAN
 #include "examples/mosaic_clean.cpp"
 
@@ -16,13 +33,61 @@
 #elif EX_MOSAIC_AUDIO
 #include "examples/mosaic_audio.cpp"
 
+#elif EX_MOSAIC_PARTICLES
+#include "examples/mosaic_particles.cpp"
+
+#elif EX_MOSAIC_MIA
+#include "examples/mosaic_mia.cpp"
+
+#elif EX_MOSAIC_LERP_COLORS
+#include "examples/lerp_colors.cpp"
+
+#elif EX_MOSAIC_DYNAMIC_ARRAYS
+#include "examples/mosaic_dynamic_arrays.cpp"
+
+
+#elif EX_MOSAIC_1
+#include "examples/mosaic_1.cpp"
+
+#elif EX_MOSAIC_VARIABLES
+#include "examples/mosaic_variables.cpp"
+
+#elif EX_MOSAIC_MOUSE_DRAWING
+#include "examples/mosaic_mouse_drawing.cpp"
+
+#elif EX_MOSAIC_2
+#include "examples/mosaic_2.cpp"
+
 //#elif MACRO_NAME
 //#include "file_name.cpp"
 
 #endif
 
+
+// @NOTE: Some of this stuff is internal and you don't ever want it to change.
+// Things like allocating the RectBuffer or calculating the levelAspect.
+// Other things like setting the gridWidth can be customized.
+void MyInit() {
+    Game->myData = malloc(sizeof(MosaicMem));
+    memset(Game->myData, 0, sizeof(MosaicMem));
+    
+    Mosaic = (MosaicMem *)Game->myData;
+
+    MoveMouse(Game->screenWidth / 2.0f, Game->screenHeight / 2.0f);
+
+    Mosaic->padding = 1.5f;
+
+    SetMosaicGridSize(16, 16);
+
+    Mosaic->screenColor = RGB(0.2f, 0.2f, 0.2f);
+    Mosaic->gridColor = RGB(0.8f, 0.8f, 0.8f);
+
+    MyMosaicInit();
+}
+
+
 // @BUG: this doesnt guarantee that it fits inside the camera if the height is bigger than the width! 
-void SetMosaicGridSize(uint8 newWidth, uint8 newHeight) {
+void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
     Mosaic->gridWidth = Clamp(newWidth, 1, 255);
     Mosaic->gridHeight = Clamp(newHeight, 1, 255);
 
@@ -35,7 +100,15 @@ void SetMosaicGridSize(uint8 newWidth, uint8 newHeight) {
 
     memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
-    Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridWidth;
+    real32 levelAspect = Mosaic->gridWidth / (Mosaic->gridHeight * 1.0f);
+
+    if (Mosaic->gridWidth > Mosaic->gridHeight) {
+        Mosaic->tileSize = ((16.0f - Mosaic->padding) / Mosaic->gridWidth);
+    }
+    else {
+        Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridHeight;        
+    }
+
     Mosaic->lineThickness = Mosaic->tileSize * 0.04f;
 
     // @TODO: add the line sizes
@@ -55,32 +128,26 @@ void SetMosaicGridSize(uint8 newWidth, uint8 newHeight) {
     }
 }
 
+void SetMosaicGridColor(vec4 color) {
+    Mosaic->gridColor = color;
+}
+
+void SetMosaicGridColor(real32 r, real32 g, real32 b) {
+    Mosaic->gridColor = RGB(r, g, b);
+}
+
+void SetMosaicScreenColor(vec4 color) {
+    Mosaic->screenColor = color;
+}
+
+void SetMosaicScreenColor(real32 r, real32 g, real32 b) {
+    Mosaic->screenColor = RGB(r, g, b);
+}
+
 
 int32 CellIndex(int32 x, int32 y) {
     return x + (y * Mosaic->gridWidth);
 }
-
-// @NOTE: Some of this stuff is internal and you don't ever want it to change.
-// Things like allocating the RectBuffer or calculating the levelAspect.
-// Other things like setting the gridWidth can be customized.
-void MyInit() {
-    Game->myData = malloc(sizeof(MosaicMem));
-    memset(Game->myData, 0, sizeof(MosaicMem));
-    
-    Mosaic = (MosaicMem *)Game->myData;
-
-    MoveMouse(Game->screenWidth / 2.0f, Game->screenHeight / 2.0f);
-
-    Mosaic->padding = 1.5f;
-
-    SetMosaicGridSize(16, 16);
-
-    Mosaic->screenColor = V4(0.2f, 0.2f, 0.2f, 1.0f);
-    Mosaic->gridColor = V4(0.8f, 0.8f, 0.8f, 1.0f);
-
-    MyMosaicInit();
-}
-
 
 vec2 GridPositionToWorldPosition(vec2i gridPosition) {
     vec2 worldPos = Mosaic->gridOrigin;
@@ -97,12 +164,19 @@ void DrawTile(vec2i position, vec4 color) {
     //DrawRect(&Mosaic->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
 }
 
+void DrawTileSprite(Tile *tile) {
+    vec2 worldPos = GridPositionToWorldPosition(tile->position);
+    DrawSprite(worldPos, V2(Mosaic->tileSize * 0.5f), tile->sprite);
+    // Instancing
+    //DrawRect(&Mosaic->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
+}
+
 void DrawBorder() {
     for (int y = 0; y < Mosaic->gridHeight + 1; y++) {
 
         if (y > 0 && y < Mosaic->gridHeight) { continue; }
         vec2 rowLineCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), 0) + V2(0, -y * Mosaic->tileSize);
-        DrawRect(rowLineCenter, V2(Mosaic->gridSize.x * 0.5f, Mosaic->lineThickness), Mosaic->gridColor);
+        DrawRect(rowLineCenter, V2(Mosaic->gridSize.x * 0.5f + (Mosaic->lineThickness), Mosaic->lineThickness), Mosaic->gridColor);
         
     }
 
@@ -110,21 +184,34 @@ void DrawBorder() {
         if (x > 0 && x < Mosaic->gridWidth) { continue; }
         
         vec2 colLineCenter = Mosaic->gridOrigin + V2(0, (-Mosaic->gridSize.y * 0.5f)) + V2(x * Mosaic->tileSize, 0);
-        DrawRect(colLineCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f), Mosaic->gridColor);
+        DrawRect(colLineCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f + (Mosaic->lineThickness)), Mosaic->gridColor);
     }
 }
 
 void DrawGrid() {
+    
     for (int y = 0; y < Mosaic->gridHeight + 1; y++) {
 
         vec2 rowLineCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), 0) + V2(0, -y * Mosaic->tileSize);
-        DrawRect(rowLineCenter, V2(Mosaic->gridSize.x * 0.5f, Mosaic->lineThickness), Mosaic->gridColor);
+
+        vec2 scale = V2(Mosaic->gridSize.x * 0.5f, Mosaic->lineThickness);
+        if (y == 0 || y == Mosaic->gridHeight) {
+            scale = V2(Mosaic->gridSize.x * 0.5f + Mosaic->lineThickness, Mosaic->lineThickness);
+        }
+        
+        DrawRect(rowLineCenter, scale, Mosaic->gridColor);
         
     }
 
     for (int x = 0; x < Mosaic->gridWidth + 1; x++) {
         vec2 colLineCenter = Mosaic->gridOrigin + V2(0, (-Mosaic->gridSize.y * 0.5f)) + V2(x * Mosaic->tileSize, 0);
-        DrawRect(colLineCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f), Mosaic->gridColor);
+
+        vec2 scale = V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f);
+        if (x == 0 || x == Mosaic->gridWidth) {
+            scale = V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f + Mosaic->lineThickness);
+        }
+        
+        DrawRect(colLineCenter, scale, Mosaic->gridColor);
     }
 }
 
@@ -166,8 +253,12 @@ Tile *GetTile(vec2i pos) {
     return GetTile(pos.x, pos.y);
 }
 
+Tile *GetTile(vec2 pos) {
+    return GetTile(pos.x, pos.y);
+}
+
 void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int32 *tilesRetrieved) {
-    for (int y_ = y; y < width; y_++) {
+    for (int y_ = y; y < height; y_++) {
         for (int x_ = x; x < width; x++) {
             Tile *t = GetTile(x_, y_);
             if (t) {
@@ -178,10 +269,60 @@ void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int
     }
 }
 
+void ClearColor(vec4 color) {
+    for (int y = 0; y < Mosaic->gridHeight; y++) {
+        for (int x = 0; x < Mosaic->gridWidth; x++) {
+            Tile *tile = GetTile(x, y);
+            tile->color = color;
+        }
+    }
+}
+
+void ClearColor(real32 r, real32 b, real32 g) {
+    ClearColor(RGB(r, g, b));
+}
+
+void SetTileColor(int32 x, int32 y, vec4 color) {
+    Tile *t = GetTile(x, y);
+    if (t) {
+        t->color = color;
+    }
+}
+
+void SetTileColor(int32 x, int32 y, real32 r, real32 g, real32 b) {
+    Tile *t = GetTile(x, y);
+    if (t) {
+        t->color = RGB(r, g, b);
+    }
+}
+
+vec2i GetMousePosition() {
+    if (Mosaic->hoveredTile) {
+        return Mosaic->hoveredTile->position;
+    }
+
+    return V2i(-1, -1);
+}
+
+int32 GetMousePositionX() {
+    if (Mosaic->hoveredTile) {
+        return Mosaic->hoveredTile->position.x;
+    }
+
+    return -1;
+}
+
+int32 GetMousePositionY() {
+    if (Mosaic->hoveredTile) {
+        return Mosaic->hoveredTile->position.y;
+    }
+
+    return -1;
+}
 
 void MosaicRender() {
     Tile *tiles = Mosaic->tiles;
-    
+
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
     Mosaic->rectBuffer.count = 0;
@@ -192,7 +333,12 @@ void MosaicRender() {
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         Tile *tile = &tiles[i];
 
-        DrawTile(tile->position, tile->color);
+        if (tile->sprite) {
+            DrawTileSprite(tile);
+        }
+        else {
+            DrawTile(tile->position, tile->color);
+        }
     }
 
     if (Mosaic->drawGrid) {

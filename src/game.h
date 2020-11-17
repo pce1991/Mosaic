@@ -110,6 +110,8 @@ struct GameMemory {
     void *myData;
 };
 
+real32 Time = 0;
+
 GameMemory *Game = NULL;
 InputQueue *Input = NULL;
 

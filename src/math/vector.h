@@ -35,7 +35,6 @@ union vec4 {
     }
 };
 
-
 union vec2i {
     int32 data[2];
     struct { int32 x, y; };

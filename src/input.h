@@ -1,6 +1,8 @@
 
 // @TODO: number keys, arrow keys, modifier keys
 
+// @TODO: dont bother passing Input into the functions!!!!
+
 enum InputID {
     Input_None,
 
@@ -25,6 +27,10 @@ enum InputID {
 
     Input_MouseLeft,
     Input_MouseRight,
+
+    Input_Num1,
+    Input_Num2,
+    Input_Num3,
 
     Input_Count,
 };

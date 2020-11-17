@@ -53,6 +53,7 @@ void PushInputChar(InputQueue *queue, char c) {
     queue->inputChars[queue->charCount++] = c;
 }
 
+// USer functions
 bool InputPressed(InputQueue *queue, InputID input, int32 deviceID = 0) {
     return queue->deviceStates[deviceID].pressed[input];
 }
@@ -70,6 +71,26 @@ bool InputHeldSeconds(InputQueue *queue, InputID input, real32 time, int32 devic
 
     return held && (Game->time - queue->deviceStates[deviceID].timePressed[input] > time);
 }
+
+
+bool InputPressed(InputID input, int32 deviceID = 0) {
+    return Input->deviceStates[deviceID].pressed[input];
+}
+
+bool InputReleased(InputID input, int32 deviceID = 0) {
+    return Input->deviceStates[deviceID].released[input];
+}
+
+bool InputHeld(InputID input, int32 deviceID = 0) {
+    return Input->deviceStates[deviceID].framesHeld[input] > 0;
+}
+
+bool InputHeldSeconds(InputID input, real32 time, int32 deviceID = 0) {
+    bool held = Input->deviceStates[deviceID].framesHeld[input] > 0;
+
+    return held && (Game->time - Input->deviceStates[deviceID].timePressed[input] > time);
+}
+
 
 // @NOTE: to be cleared at the end of the frame so we have access to inputChars thruout update. 
 void ClearInputQueue(InputQueue *queue) {
