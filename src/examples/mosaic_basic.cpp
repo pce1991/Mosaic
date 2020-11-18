@@ -37,11 +37,6 @@ void MyMosaicInit() {
 // This function is called every frame, and its what tells us what colors to draw
 // all the tiles at, along with all the other state changes in our game.
 
-// Lerp between two buffers of color
-// Equation to calculate index
-// Distance function
-// 
-
 void MyMosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
 
