@@ -350,6 +350,9 @@ void GameInit(GameMemory *gameMem) {
     AllocateQuadTopLeft(&gameMem->quadTopLeft);
     OpenGL_InitMesh(&gameMem->quadTopLeft);
 
+    AllocateCube(&gameMem->cube);
+    OpenGL_InitMesh(&gameMem->cube);
+
     InitFont(&gameMem->monoFont, "data/DejaVuSansMono.ttf");
     InitFont(&gameMem->serifFont, "data/LiberationSerif-Regular.ttf");
     // Setup glyph buffers

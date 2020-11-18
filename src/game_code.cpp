@@ -1,14 +1,16 @@
 
-#define MOSAIC 0
-#define MY_GAME 1
+#define MOSAIC 1
+#define MY_GAME 0
 #define NETWORK_SIMPLE 0
 #define MESSAGING 0
 #define PONG_BAD 0
 #define PARTICLES 0
 #define TYPING 0
 #define COLLISION 0
-#define SPRITE 1
+#define SPRITE 0
 #define ENTITY 0
+
+#define RENDERING 1
 
 #define PARSING 1
 
@@ -42,6 +44,9 @@
 
 #elif ENTITY
 #include "examples/entity_example.cpp"
+
+#elif RENDERING
+#include "examples/rendering_example.cpp"
 
 #elif PARSING
 #include "examples/parsing_example.cpp"

@@ -1,4 +1,80 @@
 
+
+struct MyData {
+    /*
+      Put all your game specific data in here.
+     */
+};
+
+MyData *Data = NULL;
+
+void MyMosaicInit() {
+    // Here we allocate the data defined in MyData so we have it on the first frame.
+    Data = (MyData *)malloc(sizeof(MyData));
+    memset(Data, 0, sizeof(MyData));
+    // I like to clear all my data to 0 and then manually set anything I don't want to start at 0.
+
+    /*
+      You can call SetMosaicGridSize(n, m) to set the grid size
+      Look at mosaic.h for the MosaicMem struct to see various parameters you can set
+     */
+
+    SetMosaicGridSize(16, 16);
+
+    // We have a global pointer to the MosaicMem data so you can set things like this.
+    Mosaic->drawGrid = true;
+
+    Mosaic->gridColor = RGB(0.2f, 0.2f, 0.2f);
+    Mosaic->screenColor = RGB(0.1f, 0.1f, 0.1f);
+
+    Mosaic->screenColor = PASTEL_PURPLE;
+
+    Log("color r %f g %f b %f", Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b);
+}
+
+// This is where you put the code you want to run every update.
+// This function is called every frame, and its what tells us what color to draw
+// all the tiles at, along with all the other state changes in our game.
+void MyMosaicUpdate() {
+    Tile *tiles = Mosaic->tiles;
+
+    // variable colors using sine wave equation (time based)
+
+    real32 red = (1 + sinf(Game->time)) * 0.5f;
+
+    // Variable color 
+
+    for (int y = 0; y < Mosaic->gridHeight; y++) {
+        for (int x = 0; x < Mosaic->gridWidth; x++) {
+            Tile *tile = GetTile(x, y);
+            tile->color = RGB(red, 0.3f, 0.7f);
+        }
+    }
+
+    // To make a variable we give it the type
+    // This tells us how big the data and how to interpret it.
+    real32 t = 1.0f;
+
+    if (InputPressed(Input, Input_Space)) {
+        
+    }
+
+    if (Mosaic->hoveredTile) {
+        Mosaic->hoveredTile->color = V4(1, 1, 1, 1);
+    }
+
+
+    foo++;
+    SetTileFoo(5, 5);
+}
+
+void SetTileFoo(int x, int y) {
+    
+}
+
+
+#if 0
+
 struct MyData {
     /*
       Put all your game specific data in here.
@@ -301,3 +377,4 @@ void MyMosaicUpdate() {
 
     //MazeGame();
 }
+#endif
