@@ -43,7 +43,7 @@ void MyMosaicUpdate() {
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *tile = GetTile(x, y);
-            tile->color = RGB(0.0f, 0.0f, 0.0f);
+            tile->color = RGB(0.0f 0.0f, 0.0f);
         }
     }
 

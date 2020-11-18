@@ -10,10 +10,12 @@
 
 #define EX_MOSAIC_LERP_COLORS 0
 
-#define EX_MOSAIC_DYNAMIC_ARRAYS 1
+#define EX_MOSAIC_DYNAMIC_ARRAYS 0
 
 #define EX_MOSAIC_1 0
 #define EX_MOSAIC_2 0
+
+#define RUBE_GOLDBERG 1
 
 #define EX_MOSAIC_VARIABLES 0
 
@@ -51,6 +53,9 @@
 
 #elif EX_MOSAIC_VARIABLES
 #include "examples/mosaic_variables.cpp"
+
+#elif RUBE_GOLDBERG
+#include "examples/rube_goldberg_machine.cpp"
 
 #elif EX_MOSAIC_MOUSE_DRAWING
 #include "examples/mosaic_mouse_drawing.cpp"
@@ -269,7 +274,7 @@ void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int
     }
 }
 
-void ColorAllTiles(vec4 color) {
+void SetAllTileColors(vec4 color) {
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *tile = GetTile(x, y);
@@ -278,8 +283,8 @@ void ColorAllTiles(vec4 color) {
     }
 }
 
-void ColorAllTiles(real32 r, real32 b, real32 g) {
-    ClearColor(RGB(r, g, b));
+void SetAllTileColors(real32 r, real32 b, real32 g) {
+    SetAllTileColors(RGB(r, g, b));
 }
 
 void SetTileColor(int32 x, int32 y, vec4 color) {
@@ -325,6 +330,7 @@ void MosaicRender() {
 
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
+
     Mosaic->rectBuffer.count = 0;
     {
         DrawRect(V2(0), Mosaic->gridSize * 0.5f, V4(0, 0, 0, 1));

@@ -320,9 +320,10 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
 
 
 void DrawRect(vec2 pos, vec2 scale, real32 angle, vec4 color) {
+    // @PERF: don't do this every draw call
     Shader *shader = &Game->shader;
     SetShader(shader);
-
+    
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
