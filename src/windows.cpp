@@ -173,7 +173,7 @@ void InitOpenGL(HWND window, OpenGLInfo *glInfo) {
 
             if (WGLEW_EXT_swap_control) {
                 // vsync
-                wglSwapIntervalEXT(1);
+                wglSwapIntervalEXT(0);
             }
         }
         else {
