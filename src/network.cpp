@@ -27,6 +27,7 @@ inline uint32 MakeAddressIPv4(u8 a, u8 b, u8 c, u8 d) {
 uint32 InitSocket(Socket *socketPtr, uint32 address, uint16 port, bool bindSocket = false) {
     socketPtr->handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
+    // @BUG: if port is 0 then OS will just give us a port, BUT we don't know what that port is.
     socketPtr->port = port;
     socketPtr->address = address;
 
@@ -45,15 +46,6 @@ uint32 InitSocket(Socket *socketPtr, uint32 address, uint16 port, bool bindSocke
             Log("Failed to bind socket for %u on port %d error: %d", address, port, error);
         }
     }
-
-    // enable promiscuous mode. Maybe not necessary. This lets you receive all packets on network, not just to machine.
-    // {
-    //     DWORD dwValue = RCVALL_ON;
-    //     DWORD dwBytesReturned = 0;
-    //     if (WSAIoctl(socketPtr->handle, SIO_RCVALL, &dwValue, sizeof(dwValue), NULL, 0, &dwBytesReturned, NULL, NULL) == SOCKET_ERROR) {
-    //         Print("Ioctl failed with error code : %d", WSAGetLastError());
-    //     }
-    // }
 
     DWORD nonBlocking = 1;
     int32 nonBlockingSuccess = ioctlsocket(socketPtr->handle, FIONBIO, &nonBlocking);
@@ -85,6 +77,9 @@ int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fro
     return recvfrom(socket->handle, (char *)buffer, bufferSize, 0, (sockaddr *)&fromSocket->socketAddress, &fromSize);
 }
 
+// @BUG: this sometimes returns something different than the IP address that ipconfig gets.
+//       Might have something to with virtual machines and computers having multiple IP addresses!
+//       NOT ROBUST!!!!
 uint32 GetMyAddress() {
     char hostName[64];
     int32 gotName = gethostname(hostName, sizeof(hostName));
@@ -126,8 +121,8 @@ void ReceivePackets(Socket *socket) {
             break;
         }
             
-        int32 fromAddress = ntohl(fromSocket.socketAddress.sin_addr.s_addr);
-        int32 fromPort = ntohs(fromSocket.socketAddress.sin_port);
+        uint32 fromAddress = ntohl(fromSocket.socketAddress.sin_addr.s_addr);
+        uint16 fromPort = ntohs(fromSocket.socketAddress.sin_port);
 
         packet.fromAddress = fromAddress;
         packet.fromPort = fromPort;

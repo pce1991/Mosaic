@@ -5,6 +5,7 @@ struct Mesh {
     
     uint32 vertCount;
     vec3 *verts;
+    vec3 *normals;
 
     uint32 indexCount;
     uint32 *indices;

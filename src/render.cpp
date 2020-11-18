@@ -194,6 +194,11 @@ vec2 NormToPixel(vec2 norm) {
 }
 
 
+void ClearColor(vec4 color) {
+    glClearColor(color.r, color.g, color.b, color.a);
+}
+
+
 void OpenGL_InitMesh(Mesh *mesh) {
     GLuint vertexBuffer;
 
@@ -212,9 +217,10 @@ void OpenGL_InitMesh(Mesh *mesh) {
 
     mesh->vertBufferID = vertexBuffer;
     mesh->indexBufferID = indexBuffer;
-    
 }
 
+void OpenGL_InitTexture(Sprite *texture);
+    
 void LoadSprite(Sprite *sprite, char *path) {
     int32 x, y, n;
     uint8 *data = stbi_load(path, &x, &y, &n, 4);
@@ -224,8 +230,11 @@ void LoadSprite(Sprite *sprite, char *path) {
     memcpy(sprite->data, data, sprite->size);
 
     free(data);
+
+    OpenGL_InitTexture(sprite);
 }
 
+// This must be called before we can draw a sprite.
 void OpenGL_InitTexture(Sprite *texture) {
     glGenTextures(1, (GLuint *)&texture->textureID);
     glCheckError();
@@ -264,8 +273,7 @@ void OpenGL_InitFontTable(FontTable *font) {
 }
 
 
-void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
-        
+void DrawSprite(vec2 position, vec2 scale, real32 angle, Sprite *texture) {
     Shader *shader = &Game->texturedQuadShader;
     SetShader(shader);
 
@@ -275,7 +283,9 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
     Mesh *mesh = &Game->quad;
 
     //mat4 model = TRS(V3(position.x - radius * 0.5f, position.y + radius * 0.5f, 0), IdentityQuaternion(), V3(radius));
-    mat4 model = TRS(V3(position.x, position.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 1));
+    mat4 model = TRS(V3(position.x, position.y, 0), AxisAngle(V3(0, 0, 1), angle), V3(scale.x, scale.y, 1.0f));
+        
+    //mat4 model = TRS(V3(position.x, position.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 1));
 
     //vec4 topLeft = mvp * V4(gameMem->quad.verts[0], 1.0f);
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
@@ -303,6 +313,11 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
     glDisableVertexAttribArray(vert);
     glDisableVertexAttribArray(texcoord);    
 }
+
+void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
+    DrawSprite(position, scale, 0.0f, texture);
+}
+
 
 void DrawRect(vec2 pos, vec2 scale, real32 angle, vec4 color) {
     Shader *shader = &Game->shader;
@@ -467,6 +482,35 @@ void RenderRectBuffer(RectBuffer *buffer) {
     glVertexAttribDivisor(model + 1, 0);
     glVertexAttribDivisor(model + 2, 0);
     glVertexAttribDivisor(model + 3, 0);
+}
+
+
+
+void DrawMesh(Mesh *mesh, vec3 pos, quaternion rotation, vec3 scale, vec4 color) {
+    Shader *shader = &Game->shader;
+    SetShader(shader);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    mat4 model = TRS(pos, rotation, scale);
+
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+
+    glUniform4fv(shader->uniforms[2].id, 1, color.data);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+    // 1st attribute buffer : vertices
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        
+    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
+
+    glDisableVertexAttribArray(vert);
 }
 
 

@@ -8,15 +8,8 @@ struct MyData {
 MyData *Data = NULL;
 
 void MyMosaicInit() {
-    // Here we allocate the data defined in MyData so we have it on the first frame.
     Data = (MyData *)malloc(sizeof(MyData));
     memset(Data, 0, sizeof(MyData));
-    // I like to clear all my data to 0 and then manually set anything I don't want to start at 0.
-
-    /*
-      You can call SetMosaicGridSize(n, m) to set the grid size
-      Look at mosaic.h for the MosaicMem struct to see various parameters you can set
-     */
 
     SetMosaicGridSize(16, 16);
 
@@ -28,14 +21,9 @@ void MyMosaicInit() {
     // These color values are "normalized" meaning that max is 1 and min is 0
     //Mosaic->screenColor = RGB(0.3f, 0.7f, 1.0f);
     Mosaic->screenColor = RGB(0.2f, 0.2f, 0.2f);
-
-    // This writes a string to the log.txt file that gets written into the output directory
-    Log("color r %f g %f b %f", Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b);
 }
 
-// This is where you put the code you want to run every update.
-// This function is called every frame, and its what tells us what colors to draw
-// all the tiles at, along with all the other state changes in our game.
+DynamicArray<vec2> positions = {};
 
 void MyMosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
@@ -47,7 +35,26 @@ void MyMosaicUpdate() {
         }
     }
 
-    if (Mosaic->hoveredTile) {
-        Mosaic->hoveredTile->color = V4(1, 1, 1, 1);
+    
+    if (InputPressed(Input, Input_Up)) {
+        vec2 p = V2(RandfRange(0.0f, 15.0f), RandfRange(0.0f, 15.0f));
+        PushBack(&positions, p);
+    }
+
+    if (InputPressed(Input, Input_Down)) {
+        if (positions.count > 0) {
+            // We could remove an index we want, but here I want to delete the position
+            // that's been in the longest.
+            // You need to make sure when using RemoveAtIndex that the index you're
+            // removing is less than the number of elements.
+            RemoveAtIndex(&positions, 0);
+        }
+    }
+
+    for (int i = 0; i < positions.count; i++) {
+        vec2 p = positions[i];
+        Tile *t = GetTile(p.x, p.y);
+
+        t->color = RGB(1, 0, 0);
     }
 }

@@ -17,10 +17,12 @@ InputQueue AllocateInputQueue(int32 capacity, int32 deviceCount) {
         deviceState->framesHeld = (int32 *)malloc(sizeof(int32) * Input_Count);
         deviceState->released = (bool *)malloc(sizeof(bool) * Input_Count);
         deviceState->pressed = (bool *)malloc(sizeof(bool) * Input_Count);
+        deviceState->timePressed = (real32 *)malloc(sizeof(real32) * Input_Count);
 
         memset(deviceState->framesHeld, -1, sizeof(int32) * Input_Count);
         memset(deviceState->pressed, 0, sizeof(bool) * Input_Count);
         memset(deviceState->released, 0, sizeof(bool) * Input_Count);
+        memset(deviceState->timePressed, 0, sizeof(real32) * Input_Count);
     }
 
     queue.charSize = 32;
@@ -51,6 +53,7 @@ void PushInputChar(InputQueue *queue, char c) {
     queue->inputChars[queue->charCount++] = c;
 }
 
+// USer functions
 bool InputPressed(InputQueue *queue, InputID input, int32 deviceID = 0) {
     return queue->deviceStates[deviceID].pressed[input];
 }
@@ -62,6 +65,32 @@ bool InputReleased(InputQueue *queue, InputID input, int32 deviceID = 0) {
 bool InputHeld(InputQueue *queue, InputID input, int32 deviceID = 0) {
     return queue->deviceStates[deviceID].framesHeld[input] > 0;
 }
+
+bool InputHeldSeconds(InputQueue *queue, InputID input, real32 time, int32 deviceID = 0) {
+    bool held = queue->deviceStates[deviceID].framesHeld[input] > 0;
+
+    return held && (Game->time - queue->deviceStates[deviceID].timePressed[input] > time);
+}
+
+
+bool InputPressed(InputID input, int32 deviceID = 0) {
+    return Input->deviceStates[deviceID].pressed[input];
+}
+
+bool InputReleased(InputID input, int32 deviceID = 0) {
+    return Input->deviceStates[deviceID].released[input];
+}
+
+bool InputHeld(InputID input, int32 deviceID = 0) {
+    return Input->deviceStates[deviceID].framesHeld[input] > 0;
+}
+
+bool InputHeldSeconds(InputID input, real32 time, int32 deviceID = 0) {
+    bool held = Input->deviceStates[deviceID].framesHeld[input] > 0;
+
+    return held && (Game->time - Input->deviceStates[deviceID].timePressed[input] > time);
+}
+
 
 // @NOTE: to be cleared at the end of the frame so we have access to inputChars thruout update. 
 void ClearInputQueue(InputQueue *queue) {
@@ -105,6 +134,7 @@ void UpdateInput(InputQueue *queue) {
         InputDeviceState *deviceState = &queue->deviceStates[event.deviceID];
 
         if (event.release) {
+            deviceState->timePressed[input] = -1;
             deviceState->framesHeld[input] = -1;
             deviceState->pressed[input] = false;
             deviceState->released[input] = true;
@@ -112,7 +142,8 @@ void UpdateInput(InputQueue *queue) {
         else {
             if (deviceState->framesHeld[input] < 0) {
                 //printf("pressed\n");
-                
+
+                deviceState->timePressed[input] = Game->time;
                 deviceState->framesHeld[input] = 0;
                 deviceState->pressed[input] = true;
                 deviceState->released[input] = false;

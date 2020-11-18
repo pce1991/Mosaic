@@ -1,0 +1,5 @@
+screenWidth: 1600;
+screenHeight: 900;
+volume: 1.0;
+server_ip: 192.0.0.1;
+socket_port:30001;

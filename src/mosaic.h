@@ -4,6 +4,8 @@ struct Tile {
     // and know where it is than pass it's position around. 
     vec2i position;
     vec4 color;
+
+    Sprite *sprite;
 };
 
 struct MosaicMem {
@@ -41,4 +43,30 @@ Tile *Tiles = NULL;
 
 
 Tile *GetTile(int32 x, int32 y);
-void SetMosaicGridSize(uint8 newWidth, uint8 newHeight);
+Tile *GetTile(vec2i pos);
+Tile *GetTile(vec2 pos);
+
+void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int32 *tilesRetrieved);
+
+
+void SetTileColor(int32 x, int32 y, vec4 color);
+void SetTileColor(int32 x, int32 y, real32 r, real32 g, real32 b);
+
+void ClearColor(vec4 color);
+void ClearColor(real32 r, real32 b, real32 g);
+
+
+vec2i GetMousePosition();
+int32 GetMousePositionX();
+int32 GetMousePositionY();
+
+
+void SetMosaicGridSize(uint32 newWidth, uint32 newHeight);
+
+void SetMosaicGridColor(vec4 color);
+void SetMosaicGridColor(real32 r, real32 g, real32 b);
+void SetMosaicScreenColor(vec4 color);
+void SetMosaicScreenColor(real32 r, real32 g, real32 b);
+
+Tile *GetHoveredTile();
+

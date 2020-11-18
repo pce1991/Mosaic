@@ -21,16 +21,12 @@ void MyMosaicInit() {
     SetMosaicGridSize(16, 16);
 
     // We have a global pointer to the MosaicMem data so you can set things like this.
-    Mosaic->drawGrid = false;
+    Mosaic->drawGrid = true;
 
     Mosaic->gridColor = RGB(0.2f, 0.2f, 0.2f);
 
     // These color values are "normalized" meaning that max is 1 and min is 0
-    //Mosaic->screenColor = RGB(0.3f, 0.7f, 1.0f);
-    Mosaic->screenColor = RGB(0.2f, 0.2f, 0.2f);
-
-    // This writes a string to the log.txt file that gets written into the output directory
-    Log("color r %f g %f b %f", Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b);
+    Mosaic->screenColor = RGB(0.4f, 0.4f, 0.4f);
 }
 
 // This is where you put the code you want to run every update.
@@ -45,9 +41,5 @@ void MyMosaicUpdate() {
             Tile *tile = GetTile(x, y);
             tile->color = RGB(0.0f, 0.0f, 0.0f);
         }
-    }
-
-    if (Mosaic->hoveredTile) {
-        Mosaic->hoveredTile->color = V4(1, 1, 1, 1);
     }
 }

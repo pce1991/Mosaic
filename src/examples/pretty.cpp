@@ -30,30 +30,35 @@ void MyInit() {
     
     memset(pretty, 0, sizeof(Particles));
 
-    for (int i = 0; i < 100; i++) {
-        Quad q = {};
-        q.position = V2(0);
-        q.velocity = V2(RandfRange(-5, 5), RandfRange(-5, 5));
-
-        q.scale = V2(RandfRange(0.1f, 0.3f));
-
-        q.rotation = RandfRange(0, 2 * _PI);
-        
-        q.angVelocity = RandfRange(0.1f, 0.3f);
-
-        q.spawnTime = Game->time;
-        q.duration = RandfRange(1.0f, 2.0f);
-
-        q.color = V4(RandfRange(0, 1),
-                     RandfRange(0, 1),
-                     RandfRange(0, 1),
-                     1.0f);
-
-        PushBack(&pretty->quads, q);
-    }
 }
 
 void MyGameUpdate() {
+
+    if (InputPressed(Input, Input_Space)) {
+        
+        for (int i = 0; i < 100; i++) {
+            Quad q = {};
+            q.position = V2(0);
+            q.velocity = V2(RandfRange(-5, 5), RandfRange(-5, 5));
+
+            q.scale = V2(RandfRange(0.1f, 0.3f));
+
+            q.rotation = RandfRange(0, 2 * _PI);
+        
+            q.angVelocity = RandfRange(0.1f, 0.3f);
+
+            q.spawnTime = Game->time;
+            q.duration = RandfRange(1.0f, 2.0f);
+
+            q.color = V4(RandfRange(0, 1),
+                         RandfRange(0, 1),
+                         RandfRange(0, 1),
+                         1.0f);
+
+            PushBack(&pretty->quads, q);
+        }
+    }
+    
     for (int i = 0; i < pretty->quads.count; i++) {
         Quad *q = &pretty->quads[i];
 

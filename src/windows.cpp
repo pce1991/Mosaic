@@ -250,6 +250,8 @@ void InitWASAPI(WinAudioOutput *audio) {
         }
     }
 
+    // @TODO: LOG errors if there were any!!!
+
     audio->device = pDevice;
     audio->audioClient = pAudioClient;
     audio->renderClient = pRenderClient;
@@ -264,6 +266,10 @@ void WASAPIThreadProc(void *data) {
 
     GamePlatform *platform = (GamePlatform *)data;
     WinAudioOutput *audio = &platform->audio;
+
+    if (audio->audioClient == NULL) {
+        return;
+    }
 
     audio->audioClient->Start();
 
@@ -312,7 +318,6 @@ void StartWASAPIThread(GamePlatform *platform) {
     HANDLE threadHandle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)WASAPIThreadProc, platform, 0, &threadID);
     CloseHandle(threadHandle);
 }
-
 
 
 void WindowsGetInput(InputQueue *inputQueue) {
@@ -372,6 +377,9 @@ void WindowsGetInput(InputQueue *inputQueue) {
                 if (keycode == 0x52) {
                     PushInputPress(inputQueue, Input_R, 0);
                 }
+
+                // @TODO: look up the keycode values for the number row
+                // and push events for those
 
                 if (keycode == VK_SPACE) {
                     PushInputPress(inputQueue, Input_Space, 0);
@@ -494,7 +502,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 #endif
     SetCurrentDirectory(newWorkingDirectory);
 
-
     
     WindowsPlatform plat = {};
 
@@ -505,7 +512,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     memset(gameMem, 0, sizeof(GameMemory));
 
     Game = gameMem;
-
 
     plat.screenWidth = gameMem->screenWidth;
     plat.screenHeight = gameMem->screenHeight;
@@ -573,9 +579,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     OpenGLInfo glInfo;
     InitOpenGL(window, &glInfo);
 
-    InitWASAPI(&platform.audio);
+    //InitWASAPI(&platform.audio);
 
-    StartWASAPIThread(&platform);
+    //StartWASAPIThread(&platform);
 
     LARGE_INTEGER startSystemTime;
     LARGE_INTEGER systemTime;
@@ -635,6 +641,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
         gameMem->deltaTime = ((real64)systemTime.QuadPart - (real64)prevSystemTime.QuadPart) / (real64)systemFrequency.QuadPart;
 
         gameMem->time += gameMem->deltaTime;
+
+        Time = gameMem->time;
 
         timeSinceRender += gameMem->deltaTime;
 

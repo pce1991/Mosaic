@@ -1,6 +1,8 @@
 
 // @TODO: number keys, arrow keys, modifier keys
 
+// @TODO: dont bother passing Input into the functions!!!!
+
 enum InputID {
     Input_None,
 
@@ -11,10 +13,10 @@ enum InputID {
     Input_Z,
     Input_R,
     
-    Input_Up,
-    Input_Down,
-    Input_Left,
-    Input_Right,
+    Input_Up,    // W
+    Input_Down,  // S
+    Input_Left,  // A 
+    Input_Right, // D
 
     Input_UpArrow,
     Input_DownArrow,
@@ -25,6 +27,10 @@ enum InputID {
 
     Input_MouseLeft,
     Input_MouseRight,
+
+    Input_Num1,
+    Input_Num2,
+    Input_Num3,
 
     Input_Count,
 };
@@ -39,6 +45,7 @@ struct InputDeviceState{
     int32 *framesHeld;
     bool *released;
     bool *pressed;
+    real32 *timePressed;
 };
 
 struct InputQueue {

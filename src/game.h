@@ -24,7 +24,7 @@
 
 #include "camera.h"
 #include "mesh.h"
-#include "entity.h"
+//#include "entity.h"
 
 #include "mosaic.h"
 
@@ -95,10 +95,11 @@ struct GameMemory {
     Mesh quad;
     Mesh glyphQuad;
     Mesh quadTopLeft;
+    Mesh cube;
 
     InputQueue inputQueue;
 
-    EntityDB entityDB;
+    //EntityDB entityDB;
 
     int32 gameIndex;
 
@@ -109,6 +110,8 @@ struct GameMemory {
 
     void *myData;
 };
+
+real32 Time = 0;
 
 GameMemory *Game = NULL;
 InputQueue *Input = NULL;
