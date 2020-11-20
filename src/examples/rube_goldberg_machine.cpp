@@ -67,6 +67,8 @@ void Simple2() {
     SetTileColor(x, y, red, green, blue);
 }
 
+// There is a good opportunity here to introduce enums
+
 void MyMosaicUpdate() {
     Simple();
 }

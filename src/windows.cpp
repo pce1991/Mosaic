@@ -643,6 +643,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
         gameMem->time += gameMem->deltaTime;
 
         Time = gameMem->time;
+        DeltaTime = gameMem->deltaTime;
 
         timeSinceRender += gameMem->deltaTime;
 

@@ -274,7 +274,7 @@ void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int
     }
 }
 
-void SetAllTileColors(vec4 color) {
+void ClearTiles(vec4 color) {
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *tile = GetTile(x, y);
@@ -283,8 +283,8 @@ void SetAllTileColors(vec4 color) {
     }
 }
 
-void SetAllTileColors(real32 r, real32 b, real32 g) {
-    SetAllTileColors(RGB(r, g, b));
+void ClearTiles(real32 r, real32 b, real32 g) {
+    ClearTiles(RGB(r, g, b));
 }
 
 void SetTileColor(int32 x, int32 y, vec4 color) {

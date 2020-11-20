@@ -52,8 +52,8 @@ void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int
 void SetTileColor(int32 x, int32 y, vec4 color);
 void SetTileColor(int32 x, int32 y, real32 r, real32 g, real32 b);
 
-void SetAllTileColors(vec4 color);
-void SetAllTileColors(real32 r, real32 b, real32 g);
+void ClearTiles(vec4 color);
+void ClearTiles(real32 r, real32 b, real32 g);
 
 
 vec2i GetMousePosition();
