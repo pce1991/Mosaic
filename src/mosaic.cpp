@@ -149,6 +149,22 @@ void SetMosaicScreenColor(real32 r, real32 g, real32 b) {
     Mosaic->screenColor = RGB(r, g, b);
 }
 
+void SetGridColor(vec4 color) {
+    Mosaic->gridColor = color;
+}
+
+void SetGridColor(real32 r, real32 g, real32 b) {
+    Mosaic->gridColor = RGB(r, g, b);
+}
+
+void ShowGrid() {
+    Mosaic->drawGrid = true;
+}
+
+void HideGrid() {
+    Mosaic->drawGrid = false;
+}
+
 
 int32 CellIndex(int32 x, int32 y) {
     return x + (y * Mosaic->gridWidth);

@@ -68,5 +68,12 @@ void SetMosaicGridColor(real32 r, real32 g, real32 b);
 void SetMosaicScreenColor(vec4 color);
 void SetMosaicScreenColor(real32 r, real32 g, real32 b);
 
+void ShowGrid();
+void HideGrid();
+
+void SetGridColor(vec4 color);
+void SetGridColor(real32 r, real32 g, real32 b);
+
+
 Tile *GetHoveredTile();
 

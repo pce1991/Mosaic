@@ -43,9 +43,11 @@ void MyMosaicUpdate() {
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *tile = GetTile(x, y);
-            tile->color = RGB(0.0f 0.0f, 0.0f);
+            tile->color = RGB(0.0f, 0.0f, 0.0f);
         }
     }
+    
+    SetTileColor(5, 4, 0.5, 0.5, 0.5);
 
     if (Mosaic->hoveredTile) {
         Mosaic->hoveredTile->color = V4(1, 1, 1, 1);
