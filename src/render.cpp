@@ -672,6 +672,58 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
+    // @GACK:
+    size *= Game->screenWidth;
+
+    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+
+    DrawText_(font, V2(pos.x, pos.y), size, color, true, str, width, center, NULL);
+    
+    va_end(args);
+}
+
+void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    // @GACK:
+    size *= Game->screenWidth;
+
+    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+
+    DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, center, NULL);
+    
+    va_end(args);
+}
+
+void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    // @GACK:
+    size *= Game->screenWidth;
+
+    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+
+    DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, false, NULL);
+    
+    va_end(args);
+}
+
+
+void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, real32 width, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
     // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
@@ -680,7 +732,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     va_end(args);
 }
 
-void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
+void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
     
@@ -695,7 +747,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     va_end(args);
 }
 
-void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
     
@@ -711,7 +763,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const ch
 }
 
 
-int32 DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, vec2 **positionsBuffer, const char *fmt, ...) {
+int32 DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, vec2 **positionsBuffer, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
     

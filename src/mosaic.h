@@ -52,6 +52,9 @@ void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int
 void SetTileColor(int32 x, int32 y, vec4 color);
 void SetTileColor(int32 x, int32 y, real32 r, real32 g, real32 b);
 
+void SetTileColor(vec2 position, real32 r, real32 g, real32 b);
+void SetTileColor(vec2 position, vec4 color);
+
 void ClearTiles(vec4 color);
 void ClearTiles(real32 r, real32 b, real32 g);
 
@@ -73,6 +76,11 @@ void HideGrid();
 
 void SetGridColor(vec4 color);
 void SetGridColor(real32 r, real32 g, real32 b);
+
+bool TilePositionsOverLap(vec2 a, vec2 b);
+bool TilePositionsOverLap(vec2i a, vec2i b);
+
+real32 GetTileCenter(real32 n);
 
 
 Tile *GetHoveredTile();
