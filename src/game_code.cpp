@@ -1,5 +1,5 @@
 
-#define MOSAIC 1
+#define MOSAIC 0
 #define MY_GAME 0
 #define NETWORK_SIMPLE 0
 #define MESSAGING 0
@@ -7,7 +7,7 @@
 #define PARTICLES 0
 #define TYPING 0
 #define COLLISION 0
-#define SPRITE 0
+#define SPRITE 1
 #define ENTITY 0
 
 #define RENDERING 1

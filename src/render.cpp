@@ -354,6 +354,7 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
 }
 
 // @NOTE: origin of rect and screen are both top left
+// @GACK: this is pretty weird cause it's not how DrawRect or DrawSprite work!
 void DrawRectScreen(vec2 pos, vec2 scale, vec4 color) {
     Shader *shader = &Game->shader;
     SetShader(shader);
@@ -390,6 +391,22 @@ void DrawRectScreenNorm(vec2 pos, vec2 scale, vec4 color) {
     vec2 scale_ = V2(scale.x * Game->screenWidth, scale.y * Game->screenWidth);
 
     DrawRectScreen(pos_, scale_, color);
+}
+
+
+void DrawLine(vec2 a, vec2 b, real32 width, vec4 color) {
+    vec2 c = Lerp(a, b, 0.5f);
+
+    real32 length = Distance(a, b) * 0.5f;
+
+    real32 angle = Angle(Normalize(b - a), V2(1, 0));
+
+    if (Dot(b - a, V2(0, 1)) < 0) {
+        angle *= -1;
+    }
+
+
+    DrawRect(c, V2(length, width), angle, color);
 }
 
 
