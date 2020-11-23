@@ -641,12 +641,12 @@ inline bool RaycastAABB(vec2 aabbMin, vec2 aabbMax, Ray ray, real32 *tMin, bool 
 }
 
 
-// This function takes a pointer to a vec2. That means when we change the values of dir, we are
-// changing the values at the memory address we passed in!
-// We WANT the value of dir to change based on the computation of this function. 
+// This function takes a pointer to a vec2. That means when we change the values of dir,
+// we are changing the values at the memory address we passed in! We WANT the value of dir
+// to change based on the computation of this function.
 // This uses the SeparatingAxisTheorem
-// @NOTE: this will not set the component of dir that doesn't need to be moved, so make sure it's cleared
-// Dir will push A out of B
+// @NOTE: this will not set the component of dir that doesn't need
+// to be moved, so make sure it's cleared Dir will push A out of B
 bool RectTest(Rect a, Rect b, vec2 aPosition, vec2 bPosition, vec2 *dir) {
 
     Rect aGlobal;
