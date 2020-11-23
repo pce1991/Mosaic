@@ -12,8 +12,12 @@
 
 #define EX_MOSAIC_DYNAMIC_ARRAYS 0
 
+#define EX_MOSAIC_PHYSICS 1
+
 #define EX_MOSAIC_1 0
 #define EX_MOSAIC_2 0
+
+#define RUBE_GOLDBERG 1
 
 #define EX_MOSAIC_VARIABLES 0
 
@@ -45,12 +49,17 @@
 #elif EX_MOSAIC_DYNAMIC_ARRAYS
 #include "examples/mosaic_dynamic_arrays.cpp"
 
+#elif EX_MOSAIC_PHYSICS
+#include "examples/mosaic_physics.cpp"
 
 #elif EX_MOSAIC_1
 #include "examples/mosaic_1.cpp"
 
 #elif EX_MOSAIC_VARIABLES
 #include "examples/mosaic_variables.cpp"
+
+#elif RUBE_GOLDBERG
+#include "examples/rube_goldberg_machine.cpp"
 
 #elif EX_MOSAIC_MOUSE_DRAWING
 #include "examples/mosaic_mouse_drawing.cpp"
@@ -142,6 +151,22 @@ void SetMosaicScreenColor(vec4 color) {
 
 void SetMosaicScreenColor(real32 r, real32 g, real32 b) {
     Mosaic->screenColor = RGB(r, g, b);
+}
+
+void SetGridColor(vec4 color) {
+    Mosaic->gridColor = color;
+}
+
+void SetGridColor(real32 r, real32 g, real32 b) {
+    Mosaic->gridColor = RGB(r, g, b);
+}
+
+void ShowGrid() {
+    Mosaic->drawGrid = true;
+}
+
+void HideGrid() {
+    Mosaic->drawGrid = false;
 }
 
 
@@ -269,7 +294,7 @@ void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int
     }
 }
 
-void ColorAllTiles(vec4 color) {
+void ClearTiles(vec4 color) {
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
             Tile *tile = GetTile(x, y);
@@ -278,8 +303,8 @@ void ColorAllTiles(vec4 color) {
     }
 }
 
-void ColorAllTiles(real32 r, real32 b, real32 g) {
-    ClearColor(RGB(r, g, b));
+void ClearTiles(real32 r, real32 b, real32 g) {
+    ClearTiles(RGB(r, g, b));
 }
 
 void SetTileColor(int32 x, int32 y, vec4 color) {
@@ -295,6 +320,22 @@ void SetTileColor(int32 x, int32 y, real32 r, real32 g, real32 b) {
         t->color = RGB(r, g, b);
     }
 }
+
+void SetTileColor(vec2 position, real32 r, real32 g, real32 b) {
+    Tile *t = GetTile(position);
+    if (t) {
+        t->color = RGB(r, g, b);
+    }
+}
+
+void SetTileColor(vec2 position, vec4 color) {
+    Tile *t = GetTile(position);
+    if (t) {
+        t->color = color;
+    }
+}
+
+
 
 vec2i GetMousePosition() {
     if (Mosaic->hoveredTile) {
@@ -320,11 +361,42 @@ int32 GetMousePositionY() {
     return -1;
 }
 
+bool TilePositionsOverLap(vec2 a, vec2 b) {
+    vec2i a_ = V2i(a.x, a.y);
+    vec2i b_ = V2i(b.x, b.y);
+
+    return a_ == b_;
+}
+
+bool TilePositionsOverLap(vec2i a, vec2i b) {
+    return a == b;
+}
+
+real32 GetTileCenter(real32 n) {
+    int32 i = (int32)n;
+    return i + 0.5f;
+}
+
+void DrawTextTop(vec4 color, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.1f);
+    DrawText(&Game->monoFont, position, 0.35f, RGB(1, 0, 0), true, str);
+
+    va_end(args);
+}
+
+
 void MosaicRender() {
     Tile *tiles = Mosaic->tiles;
 
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
+
     Mosaic->rectBuffer.count = 0;
     {
         DrawRect(V2(0), Mosaic->gridSize * 0.5f, V4(0, 0, 0, 1));

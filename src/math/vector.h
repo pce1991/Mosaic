@@ -1244,9 +1244,15 @@ inline real32 DistanceSq(vec4 a, vec4 b) {
     return LengthSq(b - a);
 }
 
+inline real32 Angle(vec2 a, vec2 b) {
+    r32 dot = Clamp(Dot(a, b), -1.0f, 1.0f);
+    real32 result = acosf(dot);
+    return result;
+}
+
 // @NOTE: we assume that a and b are normalized.
 // This is because dividing Dot(a, b) by Length(a) * Length(b) when they actually are normalized
-// can field a result > |1| which results in NaN
+// can field a result > |1| which results in NaN.
 inline real32 Angle(vec3 a, vec3 b) {
     r32 dot = Clamp(Dot(a, b), -1.0f, 1.0f);
     real32 result = acosf(dot);

@@ -112,6 +112,7 @@ struct GameMemory {
 };
 
 real32 Time = 0;
+real32 DeltaTime = 0;
 
 GameMemory *Game = NULL;
 InputQueue *Input = NULL;

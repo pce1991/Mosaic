@@ -37,13 +37,6 @@ void MyMosaicInit() {
 // This function is called every frame, and its what tells us what colors to draw
 // all the tiles at, along with all the other state changes in our game.
 
-bool shouldSwitchScene = false;
-real32 timeSwitched = 0;
-
-
-int32 function = 0;
-
-
 void Game1() {
 
     vec2 prevPosition = position;
@@ -52,34 +45,6 @@ void Game1() {
         shouldSwitchScene = true;
     }
 }
-
-
-struct Keyframe {
-    real32 startTime;
-    real32 duration;
-    Sprite *sprite;
-};
-
-enum AnimType {
-    
-};
-
-struct Animation {
-    AnimType type;
-    DynamicArray<Keyframes> keyframes;
-};
-
-struct AnimState {
-    real32 startTime;
-    int32 keyframeIndex;
-    Animation *currentAnimation;
-};
-
-struct Player {
-
-    AnimState animState;
-};
-
 
 void MyMosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
@@ -90,45 +55,7 @@ void MyMosaicUpdate() {
             tile->color = RGB(0.0f, 0.0f, 0.0f);
         }
     }
-
-    real32 timeSince = Game->time - timeSwitched;
-
-    if (timeSince >= 30) {
-        shouldSwitchScene = true;
-        timeSwitched = Game->time;
-    }
-
-    if (shouldSwitchScene) {
-        function++;
-        shouldSwitchScene = false;
-    }
-
-    prevPos = pos;
-
-    Tile *t = GetTile(pos.x, pos.y);
-
-    if () {
-
-        pos = prevPos;
-        // t now points at a tile that was at the invalid position
-        // so we need to update the tile now that we fixed the position
-        
-        t = GetTile(pos.x, pos.y);
-    }
-
-    if (t) {
-        t->color = RGB(1, 1, 1);
-    }
-
-    if (Mosaic->hoveredTile) {
-        Mosaic->hoveredTile->color = V4(1, 1, 1, 1);
-    }
-
-    Tile *hoveredTile = Mosaic->hoveredTile;
-
-    // OR
     
-    if (Mosaic->hoveredTile == obstacle2) {
-        
-    }
+    SetTileColor(5, 4, 0.5, 0.5, 0.5);
+
 }

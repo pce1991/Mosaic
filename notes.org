@@ -1,6 +1,9 @@
 
-TODO: define colors
-TODO: RGB(r g b, 1.0)
+
+PERF: fix integrated performance. Clearly doing something weird because Changes works on integrated graphics so wtf?
+
+@TODO: have to get a scrollable debug log implemented, I think it's just too powerful and useful for beginners to omit, even tho it kinda breaks the whole bare-bones approach. 
+
 
 TODO: Mosaic examples. 
 -- the less code you see the clearer things are.

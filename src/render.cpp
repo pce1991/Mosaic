@@ -320,9 +320,10 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
 
 
 void DrawRect(vec2 pos, vec2 scale, real32 angle, vec4 color) {
+    // @PERF: don't do this every draw call
     Shader *shader = &Game->shader;
     SetShader(shader);
-
+    
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -353,6 +354,7 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
 }
 
 // @NOTE: origin of rect and screen are both top left
+// @GACK: this is pretty weird cause it's not how DrawRect or DrawSprite work!
 void DrawRectScreen(vec2 pos, vec2 scale, vec4 color) {
     Shader *shader = &Game->shader;
     SetShader(shader);
@@ -389,6 +391,22 @@ void DrawRectScreenNorm(vec2 pos, vec2 scale, vec4 color) {
     vec2 scale_ = V2(scale.x * Game->screenWidth, scale.y * Game->screenWidth);
 
     DrawRectScreen(pos_, scale_, color);
+}
+
+
+void DrawLine(vec2 a, vec2 b, real32 width, vec4 color) {
+    vec2 c = Lerp(a, b, 0.5f);
+
+    real32 length = Distance(a, b) * 0.5f;
+
+    real32 angle = Angle(Normalize(b - a), V2(1, 0));
+
+    if (Dot(b - a, V2(0, 1)) < 0) {
+        angle *= -1;
+    }
+
+
+    DrawRect(c, V2(length, width), angle, color);
 }
 
 
@@ -671,6 +689,58 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
+    // @GACK:
+    size *= Game->screenWidth;
+
+    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+
+    DrawText_(font, V2(pos.x, pos.y), size, color, true, str, width, center, NULL);
+    
+    va_end(args);
+}
+
+void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    // @GACK:
+    size *= Game->screenWidth;
+
+    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+
+    DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, center, NULL);
+    
+    va_end(args);
+}
+
+void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    // @GACK:
+    size *= Game->screenWidth;
+
+    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+
+    DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, false, NULL);
+    
+    va_end(args);
+}
+
+
+void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, real32 width, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
     // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
@@ -679,7 +749,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     va_end(args);
 }
 
-void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
+void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
     
@@ -694,7 +764,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     va_end(args);
 }
 
-void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
     
@@ -710,7 +780,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const ch
 }
 
 
-int32 DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, vec2 **positionsBuffer, const char *fmt, ...) {
+int32 DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, vec2 **positionsBuffer, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
     
