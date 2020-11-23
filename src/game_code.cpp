@@ -1,6 +1,6 @@
 
-#define MOSAIC 0
-#define MY_GAME 0
+#define MOSAIC 1
+#define MY_GAME 1
 #define NETWORK_SIMPLE 0
 #define MESSAGING 0
 #define PONG_BAD 0
