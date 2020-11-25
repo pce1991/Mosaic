@@ -37,15 +37,6 @@ void MyMosaicInit() {
 // This function is called every frame, and its what tells us what colors to draw
 // all the tiles at, along with all the other state changes in our game.
 
-void Game1() {
-
-    vec2 prevPosition = position;
-
-    if (InputPressed(Input, Input_Left)) {
-        shouldSwitchScene = true;
-    }
-}
-
 void MyMosaicUpdate() {
     Tile *tiles = Mosaic->tiles;
 

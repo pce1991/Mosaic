@@ -10,7 +10,7 @@
 
 #define EX_MOSAIC_LERP_COLORS 0
 
-#define EX_MOSAIC_SPRITE 1
+#define EX_MOSAIC_SPRITE 0
 
 #define EX_MOSAIC_DYNAMIC_ARRAYS 0
 
@@ -383,14 +383,14 @@ int32 GetMousePositionY() {
     return -1;
 }
 
-bool TilePositionsOverLap(vec2 a, vec2 b) {
+bool TilePositionsOverlap(vec2 a, vec2 b) {
     vec2i a_ = V2i(a.x, a.y);
     vec2i b_ = V2i(b.x, b.y);
 
     return a_ == b_;
 }
 
-bool TilePositionsOverLap(vec2i a, vec2i b) {
+bool TilePositionsOverlap(vec2i a, vec2i b) {
     return a == b;
 }
 

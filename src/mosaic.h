@@ -76,8 +76,8 @@ void HideGrid();
 void SetGridColor(vec4 color);
 void SetGridColor(real32 r, real32 g, real32 b);
 
-bool TilePositionsOverLap(vec2 a, vec2 b);
-bool TilePositionsOverLap(vec2i a, vec2i b);
+bool TilePositionsOverlap(vec2 a, vec2 b);
+bool TilePositionsOverlap(vec2i a, vec2i b);
 
 real32 GetTileCenter(real32 n);
 
