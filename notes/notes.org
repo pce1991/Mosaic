@@ -1,13 +1,22 @@
 
+TODO: clean up dead/empty example code to avoid confusion
+TODO: delete the entityDB and only put it in an example (because of compilation ordering)
+
+
 TODO: sprite sheets
 ;; dont want to buffer all the data over, just want to grab some of it? Or do I send the whole texture and just sample a section?
 
-TODO: pause the game
+TODO: get text to a better place by actually using emSize, and proper sizing
+
+TODO: expose way to pause the game (need more keys I think)
+-- Function PauseGame() UnPauseGame()
+-- show this to user early so they can get a sense of what's happening each frame
 
 TODO: Input_MoveX/Y so we can just get it into a vector
 
 BUG: If you come at it from the top RectTest will push you horz because that is the most overlapping axis.
-     I think what we want is to find how much to push away in the direction we're moving
+     I think what we want is to find how much to push away in the direction we're moving? Maybe it'll write out two vectors and then we pick between them? 
+     
 
 TODO: networking needs to be able to run multiple instances of the game on the same machine. You should be able to host the server and N clients on the same machine. 
 -- only issue there is that the clients each need a unique port that we send to.

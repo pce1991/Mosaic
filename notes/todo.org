@@ -28,3 +28,11 @@
   What I don't like is a) I wouldnt write an actual game this way so I dont want to write a toy game this way either.
   b) it makes the entry point someplace other than the platform which seems odd.
   
+* Input
+  Rewrite the input system to have devices that we pass in instead of just a deviceID
+
+  Also give user access to all keys on the board. It isnt even an interesting engine assignment to get input working this way.
+* Screenshots
+  Take screenshot. A) it'll help the book, B) it'll be cool for students.
+* OSX
+  Metal

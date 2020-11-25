@@ -6,6 +6,7 @@
 #define PONG_BAD 0
 #define PARTICLES 0
 #define TYPING 0
+#define SPRITE 0
 #define COLLISION 0
 #define SPRITE 1
 #define ENTITY 0
