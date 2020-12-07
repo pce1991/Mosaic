@@ -660,9 +660,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
         GameUpdateAndRender(gameMem);
 
-        HDC deviceContext = GetDC(window);
-        SwapBuffers(deviceContext);
-        ReleaseDC(window, deviceContext);
+        SwapBuffers(hdc);
     }
 
     GameDeinit();

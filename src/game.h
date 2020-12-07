@@ -63,6 +63,10 @@ struct GameMemory {
     uint32 screenHeight;
     uint32 pitch;
 
+    // This is memory that we allocate up front and will last for the duration
+    // of the game. 
+    MemoryArena permanentArena;
+
     DebugLog log;
     MemoryArena frameMem;
 
