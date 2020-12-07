@@ -1,6 +1,6 @@
 
 #define EX_MOSAIC_CLEAN 0
-#define EX_MOSAIC_BASIC 0
+#define EX_MOSAIC_BASIC 1
 #define EX_MOSAIC_AUDIO 0
 #define EX_MOSAIC_RANDOM_TILES 0
 
