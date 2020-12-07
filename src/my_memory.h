@@ -33,7 +33,6 @@ void ClearMemoryArena(MemoryArena *arena) {
 
 #define PushSize(arena, type, count) (type *)PushSizeMemoryArena(arena, sizeof(type) * count)
 
-
 inline void *AllocCleared(int32 size) {
     void *d = malloc(size);
     memset(d, 0, size);

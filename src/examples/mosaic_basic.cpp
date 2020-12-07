@@ -33,16 +33,14 @@ void MyMosaicInit() {
     Log("color r %f g %f b %f", Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b);
 }
 
+// This is where you put the code you want to run every update.
+// This function is called every frame, and its what tells us what colors to draw
+// all the tiles at, along with all the other state changes in our game.
 
 void MyMosaicUpdate() {
-    Tile *tiles = Mosaic->tiles;
+    ClearTiles(0, 0, 0);
 
-    for (int y = 0; y < Mosaic->gridHeight; y++) {
-        for (int x = 0; x < Mosaic->gridWidth; x++) {
-            Tile *tile = GetTile(x, y);
-            tile->color = RGB(0.0f, 0.0f, 0.0f);
-        }
-    }
+    int *numbers = PushSize(&Game->frameMem, int, 100);
     
     SetTileColor(5, 4, 0.5, 0.5, 0.5);
 

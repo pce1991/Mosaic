@@ -10,6 +10,8 @@
 
 #define EX_MOSAIC_LERP_COLORS 0
 
+#define EX_MOSAIC_SPRITE 0
+
 #define EX_MOSAIC_DYNAMIC_ARRAYS 0
 
 #define EX_MOSAIC_PHYSICS 1
@@ -39,6 +41,9 @@
 
 #elif EX_MOSAIC_PARTICLES
 #include "examples/mosaic_particles.cpp"
+
+#elif EX_MOSAIC_SPRITE
+#include "examples/mosaic_sprite.cpp"
 
 #elif EX_MOSAIC_MIA
 #include "examples/mosaic_mia.cpp"
@@ -189,13 +194,6 @@ void DrawTile(vec2i position, vec4 color) {
     //DrawRect(&Mosaic->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
 }
 
-void DrawTileSprite(Tile *tile) {
-    vec2 worldPos = GridPositionToWorldPosition(tile->position);
-    DrawSprite(worldPos, V2(Mosaic->tileSize * 0.5f), tile->sprite);
-    // Instancing
-    //DrawRect(&Mosaic->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
-}
-
 void DrawBorder() {
     for (int y = 0; y < Mosaic->gridHeight + 1; y++) {
 
@@ -335,6 +333,30 @@ void SetTileColor(vec2 position, vec4 color) {
     }
 }
 
+void DrawSprite(vec2 position, Sprite *sprite) {
+    for (int y = 0; y < sprite->height; y++) {
+        for (int x = 0; x < sprite->width; x++) {
+            vec2 pos = position + V2(x, y);
+
+            Tile *t = GetTile(pos);
+
+            int32 pixel = (x * 4) + (y * sprite->width * 4);
+
+            if (t == NULL) { continue; }
+
+            // We don't support alpha blending, but you can use an alpha
+            // of 0 to specify that a tile shouldn't be colored. 
+            if (sprite->data[pixel + 3] == 0) {
+                continue;
+            }
+
+            t->color.r = sprite->data[pixel] / 255.0f;
+            t->color.g = sprite->data[pixel + 1] / 255.0f;
+            t->color.b = sprite->data[pixel + 2] / 255.0f;
+            t->color.a = sprite->data[pixel + 3] / 255.0f;
+        }
+    }
+}
 
 
 vec2i GetMousePosition() {
@@ -361,14 +383,14 @@ int32 GetMousePositionY() {
     return -1;
 }
 
-bool TilePositionsOverLap(vec2 a, vec2 b) {
+bool TilePositionsOverlap(vec2 a, vec2 b) {
     vec2i a_ = V2i(a.x, a.y);
     vec2i b_ = V2i(b.x, b.y);
 
     return a_ == b_;
 }
 
-bool TilePositionsOverLap(vec2i a, vec2i b) {
+bool TilePositionsOverlap(vec2i a, vec2i b) {
     return a == b;
 }
 
@@ -405,12 +427,7 @@ void MosaicRender() {
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
         Tile *tile = &tiles[i];
 
-        if (tile->sprite) {
-            DrawTileSprite(tile);
-        }
-        else {
-            DrawTile(tile->position, tile->color);
-        }
+        DrawTile(tile->position, tile->color);
     }
 
     if (Mosaic->drawGrid) {
