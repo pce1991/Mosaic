@@ -47,10 +47,8 @@ void MyGameUpdate() {
     // @TODO: what if we wanted b to push a?
     vec2 outDir = V2(0);
 
-    if (InputPressed(Input, Input_Space)) {
-        if (RectTest(Data->b, Data->a, Data->bPos, Data->aPos, &outDir)) {
-            Data->bPos = Data->bPos + outDir;
-        }
+    if (RectTest(Data->b, Data->a, Data->bPos, Data->aPos, &outDir)) {
+        Data->bPos = Data->bPos + outDir;
     }
     
     vec2 aScale = (Data->a.max - Data->a.min) * 0.5f;

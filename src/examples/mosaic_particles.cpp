@@ -29,7 +29,7 @@ void MyMosaicInit() {
 
 void MyMosaicUpdate() {
 
-    ClearColor(0, 0, 0);
+    ClearTiles(0, 0, 0);
     
     real32 timeSinceSpawn = Game->time - Data->lastSpawnTime;
 
