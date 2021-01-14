@@ -1,30 +1,23 @@
 
 To compile this program you need Visual Studio and the C++ development tools installed.
 
-To compile this program goto your Windows Search Bar and type
-"x64 Native Tools Command"
+Make sure to install Visual Studio in the "Program Files (x86)" directory.
 
-Navigate to this project directory using the "cd" command. The cd command works like this:
-"cd path_of_directory_i_want_to_go_to"
-You can go back a directory like this
-"cd ..\"
-And you can go to the c:\ drive like this
-"cd c:\"
+Once you have done that you can navigate to this directory and launch "command prompt".
 
-So for instance if you download the game engine and put it in your c:\ drive you could go to it like
+This creates a command prompt which you can use to run the compilation command to turn our code into an executable. 
 
-"cd c:\mosaic"
+To compile our program you can type (without the quotes)
 
-You might have put it in your downloads in which case you'd try
+"win_compile.bat"
 
-cd "c:\Users\my_name\Downloads"
+You'll see some output, and assuming there were no errors you can now type
 
-Once you are in this directory type "win_compile.bat" (you can use TAB for auto-completion)
+"build\game.exe"
 
-Once it has compiled you should see a new directory called "build" with a "game.exe" inside.
+Every time you create any change to the code you need to recompile the program, so I recommend keeping the command prompt open during a session so you can easily run "win_compile.bat"
 
-To run it from your command prompt you can type "build\game.exe"
-
+Think of the compiler as the user-interface between the programmer (you) and the machine. Whenever you compile your program it'll notify you if there are any errors, pointing out where they are so you can go fix them.
 
 
 If the game runs very slowly you may not be using your graphics card. Right click the "game.exe" and select "run with graphics processor" and choose the graphics card instead of the "integrated graphics" which is sometimes the default on laptops.

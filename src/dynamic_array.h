@@ -310,3 +310,5 @@ inline T *LastPtr(DynamicArray<T> *array) {
     T *result = &array->data[array->count - 1];
     return result;
 }
+
+

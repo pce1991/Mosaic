@@ -6,13 +6,15 @@
 #define PONG_BAD 0
 #define PARTICLES 0
 #define TYPING 0
-#define COLLISION 1
-#define SPRITE 1
+#define COLLISION 0
+#define SPRITE 0
 #define ENTITY 0
 
-#define RENDERING 1
+#define RENDERING 0
 
-#define PARSING 1
+#define PARSING 0
+
+#define RAYTRACER 1
 
 
 #if MOSAIC
@@ -50,6 +52,9 @@
 
 #elif PARSING
 #include "examples/parsing_example.cpp"
+
+#elif RAYTRACER
+#include "examples/raytracing.cpp"
 
 
 #endif

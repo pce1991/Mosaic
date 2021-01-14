@@ -1,4 +1,9 @@
 
+// To compile the engine:
+// open x64 native tools
+// Navigate inside the Mosaic directory
+// type "win_compile.bat" 
+
 struct MyData {
     /*
       Put all your game specific data in here.
@@ -31,7 +36,7 @@ void MyMosaicUpdate() {
     SetTileColor(5, 4, 0.5, 0.5, 0.5);
 
     vec4 color = RGB(0.1f, 0.8f, 0.8f);
-    SetTileColor(6, 6, color);
+    SetTileColor(6, 6, color * (1 + (sinf(Time * 4)) * 0.5f));
     // You can also pass a vec4 to SetTileColor
 }
 

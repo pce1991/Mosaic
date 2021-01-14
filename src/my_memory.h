@@ -5,20 +5,48 @@
 #define Megabytes(n) (1024 * Kilobytes(n))
 #define Gigabytes(n) (1024 * Megabytes(n))
 
-struct MemoryArena {
+struct MAllocator;
+
+
+typedef void *AllocateFunc(MAllocator *allocator, uint64 size);
+typedef void DeallocateFunc(MAllocator *allocator, void *data);
+
+struct MAllocator {
+    AllocateFunc *allocate;
+    DeallocateFunc *deallocate;
+};
+
+inline void *AllocateMem(MAllocator *allocator, uint64 size) {
+    return allocator->allocate(allocator, size);
+}
+
+inline void DeallocateMem(MAllocator *allocator, void *data) {
+    if (allocator->deallocate == NULL) { return; }
+    allocator->deallocate(allocator, data);
+}
+
+
+struct MemoryArena : MAllocator {
     uint32 capacity;
     uint32 size; // in bytes
     void *ptr;
 };
 
-void AllocateMemoryArena(MemoryArena *arena, uint32 capacity) {
+
+void *PushSizeMemoryArena(MemoryArena *arena, uint64 size);
+
+void AllocateMemoryArena(MemoryArena *arena, uint64 capacity) {
+    void *(*allocate)(MemoryArena *, uint64) = &PushSizeMemoryArena;
+    arena->allocate = (AllocateFunc *)allocate;
+    arena->deallocate = NULL;
+    
     arena->capacity = capacity;
     arena->size = 0;
     arena->ptr = malloc(capacity);
     memset(arena->ptr, 0, capacity);
 }
 
-void *PushSizeMemoryArena(MemoryArena *arena, uint32 size) {
+void *PushSizeMemoryArena(MemoryArena *arena, uint64 size) {
     void *result = (uint8 *)arena->ptr + arena->size;
     arena->size += size;
 
@@ -38,3 +66,78 @@ inline void *AllocCleared(int32 size) {
     memset(d, 0, size);
     return d;
 }
+
+
+
+
+template <typename T>
+struct MArray {
+    uint32 count;
+    uint32 capacity;
+
+    T *data;
+
+    // Compiler complains if this isn't a non-static member function!
+    inline T& operator[](const int index) const {
+        return data[index];
+    }
+};
+
+
+// Default MakeArray uses the heap.
+template <typename T>
+MArray<T> MakeMArray(uint32 capacity) {
+    MArray<T> array = {};
+    array.count = 0;
+    array.capacity = capacity;
+
+    if (capacity > 0) {
+        array.data = (T *)malloc(sizeof(T) * capacity);
+    }
+    
+    return array;
+}
+
+template <typename T>
+MArray<T> MakeMArray(MAllocator *allocator, uint32 capacity) {
+    MArray<T> array = {};
+    array.count = 0;
+    array.capacity = capacity;
+
+    if (capacity > 0) {
+        array.data = (T *)allocator->allocate(allocator, sizeof(T) * capacity);
+    }
+    
+    return array;
+}
+
+template <typename T>
+void PushBack(MArray<T> *array, T element) {
+    if (array->count < array->capacity) {
+        array->data[array->count] = element;
+        array->count++;
+    }
+}
+
+template <typename T>
+inline void RemoveAtIndexBySwap(MArray<T> *array, uint32 index) {
+    ASSERT(index < array->count);
+
+    if (index != array->count - 1) {
+        array->data[index] = array->data[array->count - 1];
+    }
+
+    array->count--;
+}
+
+template <typename T>
+inline T Last(MArray<T> *array) {
+    ASSERT(array->count > 0);
+
+    T result = array->data[array->count - 1];
+    return result;
+}
+
+
+// @TODO: Maybe support the rest of the DynamicArray API
+// @TODO: chunked array
