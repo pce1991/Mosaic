@@ -25,6 +25,8 @@
 
 #define EX_MOSAIC_MOUSE_DRAWING 1
 
+#define EX_MOSAIC_GRID 1
+
 
 
 #if EX_MOSAIC_CLEAN
@@ -69,6 +71,9 @@
 #elif EX_MOSAIC_MOUSE_DRAWING
 #include "examples/mosaic_mouse_drawing.cpp"
 
+#elif EX_MOSAIC_GRID
+#include "examples/mosaic_grid.cpp"
+
 #elif EX_MOSAIC_2
 #include "examples/mosaic_2.cpp"
 
@@ -89,7 +94,7 @@ void MyInit() {
 
     MoveMouse(Game->screenWidth / 2.0f, Game->screenHeight / 2.0f);
 
-    Mosaic->padding = 1.5f;
+    Mosaic->padding = 1.0f;
 
     SetMosaicGridSize(16, 16);
 
@@ -115,12 +120,40 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
     memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
 
     real32 levelAspect = Mosaic->gridWidth / (Mosaic->gridHeight * 1.0f);
+    real32 screenAspect = 16.0 / 9.0f;
+    // @HARDCODED
 
-    if (Mosaic->gridWidth > Mosaic->gridHeight) {
-        Mosaic->tileSize = ((16.0f - Mosaic->padding) / Mosaic->gridWidth);
-    }
-    else {
-        Mosaic->tileSize = (9.0f - Mosaic->padding) / Mosaic->gridHeight;        
+    Mosaic->tileSize = 1;
+
+    // @TODO: keep a dedicated place at the top for text?
+    {
+        Camera *cam = &Game->camera;
+
+        if (levelAspect > screenAspect) {
+            real32 size = Mosaic->gridWidth / (16.0f - Mosaic->padding);
+            
+            cam->width = 16.0f * size;
+            cam->height = 9.0f * size;
+        }
+        else {
+            real32 size = Mosaic->gridHeight / (9.0f - Mosaic->padding);
+            
+            cam->width = 16.0f * size;
+            cam->height = 9.0f * size;
+        }
+        
+        cam->type = CameraType_Orthographic;
+        // cam->width = 16;
+        // cam->height = 9;
+        cam->projection = Orthographic(cam->width * -0.5f, cam->width * 0.5f,
+                                       cam->height * -0.5f, cam->height * 0.5f,
+                                       0.0, 100.0f);
+
+        mat4 camWorld = TRS(Game->cameraPosition, Game->cameraRotation, V3(1));
+        cam->view = OrthogonalInverse(camWorld);
+    
+        cam->viewProjection = cam->projection * cam->view;
+
     }
 
     Mosaic->lineThickness = Mosaic->tileSize * 0.04f;
@@ -383,6 +416,14 @@ int32 GetMousePositionY() {
     return -1;
 }
 
+bool TilePositionsOverlap(vec2i a, vec2i b) {
+    return a == b;
+}
+
+bool TilePositionsOverlap(int32 ax, int32 ay, int32 bx, int32 by) {
+    return TilePositionsOverlap(V2i(ax, ay), V2i(bx, by));
+}
+
 bool TilePositionsOverlap(vec2 a, vec2 b) {
     vec2i a_ = V2i(a.x, a.y);
     vec2i b_ = V2i(b.x, b.y);
@@ -390,8 +431,8 @@ bool TilePositionsOverlap(vec2 a, vec2 b) {
     return a_ == b_;
 }
 
-bool TilePositionsOverlap(vec2i a, vec2i b) {
-    return a == b;
+bool TilePositionsOverlap(real32 ax, real32 ay, real32 bx, real32 by) {
+    return TilePositionsOverlap(V2i(ax, ay), V2i(bx, by));
 }
 
 real32 GetTileCenter(real32 n) {
@@ -436,9 +477,6 @@ void MosaicRender() {
     else if (Mosaic->drawBorder) {
         DrawBorder();
     }
-
-    //Instancing
-    //RenderRectBuffer(&Mosaic->rectBuffer);
 }
 
 // @NOTE: this is here so code can be inserted into MosaicUpdate in any order you want without

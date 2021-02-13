@@ -70,6 +70,7 @@ void SetMosaicGridColor(real32 r, real32 g, real32 b);
 void SetMosaicScreenColor(vec4 color);
 void SetMosaicScreenColor(real32 r, real32 g, real32 b);
 
+// Turn this into a "ShowGrid(true/false)"
 void ShowGrid();
 void HideGrid();
 

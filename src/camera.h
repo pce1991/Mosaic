@@ -14,4 +14,6 @@ struct Camera {
     // Orthographic
     real32 width;
     real32 height;
+
+    real32 size;
 };

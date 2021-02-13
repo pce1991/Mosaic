@@ -481,7 +481,7 @@ void GameUpdateAndRender(GameMemory *gameMem) {
 
     Game->steppingFrame = false;
 
-    RenderRectBuffer(&Game->rectBuffer);
+    //RenderRectBuffer(&Game->rectBuffer);
     Game->rectBuffer.count = 0;
     
     DrawGlyphs(gameMem->glyphBuffers);

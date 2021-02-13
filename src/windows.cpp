@@ -633,6 +633,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     //ShowCursor(false);
     WinMoveMouse(window, Game->screenWidth / 2.0f, Game->screenHeight / 2.0f, Game->screenHeight);
 
+    
+    gameMem->systemTime = (real32)systemTime.QuadPart;
+
     while(gameMem->running && PlatformRunning) {
 
         LARGE_INTEGER prevSystemTime = systemTime;
