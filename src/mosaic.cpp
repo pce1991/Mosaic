@@ -272,9 +272,11 @@ void DrawGrid() {
 }
 
 Tile *GetHoveredTile() {
+    Camera *cam = &Game->camera;
+    
     vec2 mousePos = Input->mousePosNormSigned;
-    mousePos.x *= 8;
-    mousePos.y *= 4.5f;
+    mousePos.x *= cam->width * 0.5f;
+    mousePos.y *= cam->height * 0.5f;
 
     real32 xDistFromOrig = mousePos.x - Mosaic->gridOrigin.x;
     real32 yDistFromOrig = Mosaic->gridOrigin.y - mousePos.y;
@@ -321,6 +323,31 @@ void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int
                 tiles[*tilesRetrieved] = t;
                 *tilesRetrieved += 1;
             }
+        }
+    }
+}
+
+void GetTilesInLine(int32 x0, int32 y0, int32 x1, int32 y1) {
+    int32 y = y0;
+    r32 error = 0;
+
+    real32 leftX = x0;
+    real32 rightX = x1;
+
+    // @TODO: handle all cooridinate cases for drawing top to bottom, bottom to top, etc
+
+    real32 deltaX = GetTileCenter(x1 - x0);
+    real32 deltaY = GetTileCenter(y1 - y0);
+
+    real32 deltaError = Abs(deltaY / deltaX);
+
+    for (int32 x = leftX; x < rightX; x++) {
+        SetTileColor(x, y, 1, 1, 1);
+
+        error += deltaError;
+        if (error >= 0.5f) {
+            y += Sign(y);
+            error -= 1;
         }
     }
 }

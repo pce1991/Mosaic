@@ -46,6 +46,8 @@ Tile *GetTile(vec2 pos);
 
 void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int32 *tilesRetrieved);
 
+void GetTilesInLine(int32 x0, int32 y0, int32 x1, int32 y1);
+
 
 void SetTileColor(int32 x, int32 y, vec4 color);
 void SetTileColor(int32 x, int32 y, real32 r, real32 g, real32 b);
