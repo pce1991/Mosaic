@@ -366,6 +366,26 @@ inline vec3 PointAt(Ray ray, real32 t) {
     return result;
 }
 
+
+struct Ray2D {
+    vec2 origin;
+    vec2 direction;
+};
+
+inline Ray2D MakeRay(vec2 origin, vec2 direction) {
+    Ray2D result;
+    result.origin = origin;
+    result.direction = direction;
+
+    return result;
+}
+
+inline vec2 PointAt(Ray2D ray, real32 t) {
+    vec2 result = ray.origin + t * ray.direction;
+    return result;
+}
+
+
 // Finds the parameter of Ray a closest to Ray b. Potentially finds
 // points "behind" either ray.
 // [0] http://geomalgorithms.com/a07-_distance.html
@@ -608,6 +628,69 @@ inline bool TestPointAABB(vec2 p, vec2 min, vec2 max) {
     return (p.x > min.x && p.x < max.x) &&
         (p.y > min.y && p.y < max.y);
 }
+
+inline bool RaycastAABB(vec2 aabbMin, vec2 aabbMax, vec2 origin, vec2 direction, real32 *tMin, bool testInside = false, real32 epsilon = FLT_EPSILON) {
+    *tMin = 0.0f;
+    r32 tMax = INFINITY;
+
+    for (int i = 0; i < 2; i++) {
+        if (Abs(direction.data[i]) < epsilon) {
+            if (origin.data[i] < aabbMin.data[i] || origin.data[i] > aabbMax.data[i]) { return false; }
+        }
+        else {
+            r32 ood = 1.0f / direction.data[i];
+            r32 t1 = (aabbMin.data[i] - origin.data[i]) * ood;
+            r32 t2 = (aabbMax.data[i] - origin.data[i]) * ood;
+
+            if (t1 > t2) {
+                r32 temp = t1; t1 = t2; t2 = temp;
+            }
+
+            *tMin = Max(*tMin, t1);
+            tMax = Min(tMax, t2);
+
+            if (*tMin > tMax) { return false; }
+        }
+    }
+    
+    if (testInside && TestPointAABB(V2(origin.x, origin.y), aabbMin, aabbMax)) {
+        *tMin = tMax;    
+    }
+
+    return true;
+}
+
+inline bool RaycastAABB(vec2 aabbMin, vec2 aabbMax, Ray2D ray, real32 *tMin, bool testInside = false, real32 epsilon = FLT_EPSILON) {
+    *tMin = 0.0f;
+    r32 tMax = INFINITY;
+
+    for (int i = 0; i < 2; i++) {
+        if (Abs(ray.direction.data[i]) < epsilon) {
+            if (ray.origin.data[i] < aabbMin.data[i] || ray.origin.data[i] > aabbMax.data[i]) { return false; }
+        }
+        else {
+            r32 ood = 1.0f / ray.direction.data[i];
+            r32 t1 = (aabbMin.data[i] - ray.origin.data[i]) * ood;
+            r32 t2 = (aabbMax.data[i] - ray.origin.data[i]) * ood;
+
+            if (t1 > t2) {
+                r32 temp = t1; t1 = t2; t2 = temp;
+            }
+
+            *tMin = Max(*tMin, t1);
+            tMax = Min(tMax, t2);
+
+            if (*tMin > tMax) { return false; }
+        }
+    }
+    
+    if (testInside && TestPointAABB(V2(ray.origin.x, ray.origin.y), aabbMin, aabbMax)) {
+        *tMin = tMax;    
+    }
+
+    return true;
+}
+
 
 inline bool RaycastAABB(vec2 aabbMin, vec2 aabbMax, Ray ray, real32 *tMin, bool testInside = false, real32 epsilon = FLT_EPSILON) {
     *tMin = 0.0f;

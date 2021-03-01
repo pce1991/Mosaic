@@ -234,6 +234,10 @@ void LoadSprite(Sprite *sprite, char *path) {
     OpenGL_InitTexture(sprite);
 }
 
+void LoadSprite(Sprite *sprite) {
+    OpenGL_InitTexture(sprite);
+}
+
 // This must be called before we can draw a sprite.
 void OpenGL_InitTexture(Sprite *texture) {
     glGenTextures(1, (GLuint *)&texture->textureID);
