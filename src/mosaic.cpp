@@ -1,8 +1,10 @@
 
 #define EX_MOSAIC_CLEAN 0
-#define EX_MOSAIC_BASIC 1
+#define EX_MOSAIC_BASIC 0
 #define EX_MOSAIC_AUDIO 0
 #define EX_MOSAIC_RANDOM_TILES 0
+
+#define EX_MOSAIC_TILE_RENDER 1
 
 #define EX_MOSAIC_PARTICLES 0
 
@@ -34,6 +36,9 @@
 
 #elif EX_MOSAIC_BASIC
 #include "examples/mosaic_basic.cpp"
+
+#elif EX_MOSAIC_TILE_RENDER
+#include "examples/mosaic_tile_renderer.cpp"
 
 #elif EX_MOSAIC_RANDOM_TILES
 #include "examples/mosaic_random_tiles.cpp"
@@ -115,9 +120,9 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
     }
     
     Mosaic->tileCapacity = Mosaic->gridWidth * Mosaic->gridHeight;
-    Mosaic->tiles = (Tile *)malloc(sizeof(Tile) * Mosaic->tileCapacity);
+    Mosaic->tiles = (MTile*)malloc(sizeof(MTile) * Mosaic->tileCapacity);
 
-    memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(Tile));
+    memset(Mosaic->tiles, 0, Mosaic->tileCapacity * sizeof(MTile));
 
     real32 levelAspect = Mosaic->gridWidth / (Mosaic->gridHeight * 1.0f);
     real32 screenAspect = 16.0 / 9.0f;
@@ -166,10 +171,10 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
 
     AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
 
-    Tile *tiles = Mosaic->tiles;
+    MTile*tiles = Mosaic->tiles;
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
-            Tile *tile = GetTile(x, y);
+            MTile*tile = GetTile(x, y);
             tile->position = V2i(x, y);
         }
     }
@@ -271,7 +276,7 @@ void DrawGrid() {
     }
 }
 
-Tile *GetHoveredTile() {
+MTile*GetHoveredTile() {
     Camera *cam = &Game->camera;
     
     vec2 mousePos = Input->mousePosNormSigned;
@@ -294,7 +299,7 @@ Tile *GetHoveredTile() {
     return &Mosaic->tiles[index];
 }
 
-Tile *GetTile(int32 x, int32 y) {
+MTile*GetTile(int32 x, int32 y) {
     if (x < 0 || x >= Mosaic->gridWidth) {
         return NULL;
     }
@@ -307,18 +312,18 @@ Tile *GetTile(int32 x, int32 y) {
     return &Mosaic->tiles[index];
 }
 
-Tile *GetTile(vec2i pos) {
+MTile*GetTile(vec2i pos) {
     return GetTile(pos.x, pos.y);
 }
 
-Tile *GetTile(vec2 pos) {
+MTile*GetTile(vec2 pos) {
     return GetTile(pos.x, pos.y);
 }
 
-void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int32 *tilesRetrieved) {
+void GetTileBlock(int32 x, int32 y, int32 width, int32 height, MTile**tiles, int32 *tilesRetrieved) {
     for (int y_ = y; y < height; y_++) {
         for (int x_ = x; x < width; x++) {
-            Tile *t = GetTile(x_, y_);
+            MTile*t = GetTile(x_, y_);
             if (t) {
                 tiles[*tilesRetrieved] = t;
                 *tilesRetrieved += 1;
@@ -355,7 +360,7 @@ void GetTilesInLine(int32 x0, int32 y0, int32 x1, int32 y1) {
 void ClearTiles(vec4 color) {
     for (int y = 0; y < Mosaic->gridHeight; y++) {
         for (int x = 0; x < Mosaic->gridWidth; x++) {
-            Tile *tile = GetTile(x, y);
+            MTile*tile = GetTile(x, y);
             tile->color = color;
         }
     }
@@ -366,28 +371,28 @@ void ClearTiles(real32 r, real32 b, real32 g) {
 }
 
 void SetTileColor(int32 x, int32 y, vec4 color) {
-    Tile *t = GetTile(x, y);
+    MTile*t = GetTile(x, y);
     if (t) {
         t->color = color;
     }
 }
 
 void SetTileColor(int32 x, int32 y, real32 r, real32 g, real32 b) {
-    Tile *t = GetTile(x, y);
+    MTile*t = GetTile(x, y);
     if (t) {
         t->color = RGB(r, g, b);
     }
 }
 
 void SetTileColor(vec2 position, real32 r, real32 g, real32 b) {
-    Tile *t = GetTile(position);
+    MTile*t = GetTile(position);
     if (t) {
         t->color = RGB(r, g, b);
     }
 }
 
 void SetTileColor(vec2 position, vec4 color) {
-    Tile *t = GetTile(position);
+    MTile*t = GetTile(position);
     if (t) {
         t->color = color;
     }
@@ -398,7 +403,7 @@ void DrawSprite(vec2 position, Sprite *sprite) {
         for (int x = 0; x < sprite->width; x++) {
             vec2 pos = position + V2(x, y);
 
-            Tile *t = GetTile(pos);
+            MTile*t = GetTile(pos);
 
             int32 pixel = (x * 4) + (y * sprite->width * 4);
 
@@ -482,7 +487,7 @@ void DrawTextTop(vec4 color, const char *fmt, ...) {
 
 
 void MosaicRender() {
-    Tile *tiles = Mosaic->tiles;
+    MTile*tiles = Mosaic->tiles;
 
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
@@ -493,7 +498,7 @@ void MosaicRender() {
     }
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {
-        Tile *tile = &tiles[i];
+        MTile*tile = &tiles[i];
 
         DrawTile(tile->position, tile->color);
     }
@@ -513,7 +518,7 @@ void MosaicUpdateInternal() {
     Tiles = Mosaic->tiles;
     
     Mosaic->hoveredTilePrev = Mosaic->hoveredTile;
-    Mosaic->hoveredTile = GetHoveredTile();
+    Mosaic->hoveredTile= GetHoveredTile();
 }
 
 // This function gets called by our game engine every frame.

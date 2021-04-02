@@ -1,5 +1,5 @@
 
-struct Tile {
+struct MTile{
     // This is kinda redundant because the tile can't move, but it's easier to have a tile
     // and know where it is than pass it's position around. 
     vec2i position;
@@ -28,23 +28,23 @@ struct MosaicMem {
     uint8 gridHeight;
 
     uint32 tileCapacity;
-    Tile *tiles;
+    MTile*tiles;
     
-    Tile *hoveredTile;
-    Tile *hoveredTilePrev;
+    MTile*hoveredTile;
+    MTile*hoveredTilePrev;
 
     void *myData;
 };
 
 MosaicMem *Mosaic = NULL;
-Tile *Tiles = NULL;
+MTile*Tiles = NULL;
 
 
-Tile *GetTile(int32 x, int32 y);
-Tile *GetTile(vec2i pos);
-Tile *GetTile(vec2 pos);
+MTile*GetTile(int32 x, int32 y);
+MTile*GetTile(vec2i pos);
+MTile*GetTile(vec2 pos);
 
-void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int32 *tilesRetrieved);
+void GetTileBlock(int32 x, int32 y, int32 width, int32 height, MTile**tiles, int32 *tilesRetrieved);
 
 void GetTilesInLine(int32 x0, int32 y0, int32 x1, int32 y1);
 
@@ -85,5 +85,5 @@ bool TilePositionsOverlap(vec2i a, vec2i b);
 real32 GetTileCenter(real32 n);
 
 
-Tile *GetHoveredTile();
+MTile*GetHoveredTile();
 
