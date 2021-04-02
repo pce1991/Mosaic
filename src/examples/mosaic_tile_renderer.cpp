@@ -7,7 +7,7 @@ struct Tile {
     vec4 colors[tileSize];
 };
 
-int32 width = 12;
+int32 width = 8;
 int32 height = 8;
 
 vec2 pos = V2(0, 0);
