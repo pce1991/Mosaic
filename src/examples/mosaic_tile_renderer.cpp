@@ -62,8 +62,8 @@ void MyMosaicInit() {
     }
 }
 
-// This is used because we really have a grid within a grid. So this tells us which "subtile" we should
-// be at if we want to draw our bigger-tile.
+// This is used because we really have a grid within a grid.
+// So this tells us which "subtile" we should be at if we want to draw our bigger-tile.
 vec2i GetTilePosition(int32 x, int32 y) {
     return V2i(x * tileWidth, y * tileWidth);
 }
@@ -84,7 +84,8 @@ void DrawTile(int32 posX, int32 posY, Tile *tile) {
     }
 }
 
-void DrawTile(int32 posX, int32 posY, vec4 color) {
+// If we just want to draw a block of one color.
+void DrawBlock(int32 posX, int32 posY, vec4 color) {
     for (int y = posY; y < posY + tileWidth; y++) {
         for (int x = posX; x < posX + tileWidth; x++) {
             color.a = 0;
