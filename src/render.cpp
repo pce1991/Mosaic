@@ -435,6 +435,10 @@ void DrawRect(RectBuffer *buffer, vec2 pos, vec2 scale, vec4 color) {
     if (buffer->count < buffer->capacity) {
         buffer->data[buffer->count++] = data;
     }
+    else {
+        ASSERT(false);
+        // Ran out of space in the rect buffer :(
+    }
 }
 
 void RenderRectBuffer(RectBuffer *buffer) {

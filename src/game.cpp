@@ -444,6 +444,8 @@ void GameInit(GameMemory *gameMem) {
     // }
 #endif
 
+    AllocateRectBuffer(256 * 256, &Game->rectBuffer);
+
     MyInit();
 }
 
