@@ -4,6 +4,8 @@
 #define EX_MOSAIC_AUDIO 0
 #define EX_MOSAIC_RANDOM_TILES 0
 
+#define EX_MOSAIC_FILE_READ 1
+
 #define EX_MOSAIC_TILE_RENDER 1
 
 #define EX_MOSAIC_PARTICLES 0
@@ -36,6 +38,9 @@
 
 #elif EX_MOSAIC_BASIC
 #include "examples/mosaic_basic.cpp"
+
+#elif EX_MOSAIC_FILE_READ
+#include "examples/mosaic_file_reading.cpp"
 
 #elif EX_MOSAIC_TILE_RENDER
 #include "examples/mosaic_tile_renderer.cpp"
@@ -299,7 +304,7 @@ MTile*GetHoveredTile() {
     return &Mosaic->tiles[index];
 }
 
-MTile*GetTile(int32 x, int32 y) {
+inline MTile*GetTile(int32 x, int32 y) {
     if (x < 0 || x >= Mosaic->gridWidth) {
         return NULL;
     }
@@ -312,15 +317,15 @@ MTile*GetTile(int32 x, int32 y) {
     return &Mosaic->tiles[index];
 }
 
-MTile*GetTile(vec2i pos) {
+inline MTile*GetTile(vec2i pos) {
     return GetTile(pos.x, pos.y);
 }
 
-MTile*GetTile(vec2 pos) {
+inline MTile*GetTile(vec2 pos) {
     return GetTile(pos.x, pos.y);
 }
 
-void GetTileBlock(int32 x, int32 y, int32 width, int32 height, MTile**tiles, int32 *tilesRetrieved) {
+inline void GetTileBlock(int32 x, int32 y, int32 width, int32 height, MTile**tiles, int32 *tilesRetrieved) {
     for (int y_ = y; y < height; y_++) {
         for (int x_ = x; x < width; x++) {
             MTile*t = GetTile(x_, y_);
@@ -332,6 +337,7 @@ void GetTileBlock(int32 x, int32 y, int32 width, int32 height, MTile**tiles, int
     }
 }
 
+// @BUG: broken
 void GetTilesInLine(int32 x0, int32 y0, int32 x1, int32 y1) {
     int32 y = y0;
     r32 error = 0;
@@ -370,35 +376,35 @@ void ClearTiles(real32 r, real32 b, real32 g) {
     ClearTiles(RGB(r, g, b));
 }
 
-void SetTileColor(int32 x, int32 y, vec4 color) {
+inline void SetTileColor(int32 x, int32 y, vec4 color) {
     MTile*t = GetTile(x, y);
     if (t) {
         t->color = color;
     }
 }
 
-void SetTileColor(int32 x, int32 y, real32 r, real32 g, real32 b) {
+inline void SetTileColor(int32 x, int32 y, real32 r, real32 g, real32 b) {
     MTile*t = GetTile(x, y);
     if (t) {
         t->color = RGB(r, g, b);
     }
 }
 
-void SetTileColor(vec2 position, real32 r, real32 g, real32 b) {
+inline void SetTileColor(vec2 position, real32 r, real32 g, real32 b) {
     MTile*t = GetTile(position);
     if (t) {
         t->color = RGB(r, g, b);
     }
 }
 
-void SetTileColor(vec2 position, vec4 color) {
+inline void SetTileColor(vec2 position, vec4 color) {
     MTile*t = GetTile(position);
     if (t) {
         t->color = color;
     }
 }
 
-void DrawSprite(vec2 position, Sprite *sprite) {
+inline void DrawSprite(vec2 position, Sprite *sprite) {
     for (int y = 0; y < sprite->height; y++) {
         for (int x = 0; x < sprite->width; x++) {
             vec2 pos = position + V2(x, y);

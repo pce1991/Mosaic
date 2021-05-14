@@ -4,6 +4,8 @@
 #include "game.h"
 #include "input.cpp"
 
+#include "file_io.cpp"
+
 #include "log.cpp"
 
 #include "render.cpp"
