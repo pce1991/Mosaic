@@ -317,21 +317,19 @@ void GameInit(GameMemory *gameMem) {
     gameMem->inputQueue = AllocateInputQueue(32, 2);
 
     Camera *cam = &gameMem->camera;
+    cam->size = 1;
     cam->type = CameraType_Orthographic;
     cam->width = 16;
     cam->height = 9;
-    cam->projection = Orthographic(cam->width * -0.5f, cam->width * 0.5f,
-                                   cam->height * -0.5f, cam->height * 0.5f,
+    cam->projection = Orthographic(cam->width * -0.5f * cam->size, cam->width * 0.5f * cam->size,
+                                   cam->height * -0.5f * cam->size, cam->height * 0.5f * cam->size,
                                    0.0, 100.0f);
 
     gameMem->camAngle = 0;
     gameMem->cameraPosition = V3(0, 0, 3);
     gameMem->cameraRotation = AxisAngle(V3(0, 1, 0), gameMem->camAngle);
 
-    mat4 camWorld = TRS(gameMem->cameraPosition, gameMem->cameraRotation, V3(1));
-    cam->view = OrthogonalInverse(camWorld);
-    
-    cam->viewProjection = cam->projection * cam->view;
+    UpdateCamera(cam, gameMem->cameraPosition, gameMem->cameraRotation);
 
     
     // INIT GRAPHICS
@@ -481,6 +479,8 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     if (!Game->paused || Game->steppingFrame) {
         MyGameUpdate();
     }
+
+    UpdateCamera(&gameMem->camera, gameMem->cameraPosition, gameMem->cameraRotation);
 
     Game->steppingFrame = false;
 

@@ -1,166 +1,147 @@
 
-struct Player {
-    vec2i position;
-    int32 health;
+// @TODO: start with a much simpler hardcoded example to illustrate the difficulties
+// we'd have if we just didnt have these abstractions
+
+const int32 spriteWidth = 16;
+const int32 spriteSize = spriteWidth * spriteWidth;
+
+struct MySprite {
+    vec4 colors[spriteSize];
 };
 
-struct Scorpion {
-    vec2i position;
-    int32 health;
-    int32 strength;
-};
+const int32 width = 16;
+const int32 height = 9;
 
-struct Block {
-    vec2 position;
-    vec4 color;
-};
+MySprite grassSprite = {};
+MySprite grassSprite2 = {};
 
-struct Wall {
-    vec2 position;
-};
+MySprite guySprite = {};
 
-struct Switch {
-    vec2 positon;
-    bool active;
-};
+int32 grassIndex[width * height];
 
-void InitPlayer(Player *p) {
-    p->position = V2i(5, 5);
-    p->health = 10;    
+vec2 position = V2(0, 0);
+
+
+void LoadSprite(MySprite *sprite, char *path) {
+    int32 x, y, n;
+    uint8 *data = stbi_load(path, &x, &y, &n, 4);
+
+    // @WARINNG: We assume that our MySprite data is big enough to store
+    // however many pixels we read from our png file. If the png file is bigger
+    // we will start accessing colors outside the bounds of our colors array.
+    for (int i = 0; i < x * y; i++) {
+        // 4 is the "stride" of the data
+        // / 255.0f to normalize the colors on range 0 to 1
+        sprite->colors[i].r = data[(i * 4) + 0] / 255.0f;
+        sprite->colors[i].g = data[(i * 4) + 1] / 255.0f;
+        sprite->colors[i].b = data[(i * 4) + 2] / 255.0f;
+        sprite->colors[i].a = data[(i * 4) + 3] / 255.0f;
+    }
+
+    // free the data that stbi_load allocated.
+    free(data);
 }
 
-struct Level {
-    vec2i dimensions;
-
-    Player player;
-
-    int32 scorpionCount;
-    int32 scorpionCapacity;
-    Scorpion *scorpions;
-};
-
-struct RPGMem {
-    MemoryArena levelArena;
-
-    Level level;
-};
-
-RPGMem rpg = {};
 
 void MyMosaicInit() {
-    SetMosaicGridSize(19, 19);
+    SetMosaicGridSize(width * spriteWidth, height * spriteWidth);
     HideGrid();
-    SetGridColor(0.5f, 0.5f, 0.5f);
-    SetMosaicScreenColor(0.35f, 0.2f, 0.2f);
 
-    AllocateMemoryArena(&rpg.levelArena, Megabytes(16));
-
-    rpg.level = {};
-
-    InitPlayer(&rpg.level.player);
-
-    Level *level = &rpg.level;
-
-    level->scorpionCount = 0;
-    level->scorpionCapacity = 20;
-    // Get some memory for my scorpions.
-    level->scorpions = PushSize(&rpg.levelArena, Scorpion, level->scorpionCapacity);
-
-    level->scorpionCount = 4;
-
-    for (int i = 0; i < level->scorpionCount; i++) {
-        Scorpion *s = &level->scorpions[i];
-
-        s->position = V2i(RandiRange(9, 19), RandiRange(0, 19));
-
-        s->health = 4;
-        s->strength = 3;
+    for (int i = 0; i < spriteSize; i++) {
+        grassSprite.colors[i].r = RandfRange(0.1, 0.2f);
+        grassSprite.colors[i].g = RandfRange(0.6, 0.9f);
+        grassSprite.colors[i].b = RandfRange(0.2, 0.3f);
+        grassSprite.colors[i].a = 1.0f;
     }
+
+    for (int i = 0; i < spriteSize; i++) {
+        grassSprite2.colors[i].r = RandfRange(0.1, 0.2f);
+        grassSprite2.colors[i].g = RandfRange(0.6, 0.9f);
+        grassSprite2.colors[i].b = RandfRange(0.2, 0.3f);
+        grassSprite2.colors[i].a = 1.0f;
+    }
+
+    for (int i = 0; i < width * height; i++) {
+        real32 r = RandfRange(0.0f, 1.0f);
+        if (r < 0.3) {
+            grassIndex[i] = 0;
+        }
+        else {
+            grassIndex[i] = 1;
+        }
+    }
+
+    {
+        for (int i = 0; i < spriteSize; i++) {
+            guySprite.colors[i] = RGB(0.7f, 0.3f, 0.3f);
+        }
+    }
+
+    LoadSprite(&guySprite, "data/galaga_ship.png");
 }
 
+void DrawSprite(int32 xPos, int32 yPos, MySprite *sprite) {
+    for (int y = 0; y < spriteWidth; y++) {
+        for (int x = 0; x < spriteWidth; x++) {
+            int32 index = x + (y * spriteWidth);
 
-// clamp should set n to be min if it's below min, and to max if it's above max
-void Clamp(int32 *n, int32 min, int32 max) {
-    if (*n < min) {
-        *n = min;
-    }
-    else if (*n > max) {
-        *n = max;
-    }
+            if (sprite->colors[index].a < 1.0f) {
+                continue;
+            }
+            
+            SetTileColor(x + xPos, y + yPos, sprite->colors[index]);
+        }
+    }    
 }
 
-void Clamp(real32 *n, real32 min, real32 max) {
-    if (*n < min) {
-        *n = min;
-    }
-    else if (*n > max) {
-        *n = max;
-    }
+void DrawSpriteGrid(int32 xGrid, int32 yGrid, MySprite *sprite) {
+    for (int y = 0; y < spriteWidth; y++) {
+        for (int x = 0; x < spriteWidth; x++) {
+            int32 index = x + (y * spriteWidth);
+            
+            if (sprite->colors[index].a < 1.0f) {
+                continue;
+            }
+            
+            SetTileColor(x + (xGrid * spriteWidth), y + (yGrid * spriteWidth), sprite->colors[index]);
+        }
+    }    
 }
 
-
-void UpdatePlayer(Player *player) {
-
-    if (InputPressed(Input, Input_Right)) {
-        player->position.x += 1;
-    }
-    if (InputPressed(Input, Input_Left)) {
-        player->position.x -= 1;
-    }
-    if (InputPressed(Input, Input_Up)) {
-        player->position.y -= 1;
-    }
-    if (InputPressed(Input, Input_Down)) {
-        player->position.y += 1;
-    }
-
-    Clamp(&player->position.x, 0, 18);
-    Clamp(&player->position.y, 0, 18);
-}
 
 void MyMosaicUpdate() {
     ClearTiles(0, 0, 0);
 
-    Level *level = &rpg.level;
+    int32 gIndex = 0;
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            MySprite *grass;
+            if (grassIndex[gIndex] == 0) {
+                grass = &grassSprite;
+            }
+            else {
+                grass = &grassSprite2;
+            }
+            
+            DrawSpriteGrid(x, y, grass);
 
-    Player *player = &level->player;
-
-    UpdatePlayer(player);
-
-    for (int i = 0; i < level->scorpionCount; i++) {
-        Scorpion *s = &level->scorpions[i];
-
-        if (s->position == player->position) {
-            s->health -= 5;
-
-            player->health -= s->strength;
+            gIndex++;
         }
     }
 
-    SetTileColor(player->position.x, player->position.y, 0.8f, 0.5f, 0.6f);
+    if (InputHeld(Input, Input_Right)) {
+        position.x += DeltaTime * 50;
+    }
+    if (InputHeld(Input, Input_Left)) {
+        position.x -= DeltaTime * 50;
+    }
+    if (InputHeld(Input, Input_Down)) {
+        position.y += DeltaTime * 50;
+    }
+    if (InputHeld(Input, Input_Up)) {
+        position.y -= DeltaTime * 50;
+    }
+
+    DrawSprite(position.x, position.y, &guySprite);
     
-    for (int i = 0; i < level->scorpionCount; i++) {
-        Scorpion *s = &level->scorpions[i];
-        SetTileColor(s->position.x, s->position.y, 0.8f, 0.7f, 0.2f);
-    }
-
-
-    // Remove all th dead scorpions from the buffer and decrement the count.
-    // We do this at the end of the frame so we dont ever have to worry about the count
-    // changing during the updating of a frame.
-    for (int i = level->scorpionCount - 1; i >= 0; i--) {
-        Scorpion *s = &level->scorpions[i];
-
-        if (s->health <= 0) {
-            Scorpion end = level->scorpions[level->scorpionCount - 1];
-
-            //*s = end; // could do this same thing with a dereference.
-            level->scorpions[i] = end;
-
-            level->scorpionCount--;
-        }
-    }
-
-    DrawTextScreenPixel(&Game->monoFont, V2(800, 50), 32.0f, RGB(0.2f, 0.8f, 1.0f), true, "Sc count %d", level->scorpionCount);
 }
-

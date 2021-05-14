@@ -59,6 +59,7 @@ void ClearMemoryArena(MemoryArena *arena) {
     arena->size = 0;
 }
 
+// Using a macro here so we can cast and calculate the size.
 #define PushSize(arena, type, count) (type *)PushSizeMemoryArena(arena, sizeof(type) * count)
 
 inline void *AllocCleared(int32 size) {
