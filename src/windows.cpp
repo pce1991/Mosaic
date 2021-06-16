@@ -483,6 +483,7 @@ void WindowsGetInput(InputQueue *inputQueue) {
 }
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndLine, int nCndShow) {
+    CoInitialize(NULL);
 
     GamePlatform platform = {};
     platform.running = true;
@@ -579,9 +580,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     OpenGLInfo glInfo;
     InitOpenGL(window, &glInfo);
 
-    //InitWASAPI(&platform.audio);
+    InitWASAPI(&platform.audio);
 
-    //StartWASAPIThread(&platform);
+    StartWASAPIThread(&platform);
 
     LARGE_INTEGER startSystemTime;
     LARGE_INTEGER systemTime;
