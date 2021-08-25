@@ -1,6 +1,30 @@
 
+@TODO: directX since AMD is abandoning opengl 
 
-PERF: fix integrated performance. Clearly doing something weird because Changes works on integrated graphics so wtf?
+@TODO: really good visualizations to help students.
+- logging can help
+- viewing memory contents of an arena
+- I like this assignment to: visualize what the computer is doing. Describe what it's doing (I often anthropomorphize the computer and say things like "give me the data to send to the GPU"). Could be a good assignment for first semester students.
+- the basics are easy, but what's the trick stuff? I want to show every time a variable changed in a frame, and what line of code changed that variable. (this is a constant headache for students: once they realize that the result they're seeing is because of a state change, they still have to understand why that state change occurred)
+- linking variables to output. Hover over position to see where that position is being used. Hover over character to see what is supplying that position (it gets tricky tho because what if there isnt a direct connection, like the positions were put in a buffer passed to renderer. That position isnt really on the characater data then).
+- changing data at runtime is cool, but very often data is meant to be changed thru a process, so just changing the state isnt helpful, and even confusing. 
+- in some ways I think it'd be nice to break up rendering and exectution, like breaking execution, running the Move() function, and actually seeing the character on screen change. But that is kinda a false representation isnt it, because the rendering is done in one pass. Altho if we had a by-line pause instead of a frame pause we could say "run code up til this point" and render, and step to the next frame and render. That feels really confusing to me tho, even tho a student might find it helpful, it kinda tells a lie. Like we update the render without running the physics, even tho it's {Input Update Render}. Maybe if we could do it by rendering points or something, to distinguish between the "data" state and the visual state. We could also say something like "Frame N, function ___ line n"
+- If I can even implement this it is going to obfuscate a lot of the code, or at least complicate matters by adding a layer. 
+- memory dumps, rewinds, save states, like an emulator
+- visualization of functions over time and projection ("show me what where this point will be N seconds from now assuming it continues as is").
+
+
+@TODO: rendering API
+- want to pass in an arbitrary number of uniforms (very common I have two things which are RenderQuad, but one of the shaders takes time, or a normal map, or something like that). Dont want to require writing new API calls for new shaders
+- similarly I want it to be easy to append textures. 
+- We could do this as a "setup". Bind shader, give it a mesh, set uniforms, then Draw (which handles vertex attribs and the actual draw call). 
+- look at SDL to see what they do.  
+- lets say I want to implement wrapping: how could I do that without resorting to raw gl calls?
+
+The bare minimum engine
+- SDL and other APIs give you a lot of features, but it can be hard to determine which ones are essential to getting a game running, and which ones you even need. The more code you have the more you have to support. 
+- What do I consider the bare minimum? Some of these things are niceties (debug log, debug drawing, asset system). 
+
 
 @TODO: have to get a scrollable debug log implemented, I think it's just too powerful and useful for beginners to omit, even tho it kinda breaks the whole bare-bones approach. 
 
