@@ -1,19 +1,22 @@
 
 #define MOSAIC 1
-#define MY_GAME 1
+#define MY_GAME 0
 #define NETWORK_SIMPLE 0
 #define MESSAGING 0
 #define PONG_BAD 0
 #define PARTICLES 0
 #define TYPING 0
 #define COLLISION 0
-#define SPRITE 1
+#define SPRITE 0
 #define ENTITY 0
 
-#define RENDERING 1
+#define MATRIX_EX 0
 
-#define PARSING 1
+#define RENDERING 0
 
+#define PARSING 0
+
+#define BABY 1
 
 #if MOSAIC
 #include "mosaic.cpp"
@@ -48,8 +51,14 @@
 #elif RENDERING
 #include "examples/rendering_example.cpp"
 
+#elif MATRIX_EX
+#include "examples/matrix_examples.cpp"
+
 #elif PARSING
 #include "examples/parsing_example.cpp"
+
+#elif BABY
+#include "examples/baby_demo.cpp"
 
 
 #endif

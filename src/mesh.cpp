@@ -194,7 +194,7 @@ void AllocateCube(Mesh *mesh) {
 
     // Pos Z
     {
-        vec3 normal = V3(0, 0, 1);
+        vec3 normal = -V3(0, 0, 1);
 
         mesh->verts[vertexOffset + 0] = V3( 1.0f, -1.0f, 1.0f);
         mesh->verts[vertexOffset + 1] = V3(-1.0f, -1.0f, 1.0f);
@@ -256,7 +256,7 @@ void AllocateCube(Mesh *mesh) {
 
     // Neg Z
     {
-        vec3 normal = V3(0, 0, -1);
+        vec3 normal = -V3(0, 0, -1);
 
         mesh->verts[vertexOffset + 0] = V3(-1.0f, -1.0f, -1.0f);
         mesh->verts[vertexOffset + 1] = V3( 1.0f, -1.0f, -1.0f);
@@ -287,7 +287,7 @@ void AllocateCube(Mesh *mesh) {
 
     // Pos Y
     {
-        vec3 normal = V3(0, 1, 0);
+        vec3 normal = -V3(0, 1, 0);
 
         mesh->verts[vertexOffset + 0] = V3(-1.0f,  1.0f,  -1.0f);
         mesh->verts[vertexOffset + 1] = V3( 1.0f,  1.0f,  -1.0f);
@@ -318,7 +318,7 @@ void AllocateCube(Mesh *mesh) {
 
     // Neg Y
     {
-        vec3 normal = V3(0, -1, 0);
+        vec3 normal = -V3(0, -1, 0);
 
         mesh->verts[vertexOffset + 0] = V3(-1.0f, -1.0f, 1.0f);
         mesh->verts[vertexOffset + 1] = V3( 1.0f, -1.0f, 1.0f);

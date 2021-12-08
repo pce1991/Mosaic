@@ -525,11 +525,51 @@ void DrawMesh(Mesh *mesh, vec3 pos, quaternion rotation, vec3 scale, vec4 color)
     int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
     glEnableVertexAttribArray(vert);
     glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    int normal = glGetAttribLocation(shader->programID, "in_normal");
+    glEnableVertexAttribArray(normal);
+    glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 0, (void *)(sizeof(vec3) * mesh->vertCount));
         
     glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
 
     glDisableVertexAttribArray(vert);
 }
+
+
+void DrawMeshLit(Mesh *mesh, vec3 pos, quaternion rotation, vec3 scale, vec4 color) {
+    Shader *shader = &Game->singleLight;
+    SetShader(shader);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    
+    mat4 model = TRS(pos, rotation, scale);
+
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+
+    glUniform4fv(shader->uniforms[2].id, 1, color.data);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+    // 1st attribute buffer : vertices
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    int normal = glGetAttribLocation(shader->programID, "in_normal");
+    glEnableVertexAttribArray(normal);
+    glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 0, (void *)(sizeof(vec3) * mesh->vertCount));
+        
+    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
+
+    glDisableVertexAttribArray(vert);
+}
+
 
 
 // @NOTE: only works for monospace fonts because it assumes everyone has the same dimensions.

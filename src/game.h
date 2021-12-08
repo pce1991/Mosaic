@@ -91,7 +91,8 @@ struct GameMemory {
     Shader instancedQuadShader;
     
     Shader shader;
-    int32 vertBuffer;
+
+    Shader singleLight;
 
     Shader textShader;
 

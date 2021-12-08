@@ -401,18 +401,28 @@ void GameInit(GameMemory *gameMem) {
         CompileShader(&gameMem->texturedQuadShader, 3, uniforms);
     }
 
-        {
+    {
         LoadShader("shaders/text.vert", "shaders/text.frag", &gameMem->textShader);
         const char *uniforms[] = {
-            "model",
-            "viewProjection",
-            "texcoordsMap",
-            "fontTable",
-            "time",
+                                  "model",
+                                  "viewProjection",
+                                  "texcoordsMap",
+                                  "fontTable",
+                                  "time",
         };
         CompileShader(&gameMem->textShader, ARRAY_LENGTH(char *, uniforms), uniforms);
     }
-        
+
+    {
+        LoadShader("shaders/single_light.vert", "shaders/single_light.frag", &gameMem->singleLight);
+        const char *uniforms[] = {
+                                  "model",
+                                  "viewProjection",
+                                  "color",
+        };
+        CompileShader(&gameMem->singleLight, 3, uniforms);
+    }
+    
 #elif LINUX
     {
         LoadShader("shaders/mesh_pi.vert", "shaders/mesh_pi.frag", &gameMem->shader);
@@ -478,6 +488,8 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     if (!Game->paused || Game->steppingFrame) {
         MyGameUpdate();
     }
+
+    Camera *cam = &gameMem->camera;
 
     Game->steppingFrame = false;
 

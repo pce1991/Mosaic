@@ -1,6 +1,6 @@
 
 #define EX_MOSAIC_CLEAN 0
-#define EX_MOSAIC_BASIC 1
+#define EX_MOSAIC_BASIC 0
 #define EX_MOSAIC_AUDIO 0
 #define EX_MOSAIC_RANDOM_TILES 0
 
@@ -14,16 +14,18 @@
 
 #define EX_MOSAIC_DYNAMIC_ARRAYS 0
 
-#define EX_MOSAIC_PHYSICS 1
+#define EX_MOSAIC_PHYSICS 0
 
 #define EX_MOSAIC_1 0
 #define EX_MOSAIC_2 0
 
-#define RUBE_GOLDBERG 1
+#define RUBE_GOLDBERG 0
 
 #define EX_MOSAIC_VARIABLES 0
 
-#define EX_MOSAIC_MOUSE_DRAWING 1
+#define EX_MOSAIC_MOUSE_DRAWING 0
+
+#define EX_BABY_DEMO 1
 
 
 
@@ -47,6 +49,10 @@
 
 #elif EX_MOSAIC_MIA
 #include "examples/mosaic_mia.cpp"
+
+#elif EX_BABY_DEMO
+#include "examples/baby_demo.cpp"
+
 
 #elif EX_MOSAIC_LERP_COLORS
 #include "examples/lerp_colors.cpp"
@@ -281,8 +287,8 @@ Tile *GetTile(vec2 pos) {
 }
 
 void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int32 *tilesRetrieved) {
-    for (int y_ = y; y < height; y_++) {
-        for (int x_ = x; x < width; x++) {
+    for (int y_ = y; y_ < height; y_++) {
+        for (int x_ = x; x_ < width; x_++) {
             Tile *t = GetTile(x_, y_);
             if (t) {
                 tiles[*tilesRetrieved] = t;
@@ -290,6 +296,36 @@ void GetTileBlock(int32 x, int32 y, int32 width, int32 height, Tile **tiles, int
             }
         }
     }
+}
+
+void SetBlockColor(int32 x, int32 y, int32 width, int32 height, vec4 color) {
+    vec2i bottomRight = V2i(x + width, y + height);
+    
+    for (int y_ = y; y_ < bottomRight.y; y_++) {
+        if (y_ < 0 || y_ >= Mosaic->gridHeight) {
+            continue;
+        }
+        
+        for (int x_ = x; x_ < bottomRight.x; x_++) {
+            if (x_ < 0 || x_ >= Mosaic->gridWidth) {
+                continue;
+            }
+            
+            Tile *t = GetTile(x_, y_);
+            if (t) {
+                t->color = color;
+            }
+        }
+    }
+}
+
+void SetBlockColor(vec2 pos, int32 width, int32 height, vec4 color) {
+    vec2i posInt = V2i(floorf(pos.x), floorf(pos.y));
+    SetBlockColor(posInt.x, posInt.y, width, height, color);
+}
+
+void SetBlockColor(vec2i pos, int32 width, int32 height, vec4 color) {
+    SetBlockColor(pos.x, pos.y, width, height, color);
 }
 
 void ClearTiles(vec4 color) {
