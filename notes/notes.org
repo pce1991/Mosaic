@@ -3,6 +3,23 @@ TODO: clean up dead/empty example code to avoid confusion
 TODO: delete the entityDB and only put it in an example (because of compilation ordering)
 
 
+Need this for Game Engine
+TODO: more 3D examples
+- load OBJ files
+- texture mapping
+- lighting
+- normal mapping?
+- some type of Asset system
+- multithreading
+- audio mixer (this would we a good thing to implement)
+
+Strip out a lot of stuff about engine:
+don't need Mosaic stuff.
+
+TODO:
+- networking encryption, compression, and serialization(?)
+
+
 TODO: sprite sheets
 ;; dont want to buffer all the data over, just want to grab some of it? Or do I send the whole texture and just sample a section?
 

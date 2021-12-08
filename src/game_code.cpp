@@ -16,6 +16,10 @@
 
 #define PARSING 0
 
+#define RAYTRACER 1
+
+#define PARSING 0
+
 #define BABY 1
 
 #if MOSAIC
@@ -57,8 +61,13 @@
 #elif PARSING
 #include "examples/parsing_example.cpp"
 
+<<<<<<< HEAD
 #elif BABY
 #include "examples/baby_demo.cpp"
+=======
+#elif RAYTRACER
+#include "examples/raytracing.cpp"
+>>>>>>> 7ab4889a654182a416c262fa09bb7674dc9950c8
 
 
 #endif

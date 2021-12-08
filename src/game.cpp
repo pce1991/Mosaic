@@ -4,6 +4,8 @@
 #include "game.h"
 #include "input.cpp"
 
+#include "file_io.cpp"
+
 #include "log.cpp"
 
 #include "render.cpp"
@@ -304,7 +306,8 @@ void GameInit(GameMemory *gameMem) {
     Game = gameMem;
     Input = &Game->inputQueue;
 
-    AllocateMemoryArena(&Game->frameMem, Megabytes(1024));
+    AllocateMemoryArena(&Game->permanentArena, Megabytes(256));
+    AllocateMemoryArena(&Game->frameMem, Megabytes(32));
 
     Game->log.head = (DebugLogNode *)malloc(sizeof(DebugLogNode));
     AllocateDebugLogNode(Game->log.head, LOG_BUFFER_CAPACITY);
@@ -316,21 +319,19 @@ void GameInit(GameMemory *gameMem) {
     gameMem->inputQueue = AllocateInputQueue(32, 2);
 
     Camera *cam = &gameMem->camera;
+    cam->size = 1;
     cam->type = CameraType_Orthographic;
     cam->width = 16;
     cam->height = 9;
-    cam->projection = Orthographic(cam->width * -0.5f, cam->width * 0.5f,
-                                   cam->height * -0.5f, cam->height * 0.5f,
+    cam->projection = Orthographic(cam->width * -0.5f * cam->size, cam->width * 0.5f * cam->size,
+                                   cam->height * -0.5f * cam->size, cam->height * 0.5f * cam->size,
                                    0.0, 100.0f);
 
     gameMem->camAngle = 0;
     gameMem->cameraPosition = V3(0, 0, 3);
     gameMem->cameraRotation = AxisAngle(V3(0, 1, 0), gameMem->camAngle);
 
-    mat4 camWorld = TRS(gameMem->cameraPosition, gameMem->cameraRotation, V3(1));
-    cam->view = OrthogonalInverse(camWorld);
-    
-    cam->viewProjection = cam->projection * cam->view;
+    UpdateCamera(cam, gameMem->cameraPosition, gameMem->cameraRotation);
 
     
     // INIT GRAPHICS
@@ -453,6 +454,8 @@ void GameInit(GameMemory *gameMem) {
     // }
 #endif
 
+    AllocateRectBuffer(256 * 256, &Game->rectBuffer);
+
     MyInit();
 }
 
@@ -490,6 +493,7 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     }
 
     Camera *cam = &gameMem->camera;
+    UpdateCamera(&gameMem->camera, gameMem->cameraPosition, gameMem->cameraRotation);
 
     Game->steppingFrame = false;
 
