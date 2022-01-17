@@ -53,7 +53,7 @@ void PushInputChar(InputQueue *queue, char c) {
     queue->inputChars[queue->charCount++] = c;
 }
 
-// USer functions
+// User functions
 bool InputPressed(InputQueue *queue, InputID input, int32 deviceID = 0) {
     return queue->deviceStates[deviceID].pressed[input];
 }

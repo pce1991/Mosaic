@@ -5,6 +5,15 @@
 #define Megabytes(n) (1024 * Kilobytes(n))
 #define Gigabytes(n) (1024 * Megabytes(n))
 
+// @TODO:
+// clearer name for size.
+// PushSize and PushArray
+// Function to set the cursor/offset/used
+// Allocate in 16
+// Should it be able to resize? That just complicates things but it's good to have a
+//   demonstration
+// ChunkedArray (or just use MArray for this?)
+
 struct MAllocator;
 
 
@@ -39,6 +48,9 @@ void AllocateMemoryArena(MemoryArena *arena, uint64 capacity) {
     void *(*allocate)(MemoryArena *, uint64) = &PushSizeMemoryArena;
     arena->allocate = (AllocateFunc *)allocate;
     arena->deallocate = NULL;
+
+    // size_t align = 8;
+    // arena->used = (arena->used + (align - 1)) & ~(align - 1);
     
     arena->capacity = capacity;
     arena->size = 0;

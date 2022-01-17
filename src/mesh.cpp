@@ -45,7 +45,7 @@ void AllocateQuad(Mesh *mesh) {
     mesh->texcoords[1] = V2(1, 0);
     mesh->texcoords[2] = V2(1, 1);
     mesh->texcoords[3] = V2(0, 1);
-#endif    
+#endif
 
     mesh->indexCount = 6;
 

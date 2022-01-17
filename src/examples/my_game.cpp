@@ -2,6 +2,8 @@
 struct MyData {
     Sprite sprite;
     Sprite sprite2;
+
+    SoundClip sound;
 };
 
 MyData *Data = NULL;
@@ -21,6 +23,8 @@ void MyInit() {
     LoadSprite(&Data->sprite2, "data/van_gogh.png");
 
     LoadSprite(&lemonSprite, "data/bad_lemon.png");
+
+    LoadSoundClip("data/sfx/flute_breathy_c4.wav", &Data->sound);
 }
 
 
@@ -32,11 +36,10 @@ vec2 lemonPosition = V2(0, 0);
 
 void MyGameUpdate() {
     // This sets the background color. 
-    ClearColor(RGB(0.2f, 0.0f, 0.2f));
+    ClearColor(RGB(0.0f, 0.0f, 0.0f));
     
     // version that doesnt take an angle.
-    DrawSprite(V2(0), V2(4, 4), &Data->sprite2);
-    DrawSprite(lemonPosition, V2(1, 1), Game->time, &Data->sprite);
+    DrawSprite(V2(0), V2(4, 4), 0, &Data->sprite2);
 
     if (InputHeld(Input, Input_Up)) {
         lemonPosition.y += 2 * Game->deltaTime;
@@ -48,19 +51,25 @@ void MyGameUpdate() {
     mousePos.y = mousePos.y * 4.5f;
     DrawSprite(mousePos, V2(0.5f, 0.5f), &lemonSprite);
 
-    DrawRect(position, V2(1, 1), RGB(1.0f, 0.3f, 0.3f));
+    DrawRect(V2(0, 0), V2(1, 1), RGB(1.0f, 0.3f, 0.3f));
 
     //DrawRect(V2(-2, -2), scale, RGB(0, 1, 1));
 
-    DrawRect(V2(-2, -2), scale, V4(0.0f, 1.0f, 1.0f, 0.5f));
+    //DrawRect(V2(-2, -2), scale, V4(0.0f, 1.0f, 1.0f, 0.5f));
 
+    //DrawCoolRect(V2(0, 0), V2(1, 1), 0, RGB(0.0f, 0.3f, 0.3f));
+
+
+    if (InputPressed(Input, Input_Space)) {
+        PlaySound(&Game->audioPlayer, Data->sound, 1.0f, true);
+    }
     
-    scale.x -= 0.2f * Game->deltaTime;
-    scale.y -= 0.2f * Game->deltaTime;
+    // scale.x -= 0.2f * Game->deltaTime;
+    // scale.y -= 0.2f * Game->deltaTime;
     // once scale goes negative we will have inverted the shape,
     // it will continue to grow.
 
-    position.y -= 2 * Game->deltaTime;
+    //position.y -= 2 * Game->deltaTime;
 
     // things are drawn in the order you call the functions.
     // The latest draw call will be on top of all previous, and so on.
@@ -70,4 +79,5 @@ void MyGameUpdate() {
     // We have negative coordinates
     // The width of our screen is 16 (-8 to 8) (left to right)
     // The height of our screen is 9 (-4.5 to 4.5) (bottom to top)
+
 }

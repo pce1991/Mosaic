@@ -3,7 +3,7 @@
 // Only machines on my local network are able to communicate
 // with this address.
 // open up command prompt and type ipconfig to find out your machine's local IP address
-const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 35);
+const uint32 ServerAddress = MakeAddressIPv4(192, 168, 1, 179);
 const uint16 ServerPort = 30000;
 
 // @NOTE TO STUDENTS: look up the hash function in the engine!
@@ -23,6 +23,7 @@ struct ServerData {
 
 struct ClientData {
     real32 lastPingTimeFromServer;
+    bool connected;
 };
 
 struct MyData {
@@ -90,16 +91,24 @@ void ClientUpdate() {
 
     // TODO: We should probably check to make sure the packet id is from our game.
     if (network->packetsReceived.count > 0) {
-        DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "CONNECTED TO SERVER!");
-
         client->lastPingTimeFromServer = Game->time;
+        client->connected = true;
+    }
+
+    if (client->connected) {
+        DrawTextScreen(&Game->serifFont, V2(0.5f, 0.1f), 0.02f, V4(1), true, "CONNECTED TO SERVER!");
     }
     else {
-        DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1, 0, 0, 1), true, "NO CONNECTION...");
+        DrawTextScreen(&Game->serifFont, V2(0.5f, 0.1f), 0.02f, V4(1, 0, 0, 1), true, "NO CONNECTION...");        
     }
     
     real32 timeSincePing = Game->time - client->lastPingTimeFromServer;
-    DrawTextScreen(&Game->serifFont, V2(800, 200), 32, V4(1, 0, 0, 1), true, "Last Ping Time %.2f", timeSincePing);
+
+    if (timeSincePing > 1.0f) {
+        client->connected = false;
+    }
+    
+    DrawTextScreen(&Game->serifFont, V2(0.5f, 0.2f), 0.02f, V4(1, 0, 0, 1), true, "Last Ping Time %.2f", timeSincePing);
 }
 
 void ServerUpdate() {

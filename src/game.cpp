@@ -125,7 +125,7 @@ void InitFont(FontTable *font, char *path) {
 
     font->texture = fontSprite;
 
-    OpenGL_InitFontTable(font);
+    InitFontTable(font);
 }
 
 bool ReadConfigFile(char *path) {
@@ -335,43 +335,25 @@ void GameInit(GameMemory *gameMem) {
 
     
     // INIT GRAPHICS
-    GLuint vertexArrayID;
-    glGenVertexArrays(1, &vertexArrayID);
-    glBindVertexArray(vertexArrayID);
-    
     AllocateTriangle(&gameMem->tri);
-    OpenGL_InitMesh(&gameMem->tri);
+    InitMesh(&gameMem->tri);
 
     AllocateQuad(&gameMem->quad);
-    OpenGL_InitMesh(&gameMem->quad);
+    InitMesh(&gameMem->quad);
 
     AllocateGlyphQuad(&gameMem->glyphQuad);
-    OpenGL_InitMesh(&gameMem->glyphQuad);
+    InitMesh(&gameMem->glyphQuad);
 
     AllocateQuadTopLeft(&gameMem->quadTopLeft);
-    OpenGL_InitMesh(&gameMem->quadTopLeft);
+    InitMesh(&gameMem->quadTopLeft);
 
     AllocateCube(&gameMem->cube);
-    OpenGL_InitMesh(&gameMem->cube);
+    InitMesh(&gameMem->cube);
 
     InitFont(&gameMem->monoFont, "data/DejaVuSansMono.ttf");
     InitFont(&gameMem->serifFont, "data/LiberationSerif-Regular.ttf");
-    // Setup glyph buffers
-    {
-        for (int i = 0; i < 32; i++) {
-            GlyphBuffer *buffer = &Game->glyphBuffers[i];
-            
-            buffer->capacity = GlyphBufferCapacity;
-            buffer->size = buffer->capacity * sizeof(GlyphData);
-            buffer->data = (GlyphData *)malloc(buffer->size);
-            memset(buffer->data, 0, buffer->size);
 
-            glGenBuffers(1, (GLuint *)&buffer->bufferID);
-            glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
-            glBufferData(GL_ARRAY_BUFFER, buffer->size, buffer->data, GL_STATIC_DRAW);
-        }
-    }
-
+    InitGlyphBuffers(GlyphBufferCount);
 
 #if WINDOWS
     {
@@ -382,6 +364,17 @@ void GameInit(GameMemory *gameMem) {
             "color",
         };
         CompileShader(&gameMem->shader, 3, uniforms);
+    }
+
+    {
+        LoadShader("shaders/cool_mesh.vert", "shaders/cool_mesh.frag", &gameMem->coolShader);
+        const char *uniforms[] = {
+            "model",
+            "viewProjection",
+            "color",
+            "time",
+        };
+        CompileShader(&gameMem->coolShader, 4, uniforms);
     }
 
     {
@@ -398,8 +391,9 @@ void GameInit(GameMemory *gameMem) {
             "model",
             "viewProjection",
             "texture0",
+            "time",
         };
-        CompileShader(&gameMem->texturedQuadShader, 3, uniforms);
+        CompileShader(&gameMem->texturedQuadShader, 4, uniforms);
     }
 
         {

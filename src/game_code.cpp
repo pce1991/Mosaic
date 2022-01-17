@@ -1,7 +1,8 @@
 
-#define MOSAIC 1
-#define MY_GAME 1
-#define NETWORK_SIMPLE 0
+#define MOSAIC 0
+#define MY_GAME 0
+
+#define NETWORK_SIMPLE 1
 #define MESSAGING 0
 #define PONG_BAD 0
 #define PARTICLES 0
@@ -14,6 +15,7 @@
 
 #define PARSING 0
 
+#define DX12_TEST 1
 #define RAYTRACER 1
 
 
@@ -52,6 +54,9 @@
 
 #elif PARSING
 #include "examples/parsing_example.cpp"
+
+#elif DX12_TEST
+#include "examples/dx12_test.cpp"
 
 #elif RAYTRACER
 #include "examples/raytracing.cpp"

@@ -10,8 +10,6 @@ struct Mesh {
     uint32 indexCount;
     uint32 *indices;
 
-    // @TODO: texcoords
-
     uint32 texcoordsCount;
     vec2 *texcoords;
 
@@ -19,3 +17,13 @@ struct Mesh {
     int32 indexBufferID;
 };
 
+// @TODO: material, submesh which knows the start and end indices
+
+
+enum TokenTypeF {
+                _Test
+};
+
+struct Foo {
+    TokenTypeF type;
+};

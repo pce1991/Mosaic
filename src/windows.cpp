@@ -1,5 +1,9 @@
 #define WINDOWS 1
 
+#define OPENGL 1
+#define DX12 0
+#define DX11 0
+
 #include <ws2tcpip.h>
 #include <Mstcpip.h> // only need this if turning on promiscuous mode for socket.
 
@@ -13,9 +17,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if OPENGL
 #define GLEW_STATIC
 #include <gl/glew.h>
 #include <gl/wglew.h>
+#elif DX12
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <d3dcompiler.h> // must link the d3dcompiler_47.dll in lib/dx12
+//#include <DirectXMath.h>
+//#include "dx12/d3dx12.h"
+#endif
+
 
 #include "types.h"
 
@@ -94,9 +107,10 @@ LRESULT CALLBACK MainWindowCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_ACTIVATEAPP: {
         } break;
 
-        // the default case means that if none of the other cases happened, we fall thru to this one
-        // "Calls the default window procedure to provide default processing for any window messages
-        // that an application does not process. This function ensures that every message is processed"
+        // the default case means that if none of the other cases happened, we fall thru
+        // to this one "Calls the default window procedure to provide default processing
+        // for any window messages that an application does not process. This function
+        // ensures that every message is processed"
         default: {
             result = DefWindowProc(hwnd, msg, wParam, lParam);
         } break;
@@ -106,7 +120,7 @@ LRESULT CALLBACK MainWindowCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return result;
 }
 
-#if 1
+#if OPENGL
 void InitOpenGL(HWND window, OpenGLInfo *glInfo) {
     HDC deviceContext = GetDC(window);
 
@@ -180,6 +194,10 @@ void InitOpenGL(HWND window, OpenGLInfo *glInfo) {
             Print((char *)glewGetErrorString(err));
         }
     }
+
+    GLuint vertexArrayID;
+    glGenVertexArrays(1, &vertexArrayID);
+    glBindVertexArray(vertexArrayID);
 }
 #endif
 
@@ -577,8 +595,12 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     UpdateWindow(window);
 
 
+#if OPENGL
     OpenGLInfo glInfo;
     InitOpenGL(window, &glInfo);
+#elif DX12
+    
+#endif
 
     InitWASAPI(&platform.audio);
 
@@ -660,7 +682,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
             //Sleep(timeUntilRender * 1000);
         }
 
+#if OPENGL
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
 
         GameUpdateAndRender(gameMem);
 

@@ -46,7 +46,7 @@
 // @NOTE: there are only 32 buffers for text rendering so on one frame you can only have
 //        32 calls to DrawText(). You can increase this number if you're willing to allocate
 //        more memory.
-#define GlyphBufferCount 512
+#define GlyphBufferCount 32
 #define GlyphBufferCapacity 256
 
 struct GameMemory {
@@ -57,7 +57,6 @@ struct GameMemory {
     real32 systemTime;
     real32 time;
     real32 deltaTime;
-
     real32 startTime;
 
     uint32 frame;
@@ -67,8 +66,8 @@ struct GameMemory {
     uint32 screenHeight;
     uint32 pitch;
 
-    // This is memory that we allocate up front and will last for the duration
-    // of the game. 
+    // This is memory that we allocate up front and will last for the duration of the
+    // game.
     MemoryArena permanentArena;
 
     DebugLog log;
@@ -80,7 +79,6 @@ struct GameMemory {
     GlyphBuffer glyphBuffers[GlyphBufferCount];
 
     FontTable monoFont;
-    
     FontTable serifFont;
 
     Camera camera;
@@ -96,6 +94,8 @@ struct GameMemory {
     
     Shader shader;
     int32 vertBuffer;
+
+    Shader coolShader;
 
     Shader textShader;
 

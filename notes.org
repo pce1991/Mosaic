@@ -203,3 +203,5 @@ Sprites: I don't like how sprites can occupy one tile because it kinda lies abou
   
   To a degree limitations help you create, but I think it has more to do with specifications. Being familiar with the details and the intracacies of an implementation.
   A limitation is "only make a game with boxes" which isnt necessarily fruitful. But understanding boxes, the type of operations you can use them for lets you do a lot of things. It makes you think of the properties of your tools and how they can be used in interesting ways. The limitations can push you towards familiarity, and that's the goal.
+* Ergonomics
+  Passing in Input, audioPlayer, etc is really annoying

@@ -19,7 +19,6 @@ enum WavFormat {
 
 // Sound clip must be a .wav file and must be a mono track (or a stereo I forget lol)
 bool LoadSoundClip(const char *audioPath, SoundClip *sound) {
-
     bool success = true;
     
     FILE *file = fopen(audioPath, "rb");
@@ -171,6 +170,12 @@ int32 PlaySound(AudioPlayer *player, SoundClip clip, real32 volume) {
 
 void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
     memset(output, 0, sizeof(real32) * samplesToRender * 2);
+
+    // Even tho main thread can add things to the playingSounds buffer as it's being
+    // executed, nothing else is allowed to touch that data,
+    // @BUG: technically this buffer may grow as we're addying things to it
+    // because the DynamicArray may resize. So we should really use a fixed size
+    // buffer of the max number of sounds.
     
     for (int i = 0; i < player->playingSounds.count; i++) {
         PlayingSound *sound = &player->playingSounds[i];
@@ -181,10 +186,17 @@ void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
             samplesToRenderForSound = sound->samplesInBuffer - sound->samplesRendered;
         }
 
+        // r32 startVolume = sound->lastVolume;
+        // r32 targetVolume = sound->volume;
+        
         for (int i = 0; i < samplesToRenderForSound; i++) {
-            output[2 * i] += sound->clip.data[i + sound->samplesRendered] * sound->volume;
-            output[(2 * i) + 1] += sound->clip.data[i + sound->samplesRendered] * sound->volume;
+            //r32 volume = Lerp(startVolume, targetVolume, i / samplesToRenderForSound * 1.0f);
+            r32 volume = sound->volume;
+            output[2 * i] += sound->clip.data[i + sound->samplesRendered] * volume;
+            output[(2 * i) + 1] += sound->clip.data[i + sound->samplesRendered] * volume;
         }
+
+        //sound->lastVolume = targetVolume;
 
         sound->samplesRendered += samplesToRender;
 
