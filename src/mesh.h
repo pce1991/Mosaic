@@ -18,12 +18,3 @@ struct Mesh {
 };
 
 // @TODO: material, submesh which knows the start and end indices
-
-
-enum TokenTypeF {
-                _Test
-};
-
-struct Foo {
-    TokenTypeF type;
-};
