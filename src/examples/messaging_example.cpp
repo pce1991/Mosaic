@@ -259,17 +259,17 @@ void ClientUpdate() {
         int32 bytesSent = SendPacket(&Game->networkInfo.socket, ServerAddress, ServerPort, p, packetSize);
     }
 
-    DrawTextScreen(&Game->serifFont, V2(800, 100), 32, V4(1), true, "MESSENGER APPETIZER");
+    DrawTextScreenPixel(&Game->serifFont, V2(800, 100), 32, V4(1), true, "MESSENGER APPETIZER");
 
     vec2 entryCursor = V2(300, 800);
 
     vec2 *positionsBuffer = NULL;
     int32 charCount = 0;
     if (!myData.enteredName) {
-        charCount = DrawTextScreen(&Game->monoFont, entryCursor, 16.0f, V4(1), false, &positionsBuffer, "Enter your name and press enter: %s", myData.message);
+        charCount = DrawTextScreenPixel(&Game->monoFont, entryCursor, 16.0f, V4(1), false, &positionsBuffer, "Enter your name and press enter: %s", myData.message);
     }
     else {
-        charCount = DrawTextScreen(&Game->monoFont, entryCursor, 16.0f, V4(1), false, &positionsBuffer, "to send: %s", myData.message);
+        charCount = DrawTextScreenPixel(&Game->monoFont, entryCursor, 16.0f, V4(1), false, &positionsBuffer, "to send: %s", myData.message);
     }
 
     // @HACK: this is not exactly the position we'd want to draw the cursor.
@@ -289,14 +289,14 @@ void ClientUpdate() {
         // That means we need to know the dimensions after one DrawText call.
         // The other option is to pass in an array of colors (which seems fine but eventually we want dimensions)
         Message m = myData.messages[i];
-        DrawTextScreen(&Game->monoFont, cursor, 16.0f, V4(1), false, "%.2f %.*s: %.*s", m.timeSent, m.userNameLength, m.userName, m.length, m.string);
+        DrawTextScreenPixel(&Game->monoFont, cursor, 16.0f, V4(1), false, "%.2f %.*s: %.*s", m.timeSent, m.userNameLength, m.userName, m.length, m.string);
 
         cursor.y -= 40;
     }
     
     real32 timeSincePing = Game->time - myData.lastTimeGotPing;
     if (!myData.gotPing || timeSincePing > 5.0) {
-        DrawTextScreen(&Game->monoFont, V2(1000, 200), 32.0f, V4(1, 0, 0, 1), "No user connected");
+        DrawTextScreenPixel(&Game->monoFont, V2(1000, 200), 32.0f, V4(1, 0, 0, 1), "No user connected");
     }
 }
 

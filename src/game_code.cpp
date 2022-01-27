@@ -1,9 +1,9 @@
 
 #define MOSAIC 1
-#define MY_GAME 1
+#define MY_GAME 0
 
-#define NETWORK_SIMPLE 1
-#define MESSAGING 0
+#define NETWORK_SIMPLE 0
+#define MESSAGING 1
 #define PONG_BAD 0
 #define PARTICLES 0
 #define TYPING 0
