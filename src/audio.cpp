@@ -147,38 +147,68 @@ void GenerateSineWaveClip(SoundClip *clip) {
 }
 
 
-int32 PlaySound(AudioPlayer *player, SoundClip clip, real32 volume, bool loop) {
-    // TODO: FREELIST
+SoundHandle PlaySound(AudioPlayer *player, SoundClip clip, real32 volume, bool loop) {
+    Sound *sound = NULL;
     
-    PlayingSound sound = {};
-    sound.playing = true;
-    sound.clip = clip;
-    sound.loop = loop;
-    sound.volume = volume;
+    int32 index;
+    if (PopBack(&player->freeList, &index)) {
+        sound = &player->sounds[index];
+    }
+    else {
+        sound = PushBackPtr(&player->sounds);
+        index = player->sounds.count - 1;
+        sound->generation = 1;
+    }
+
+    sound->playing = true;
+    sound->clip = clip;
+    sound->loop = loop;
+    sound->volume = volume;
 
     // @MAYBE: is this right?
-    sound.samplesInBuffer = clip.sampleCount;
-    int32 index = PushBack(&player->playingSounds, sound);
+    sound->samplesInBuffer = clip.sampleCount;
 
-    return index;
+    SoundHandle handle = {};
+    handle.index = index;
+    handle.generation = sound->generation;
+
+    return handle;
 }
 
-int32 PlaySound(AudioPlayer *player, SoundClip clip, real32 volume) {
+SoundHandle PlaySound(AudioPlayer *player, SoundClip clip, real32 volume) {
     return PlaySound(player, clip, volume, false);
 }
 
+Sound *GetSound(AudioPlayer *player, SoundHandle handle) {
+    if (handle.index > player->sounds.count) {
+        return NULL;
+    }
+    
+    Sound *sound = &player->sounds[handle.index];
+
+    if (sound->generation != handle.generation) {
+        return NULL;
+    }
+
+    return sound;
+}
+
+void AudioPlayerInit(AudioPlayer *player, MemoryArena *arena) {
+    player->sounds = MakeChunkedArray<Sound>(arena, 128);
+    player->freeList = MakeChunkedArray<int32>(arena, 128);
+}
 
 void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
     memset(output, 0, sizeof(real32) * samplesToRender * 2);
 
-    // Even tho main thread can add things to the playingSounds buffer as it's being
+    // Even tho main thread can add things to the sounds buffer as it's being
     // executed, nothing else is allowed to touch that data,
     // @BUG: technically this buffer may grow as we're addying things to it
     // because the DynamicArray may resize. So we should really use a fixed size
     // buffer of the max number of sounds.
     
-    for (int i = 0; i < player->playingSounds.count; i++) {
-        PlayingSound *sound = &player->playingSounds[i];
+    for (int i = 0; i < player->sounds.count; i++) {
+        Sound *sound = &player->sounds[i];
         if (!sound->playing) { continue; }
 
         int32 samplesToRenderForSound = samplesToRender;
@@ -186,17 +216,16 @@ void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
             samplesToRenderForSound = sound->samplesInBuffer - sound->samplesRendered;
         }
 
-        // r32 startVolume = sound->lastVolume;
-        // r32 targetVolume = sound->volume;
+        r32 startVolume = sound->lastVolume;
+        r32 targetVolume = sound->volume;
         
         for (int i = 0; i < samplesToRenderForSound; i++) {
-            //r32 volume = Lerp(startVolume, targetVolume, i / samplesToRenderForSound * 1.0f);
-            r32 volume = sound->volume;
+            r32 volume = Lerp(startVolume, targetVolume, i / (samplesToRenderForSound * 1.0f));
             output[2 * i] += sound->clip.data[i + sound->samplesRendered] * volume;
             output[(2 * i) + 1] += sound->clip.data[i + sound->samplesRendered] * volume;
         }
 
-        //sound->lastVolume = targetVolume;
+        sound->lastVolume = targetVolume;
 
         sound->samplesRendered += samplesToRender;
 
@@ -206,7 +235,8 @@ void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
             }
             else {
                 sound->playing = false;
-                // FREELIST
+                sound->generation++;
+                PushBack(&player->freeList, i);
             }
         }
     }

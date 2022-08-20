@@ -46,7 +46,7 @@ struct ChunkedArray {
     ArrayChunk *tailChunk;
 
     inline T& operator[](const int index) const {
-        // (index / chunkCount) to get the chunk
+        // (index / elementsPerChunk) to get the chunk
         // then index % chunkCount to get the index
 
         s32 chunkIndex = index / elementsPerChunk;
@@ -74,7 +74,7 @@ void ChunkedArrayAllocateChunk(ChunkedArray<T> *array) {
         array->tailChunk = chunk->nextChunk;
     }
 
-    array->chunkCount++;
+     
 }
 
 template <typename T>
@@ -136,7 +136,7 @@ inline T *PushBackPtr(ChunkedArray<T> *array)  {
     uint32 index = array->count;
     array->count++;
     T *result = &(*array)[index];
-    Plat.ClearMem(result, sizeof(T));
+    memset(result, 0, sizeof(T));
     return result;
 }
 
@@ -174,7 +174,7 @@ inline void ChunkedArrayClearToCount(ChunkedArray<T> *array, uint32 count) {
 
     ArrayChunk *chunk = array->headChunk;
     while (chunk != NULL) {
-        Plat.ClearMem(chunk->data, array->elementsPerChunk * sizeof(T));
+        memset(chunk->data, 0, array->elementsPerChunk * sizeof(T));
         chunk = chunk->nextChunk;
     }
     
@@ -244,9 +244,9 @@ inline void RemoveAtIndex(ChunkedArray<T> *array, uint32 index) {
         uint32 elementsToMoveInChunk = elementsInChunk - indexInChunk - 1;
         if (elementsToMoveInChunk > 0) {
             ArrayChunk *chunk = GetNthChunk(array, firstChunkIndex);
-            Plat.MoveMem(chunk->data + sizeof(T) * indexInChunk,
-                         chunk->data + sizeof(T) * (indexInChunk + 1),
-                         sizeof(T) * elementsToMoveInChunk);
+            memmove(chunk->data + sizeof(T) * indexInChunk,
+                    chunk->data + sizeof(T) * (indexInChunk + 1),
+                    sizeof(T) * elementsToMoveInChunk);
         }
     }
 
@@ -266,8 +266,8 @@ inline void RemoveAtIndex(ChunkedArray<T> *array, uint32 index) {
             break;
         }
 
-        Plat.CopyMem(prevChunk->data + sizeof(T) * (array->elementsPerChunk - 1), chunk->data, sizeof(T));
-        Plat.MoveMem(chunk->data, chunk->data + sizeof(T), sizeof(T) * (elementsInChunk - 1));
+        memcpy(prevChunk->data + sizeof(T) * (array->elementsPerChunk - 1), chunk->data, sizeof(T));
+        memmove(chunk->data, chunk->data + sizeof(T), sizeof(T) * (elementsInChunk - 1));
     }
 
     array->count--;
@@ -330,11 +330,11 @@ inline void CopyChunkedArrayIntoBuffer(ChunkedArray<T> *array, void *buffer) {
     ArrayChunk *chunk = array->headChunk;
     while (chunk != NULL) {
         if (chunk != chunk->tailChunk) {
-            Plat.CopyMem(buffer, array->chunks[i]->data, sizeof(T) * array->elementsPerChunk);
+            memcpy(buffer, array->chunks[i]->data, sizeof(T) * array->elementsPerChunk);
         }
         else {
             u32 remainingCount = array->count - ((array->chunkCount - 1) * array->elementsPerChunk);
-            Plat.CopyMem(buffer, chunk->data, sizeof(T) * remainingCount);
+            memcpy(buffer, chunk->data, sizeof(T) * remainingCount);
         }
 
         buffer = (uint8 *)buffer + (sizeof(T) * array->elementsPerChunk);

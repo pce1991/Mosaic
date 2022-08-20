@@ -10,7 +10,7 @@ struct SoundClip {
     real32 *data;
 };
 
-struct PlayingSound {
+struct Sound {
     SoundClip clip;
     // @NOTE: this data is copied from our soundClip, but it doesnt allocate the data of a sound clip
     // (nor should it), but that means you cant do anything to it without messing with the source.
@@ -20,22 +20,30 @@ struct PlayingSound {
 
     real32 volume;
 
+    // @NOTE: do not touch this value. This is for the mixing so we interpolate
+    // between the volume at the last frame and the new volume we want to render at.
+    real32 lastVolume;
+
     uint32 samplesInBuffer;
     uint32 samplesRenderedFromBuffer;
     uint64 samplesRendered;
 
     // @TODO: start time
-    // @TODO: volume
+
+    int32 generation;
 };
 
 struct AudioPlayer {
     real32 volume;
     
-    DynamicArray<PlayingSound> playingSounds;
-    DynamicArray<int32> freeList;
+    ChunkedArray<Sound> sounds;
+    ChunkedArray<int32> freeList;
 };
 
-// @TODO: handles instead of indices
+struct SoundHandle {
+    int32 index;
+    int32 generation; // a generation of 0 is invalid
+};
 
 inline real32 SineWave(real32 time, real32 freq) {
     real32 step = HZ / freq;

@@ -65,7 +65,7 @@ void MyMosaicInit() {
 
         spotCapacity = widthOnFirstLine * height;
 
-        spots = PushSize(&Game->permanentArena, Spot, spotCapacity);
+        spots = PushArray(&Game->permanentArena, Spot, spotCapacity);
 
 
         FileSeek(&file, 0);
@@ -165,23 +165,23 @@ void MyMosaicInit() {
 
     AllocateMemoryArena(&game.arena, Megabytes(64));
 
-    game.levels = PushSize(&game.arena, Level, 2);
+    game.levels = PushArray(&game.arena, Level, 2);
 
     game.levelCurr = &game.levels[0];
 
     *game.levelCurr = {};
     game.levelCurr->wallCapacity = 256;
-    game.levelCurr->walls = PushSize(&game.arena, Wall, game.levelCurr->wallCapacity);
+    game.levelCurr->walls = PushArray(&game.arena, Wall, game.levelCurr->wallCapacity);
 
     game.levelCurr->boxCapacity = 16;
-    game.levelCurr->boxs = PushSize(&game.arena, Box, game.levelCurr->boxCapacity);
+    game.levelCurr->boxs = PushArray(&game.arena, Box, game.levelCurr->boxCapacity);
 
     Level *levelCurr = game.levelCurr;
 
 
     vec2i cursor = V2i(0, 0);
     FileHandle file;
-    if (OpenFileForRead("data/sokoban_level.txt", &file)) {
+    if (OpenFileForRead("data/sokoban_level.txt", &file, &Game->frameMem)) {
 
         while (file.offset < file.size) {
             char c = ReadChar(&file);

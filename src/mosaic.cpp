@@ -1,6 +1,7 @@
 
 #define EX_MOSAIC_CLEAN 0
 #define EX_MOSAIC_BASIC 1
+#define EX_MOSAIC_PERF 1
 #define EX_MOSAIC_AUDIO 0
 #define EX_MOSAIC_RANDOM_TILES 0
 
@@ -40,6 +41,9 @@
 
 #elif EX_MOSAIC_BASIC
 #include "examples/mosaic_basic.cpp"
+
+#elif EX_MOSAIC_PERF
+#include "examples/mosaic_perf.cpp"
 
 #elif EX_MOSAIC_FILE_READ
 #include "examples/mosaic_file_reading.cpp"

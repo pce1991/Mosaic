@@ -1,11 +1,17 @@
 
-// This function runs at the start of our program
+SoundClip sound;
+SoundHandle handle;
+
 void MyMosaicInit() {
-    SetMosaicGridSize(16, 16);
+    LoadSoundClip("data/sfx/flute_breathy_c4.wav", &sound);
 }
 
-// MyMosaicUpdate is called once per frame and does all the updating of the state
-// that we want to happen before drawing an image to the screen.
 void MyMosaicUpdate() {
-    ClearTiles(0, 0, 0);
+    if (handle.generation == 0) {
+        handle = PlaySound(&Game->audioPlayer, sound, 1.0f, true);
+    }
+
+    if (Sound *sound = GetSound(&Game->audioPlayer, handle)) {
+        sound->volume = (1 + sinf(Time * 5)) * 0.5f;
+    }
 }

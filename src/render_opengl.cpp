@@ -679,7 +679,7 @@ void DrawText_(FontTable *font, vec2 pos, real32 size, vec4 color, bool screen, 
 
     float emSize = buffer->font->emSize;
 
-    vec2 *positions = PushSize(&Game->frameMem, vec2, len);
+    vec2 *positions = PushArray(&Game->frameMem, vec2, len);
     LayoutGlyphs(buffer->font, str, len, size, positions, width, center);
 
     buffer->count += len;

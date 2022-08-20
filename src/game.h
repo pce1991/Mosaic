@@ -28,7 +28,6 @@
 
 #include "camera.h"
 #include "mesh.h"
-//#include "entity.h"
 
 #include "mosaic.h"
 
@@ -107,8 +106,6 @@ struct GameMemory {
     Mesh cube;
 
     InputQueue inputQueue;
-
-    //EntityDB entityDB;
 
     int32 gameIndex;
 

@@ -1,4 +1,27 @@
 
+* Audio mixing!!
+  I have kinda liked this as an exercise for engine but not worth it I think.
+* Performance when drawing lots of stuff
+  Have to multithread this, if you've got just a 320 x 240 resolution that's a lot of iterations. But I'd like them to be able to draw 
+
+  And really multithreading is not that hard, and this is a good intro to it.
+
+  I'd like to do this without a task-manager, just simply feeding work to a couple threads that are devoted to drawing. 
+
+  Like what's the simplest version here? Two threads, each with their own queue (so we dont have to synchronize). We simply queue a bunch of stuff up and then have it run. 
+  
+  Must make sure there's no overlap between any two regions, otherwise we get a race condition!
+  - so this will be good when drawing sprites on a larger grid over our normal one. 
+  - this'll be fine if we just make sure to add a sprite to all threads when it overlaps their region, knowing that we'll discard any pixels outside region.
+
+  A job system would be much nicer because we dont have to do any platform code in the game. 
+* Game to Core so they can just use Game for their struct
+* Real32 
+  Change all real32 to float32
+* File parsing
+  Read literals for ints, floats, bools, and strings
+  
+  This might be a cool exercise for students tho. 
 * Compiling
   Pass in a flag telling it what code to compile. Much better than the #if stuff, tho it might require editing the compile script if you want to change the code so there's a tradeoff there.
 * Tech

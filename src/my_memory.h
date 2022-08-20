@@ -72,7 +72,10 @@ void ClearMemoryArena(MemoryArena *arena) {
 }
 
 // Using a macro here so we can cast and calculate the size.
-#define PushSize(arena, type, count) (type *)PushSizeMemoryArena(arena, sizeof(type) * count)
+#define PushSize(arena, count) (type *)PushSizeMemoryArena(arena, count)
+#define PushArray(arena, type, count) (type *)PushSizeMemoryArena(arena, sizeof(type) * count)
+
+// @TODO: PushArray is a better name
 
 inline void *AllocCleared(int32 size) {
     void *d = malloc(size);
