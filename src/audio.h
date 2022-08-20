@@ -36,8 +36,8 @@ struct Sound {
 struct AudioPlayer {
     real32 volume;
     
-    ChunkedArray<Sound> sounds;
-    ChunkedArray<int32> freeList;
+    DynamicArray<Sound> sounds;
+    DynamicArray<int32> freeList;
 };
 
 struct SoundHandle {

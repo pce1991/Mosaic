@@ -1,6 +1,10 @@
 
-* Audio mixing!!
-  I have kinda liked this as an exercise for engine but not worth it I think.
+* Pass in file to compile
+  Much easier to check out different files if they don't have to mess with mosaic.cpp
+* FontSize
+  This is totally fucking broken
+* release build script
+  strip out the notes folder.
 * Performance when drawing lots of stuff
   Have to multithread this, if you've got just a 320 x 240 resolution that's a lot of iterations. But I'd like them to be able to draw 
 

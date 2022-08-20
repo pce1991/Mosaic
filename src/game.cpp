@@ -14,118 +14,12 @@
 #include "network.cpp"
 
 #include "mesh.cpp"
-
+#include "font.cpp"
 
 #include "ui.cpp"
 
 #include "game_code.cpp"
 
-
-void InitFont(FontTable *font, char *path) {
-    int32 fontBitmapWidth = 1024;
-    int32 fontBitmapHeight = 1024;
-    int32 fontBitmapSize = fontBitmapWidth * fontBitmapHeight;
-    uint8 *fontBitmap = (uint8 *)malloc(fontBitmapSize);
-
-    // @HACK: actually figure this out.
-    // It should be enough that when we grab a glyph and scale by emSize it should take up 1 unit.
-    // This is totally arbitrarily chosen right now so that a glyph with size 1 is about 1 unit.
-    font->emSize = 26;
-
-    uint32 startAscii = 32;
-    uint32 endAscii = 127;
-    uint32 charCount = endAscii - startAscii;
-
-    uint32 ttfBufferSize = 1024 * 10000;
-    uint8 *ttfBuffer = (uint8 *)malloc(ttfBufferSize);
-    FILE *ttfFile = fopen(path, "rb");
-    //FILE *ttfFile = fopen("data/DejaVuSansMono.ttf", "rb");
-    //FILE *ttfFile = fopen("data/LiberationSerif-Regular.ttf", "rb");
-    
-    //FILE *ttfFile = fopen("data/liberation-mono/LiberationMono-Regular.ttf", "rb");
-    fread(ttfBuffer, 1, ttfBufferSize, ttfFile);
-
-        
-    stbtt_fontinfo info;
-    stbtt_InitFont(&info, ttfBuffer, 0);
-    int32 ascent, descent;
-    stbtt_GetFontVMetrics(&info, &ascent, &descent, 0);
-
-    font->ascent = ascent / (fontBitmapWidth * 1.0f);
-    font->descent = descent / (fontBitmapWidth * 1.0f);
-
-    // @GACK @HARDCODED: what is the relationship of this to the bitmap size?
-    float fontPixelHeight = 64;
-    
-    stbtt_bakedchar *bakedChars = (stbtt_bakedchar *)malloc(sizeof(stbtt_bakedchar) * charCount);
-    
-    stbtt_BakeFontBitmap(ttfBuffer, 0, fontPixelHeight, fontBitmap, fontBitmapWidth, fontBitmapHeight, startAscii, charCount, bakedChars);
-
-    font->glyphs = (Glyph *)malloc(sizeof(Glyph) * charCount);
-    Glyph *glyphs = font->glyphs;
-    
-    font->texcoordsMapData = (vec4 *)malloc(sizeof(vec4) * charCount);
-
-    font->glyphCount = charCount;
-
-    for (int i = 0; i < charCount; i++) {
-        glyphs[i].xOffset = bakedChars[i].xoff / (fontBitmapWidth * 1.0f);
-        glyphs[i].yOffset = bakedChars[i].yoff / (fontBitmapWidth * 1.0f);
-        glyphs[i].xAdvance = bakedChars[i].xadvance / (fontBitmapWidth * 1.0f);
-
-        stbtt_aligned_quad quad;
-
-        real32 x = 0;
-        real32 y = 0;
-        stbtt_GetBakedQuad(bakedChars, fontBitmapWidth, fontBitmapHeight, i, &x, &y, &quad, 1);
-
-        //Print("%c (%f %f) (%f %f) adv %f", i + startAscii, quad.x0, quad.y0, quad.x1, quad.y1, bakedChars[i].xadvance);
-
-        // This calculation depends on our quad being 1 wide and 1 tall, 2x2 breaks things
-        // Not exactly sure why... 
-        glyphs[i].lowerLeft = V2(quad.x0 / (fontBitmapWidth * 1.0f), -quad.y1 / (fontBitmapHeight * 1.0f));
-#if 1
-        font->texcoordsMapData[i] = V4(bakedChars[i].x0 / (fontBitmapWidth * 1.0f),
-                                       bakedChars[i].y0 / (fontBitmapWidth * 1.0f),
-                                       bakedChars[i].x1 / (fontBitmapWidth * 1.0f),
-                                       bakedChars[i].y1 / (fontBitmapWidth * 1.0f));
-#endif
-    }
-    
-    Sprite fontSprite;
-    fontSprite.width = fontBitmapWidth;
-    fontSprite.height = fontBitmapHeight;
-    fontSprite.size = fontSprite.width * fontSprite.height * 4;
-    fontSprite.data = (uint8 *)malloc(fontSprite.size);
-
-    for (int i = 0; i < fontBitmapSize; i++) {
-        fontSprite.data[(i * 4) + 0] = fontBitmap[i];
-        fontSprite.data[(i * 4) + 1] = fontBitmap[i];
-        fontSprite.data[(i * 4) + 2] = fontBitmap[i];
-        fontSprite.data[(i * 4) + 3] = fontBitmap[i];
-
-#if 0
-        // @BUG: this produces a bunch of dots
-        if (i < 1024 * 4) {
-            fontSprite.data[(i * 4) + 0] = 255;
-            fontSprite.data[(i * 4) + 1] = 0;
-            fontSprite.data[(i * 4) + 2] = 0;
-            fontSprite.data[(i * 4) + 3] = 0;
-        }
-        else {
-            fontSprite.data[(i * 4) + 0] = 0; // 255; // 255 * ((1 + sinf(i * 0.1f)) / 2.0f); 
-            fontSprite.data[(i * 4) + 1] = 0;
-            fontSprite.data[(i * 4) + 2] = 0;
-            fontSprite.data[(i * 4) + 3] = 0;
-        }
-#endif
-            
-    }
-
-    font->texture = fontSprite;
-
-    InitFontTable(font);
-}
 
 bool ReadConfigFile(char *path) {
     FILE *file = fopen(path, "r");

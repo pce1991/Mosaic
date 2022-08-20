@@ -12,7 +12,7 @@
 // Allocate in 16
 // Should it be able to resize? That just complicates things but it's good to have a
 //   demonstration
-// ChunkedArray (or just use MArray for this?)
+// DynamicArray (or just use MArray for this?)
 
 struct MAllocator;
 

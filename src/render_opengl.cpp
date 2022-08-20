@@ -782,7 +782,6 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const ch
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    // @GACK:
     size *= Game->screenWidth;
 
     pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
@@ -800,9 +799,9 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, boo
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    // @BUG
-    // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
-    // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
+    // @BUG @GACK: this height - pos.y is because we want zero vector to be top left, but
+    // our projection matrix is set up so that 0 is the bottom of the screen, and changing
+    // that seems to flip our glyphs...
     DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, width, center, NULL);
     
     va_end(args);
@@ -815,9 +814,9 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, boo
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    // @BUG
-    // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
-    // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
+    // @BUG @GACK: this height - pos.y is because we want zero vector to be top left, but
+    // our projection matrix is set up so that 0 is the bottom of the screen, and changing
+    // that seems to flip our glyphs...
     DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, center, NULL);
     
     va_end(args);

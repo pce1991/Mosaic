@@ -91,6 +91,7 @@ bool TilePositionsOverlap(vec2i a, vec2i b);
 
 real32 GetTileCenter(real32 n);
 
+void DrawTextTop(vec4 color, const char *fmt, ...);
 
 MTile*GetHoveredTile();
 

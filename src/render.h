@@ -91,14 +91,15 @@ struct Sprite{
     int32 textureID;
 };
 
-typedef struct {
+struct Glyph{
     float xOffset;
     float yOffset;
 
     float xAdvance;
 
     vec2 lowerLeft;
-} Glyph;
+    vec2 size;
+};
 
 
 struct GlyphData {

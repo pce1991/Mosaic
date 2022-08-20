@@ -528,7 +528,7 @@ void DrawTextTop(vec4 color, const char *fmt, ...) {
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
     vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.1f);
-    DrawText(&Game->monoFont, position, 0.35f, RGB(1, 0, 0), true, str);
+    DrawText(&Game->monoFont, position, 0.35f, color, true, str);
 
     va_end(args);
 }
@@ -542,7 +542,8 @@ void MosaicRender() {
 
     Mosaic->rectBuffer.count = 0;
     {
-        DrawRect(V2(0), Mosaic->gridSize * 0.5f, V4(0, 0, 0, 1));
+        vec2 pos = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, -Mosaic->gridSize.y * 0.5f);
+        DrawRect(pos, Mosaic->gridSize * 0.5f, V4(0, 0, 0, 1));
     }
 
     for (int i = 0; i < Mosaic->tileCapacity; i++) {

@@ -194,8 +194,8 @@ Sound *GetSound(AudioPlayer *player, SoundHandle handle) {
 }
 
 void AudioPlayerInit(AudioPlayer *player, MemoryArena *arena) {
-    player->sounds = MakeChunkedArray<Sound>(arena, 128);
-    player->freeList = MakeChunkedArray<int32>(arena, 128);
+    player->sounds = MakeDynamicArray<Sound>(arena, 128);
+    player->freeList = MakeDynamicArray<int32>(arena, 128);
 }
 
 void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {

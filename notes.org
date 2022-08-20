@@ -205,3 +205,15 @@ Sprites: I don't like how sprites can occupy one tile because it kinda lies abou
   A limitation is "only make a game with boxes" which isnt necessarily fruitful. But understanding boxes, the type of operations you can use them for lets you do a lot of things. It makes you think of the properties of your tools and how they can be used in interesting ways. The limitations can push you towards familiarity, and that's the goal.
 * Ergonomics
   Passing in Input, audioPlayer, etc is really annoying. 
+
+  Text printing:
+  - the names are annoying. Printing to screen in pixels should be favored I think. Not ScreenPixels
+  - Mosaic should have a nice way to splat text on the screen line after line without you thinking about it. 
+  - dedicated region of screen for text.
+  - offset grid so we can put text on the left side. 
+  - text on a row of the grid.
+  - text and textf
+  - sprintf
+  - unicode
+  - REALLY NEED TO FIGURE OUT EMSIZE STUFF. We cant actually draw text at a reasonable size. Saying 64 pixels doesnt mean anything
+
