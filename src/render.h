@@ -123,6 +123,8 @@ struct FontTable {
     real32 ascent;
     real32 descent;
 
+    real32 lineHeight;
+
     real32 emSize;
 
     Glyph *glyphs;

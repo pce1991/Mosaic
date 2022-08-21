@@ -1,8 +1,30 @@
 
+
 * Pass in file to compile
   Much easier to check out different files if they don't have to mess with mosaic.cpp
 * FontSize
   This is totally fucking broken
+
+  I think part of the problem is that we just look at texcoord map for the size. 
+
+  Why is the scaling not working?
+
+  So the texcoord map we're getting is right
+
+  We want it so that a glyph with an emSize of 1 would take up 1 world unit, or one pixel.
+  - that means when we take the dimension of the UV range and scale it by the emSize * 1 we should get (1 1)
+  - now most glyphs arent size EM, so they'll take up a smaller UV space, but we need to know what thu UV space we'd occupy 
+
+    stb lets us get the scale for a given emSize, but is that really what we want? I don't care what the emSize is, I just want an emSize
+
+    What's happening now is that our emSize is sooo small
+    - our uv range covers multiple glyphs
+    - we have to scale a ton to even get visible
+
+  I dont think we really need the emSize on the font.
+
+  Our calculations are still wrong! 
+  - size is dependent on the size of the texture (despite our pixelHeight scaling with size...?)
 * release build script
   strip out the notes folder.
 * Performance when drawing lots of stuff

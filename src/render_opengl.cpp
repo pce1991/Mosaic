@@ -593,22 +593,19 @@ void DrawMesh(Mesh *mesh, vec3 pos, quaternion rotation, vec3 scale, vec4 color)
 
 // @NOTE: only works for monospace fonts because it assumes everyone has the same dimensions.
 real32 CharacterCountToWidth(FontTable *font, int32 count, real32 size) {
-    float emSize = font->emSize;
     char c = '-';
     int32 codepoint = c - 32;
 
     real32 x = 0;
 
-    x += font->glyphs[codepoint].lowerLeft.x * size * emSize;
-    x += font->glyphs[codepoint].xAdvance * size * emSize;
+    x += font->glyphs[codepoint].lowerLeft.x * size;
+    x += font->glyphs[codepoint].xAdvance * size;
 
     return x * count;
 }
 
 // @NOTE: width is totally arbitrary until we figure out the emSize situation.
 void LayoutGlyphs(FontTable *font, const char *string, int32 count, real32 size, vec2 *positions, real32 width, bool center) {
-    float emSize = font->emSize;
-
     real32 maxWidth = 0;
     
     real32 x = 0;
@@ -631,8 +628,8 @@ void LayoutGlyphs(FontTable *font, const char *string, int32 count, real32 size,
         while (tempC != ' ') {
             int32 tempCodepoint = tempC - 25;
 
-            tempX += font->glyphs[tempCodepoint].lowerLeft.x * size * emSize;
-            tempX += font->glyphs[tempCodepoint].xAdvance * size * emSize;
+            tempX += font->glyphs[tempCodepoint].lowerLeft.x * size;
+            tempX += font->glyphs[tempCodepoint].xAdvance * size;
 
             tempC = string[++tempI];
         }
@@ -643,10 +640,10 @@ void LayoutGlyphs(FontTable *font, const char *string, int32 count, real32 size,
         }
 
         positions[i] = V2(x, y);
-        positions[i].y += font->glyphs[codepoint].lowerLeft.y * size * emSize;
-        positions[i].x += font->glyphs[codepoint].lowerLeft.x * size * emSize;
+        positions[i].y += font->glyphs[codepoint].lowerLeft.y * size;
+        positions[i].x += font->glyphs[codepoint].lowerLeft.x * size;
 
-        x += (font->glyphs[codepoint].xAdvance * size * emSize);
+        x += (font->glyphs[codepoint].xAdvance * size);
 
         if (x > maxWidth) {
             maxWidth = x;
@@ -677,8 +674,6 @@ void DrawText_(FontTable *font, vec2 pos, real32 size, vec4 color, bool screen, 
 
     buffer->model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(1));
 
-    float emSize = buffer->font->emSize;
-
     vec2 *positions = PushArray(&Game->frameMem, vec2, len);
     LayoutGlyphs(buffer->font, str, len, size, positions, width, center);
 
@@ -693,7 +688,7 @@ void DrawText_(FontTable *font, vec2 pos, real32 size, vec4 color, bool screen, 
         buffer->data[i].codepoint = codepoint;
 
         vec4 corners = buffer->font->texcoordsMapData[codepoint];
-        buffer->data[i].dimensions = V2(corners.z - corners.x, corners.w - corners.y) * size * emSize;
+        buffer->data[i].dimensions = font->glyphs[codepoint].size * size;
     }
 
     if (positionsBuffer != NULL) {
@@ -857,8 +852,6 @@ int32 DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bo
 
 
 void DrawGlyphs(GlyphBuffer *buffers) {
-    // @TODO: generate buffers
-        
     Shader *shader = &Game->textShader;
     SetShader(shader);
 
@@ -905,7 +898,6 @@ void DrawGlyphs(GlyphBuffer *buffers) {
 
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2,  GL_FLOAT, GL_FALSE, 0, (void*)((sizeof(vec3) * mesh->vertCount)));
-
     
         // Buffer the data and draw it
         glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
