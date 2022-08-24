@@ -1,5 +1,6 @@
 
 #define EX_MOSAIC_CLEAN 0
+#define MY_MOSAIC 1
 #define EX_MOSAIC_BASIC 1
 #define EX_MOSAIC_PERF 1
 #define EX_MOSAIC_AUDIO 0
@@ -38,6 +39,9 @@
 
 #if EX_MOSAIC_CLEAN
 #include "examples/mosaic_clean.cpp"
+
+#elif MY_MOSAIC
+#include "my_mosaic.cpp"
 
 #elif EX_MOSAIC_BASIC
 #include "examples/mosaic_basic.cpp"

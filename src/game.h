@@ -106,7 +106,9 @@ struct GameMemory {
     Mesh quadTopLeft;
     Mesh cube;
 
-    InputQueue inputQueue;
+    InputManager inputManager;
+    InputDevice *keyboard;
+    InputDevice *mouse;
 
     int32 gameIndex;
 
@@ -122,7 +124,7 @@ real32 Time = 0;
 real32 DeltaTime = 0;
 
 GameMemory *Game = NULL;
-InputQueue *Input = NULL;
+InputManager *Input = NULL;
 
 #define ArrayLength(array, type) sizeof(array)/sizeof(type)
 

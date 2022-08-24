@@ -1,152 +1,126 @@
 
-InputQueue AllocateInputQueue(int32 capacity, int32 deviceCount) {
-    InputQueue queue;
+void AllocateInputManager(InputManager *input, MemoryArena *arena, int32 capacity, int32 deviceCapacity) {
+    input->events = MakeDynamicArray<InputEvent>(arena, capacity);
 
-    queue.count = 0;
-    queue.capacity = capacity;
-    queue.size = sizeof(InputEvent) * capacity;
-    queue.events = (InputEvent *)malloc(queue.size);
-    memset(queue.events, 0, queue.size);
+    input->deviceCount = deviceCapacity;
+    input->devices = (InputDevice *)malloc(sizeof(InputDevice) * deviceCapacity);
 
-    queue.deviceCount = deviceCount;
-    queue.deviceStates = (InputDeviceState *)malloc(sizeof(InputDeviceState) * deviceCount);
+    memset(input->devices, 0, input->deviceCount * sizeof(InputDevice));
+
+    input->charSize = 32;
+    input->charCount = 0;
+    input->inputChars = (char *)malloc(input->charSize);
+}
+
+void AllocateInputDevice(InputDevice *device, InputDeviceType type, int32 discreteCount, int32 analogueCount) {
+    device->type = type;
+    device->discreteCount = discreteCount;
     
-    for (int i = 0; i < deviceCount; i++) {
-        InputDeviceState *deviceState = &queue.deviceStates[i];
-        
-        deviceState->framesHeld = (int32 *)malloc(sizeof(int32) * Input_Count);
-        deviceState->released = (bool *)malloc(sizeof(bool) * Input_Count);
-        deviceState->pressed = (bool *)malloc(sizeof(bool) * Input_Count);
-        deviceState->timePressed = (real32 *)malloc(sizeof(real32) * Input_Count);
+    device->framesHeld = (int32 *)malloc(sizeof(int32) * discreteCount);
+    device->released = (bool *)malloc(sizeof(bool) * discreteCount);
+    device->pressed = (bool *)malloc(sizeof(bool) * discreteCount);
+    device->timePressed = (real32 *)malloc(sizeof(real32) * discreteCount);
 
-        memset(deviceState->framesHeld, -1, sizeof(int32) * Input_Count);
-        memset(deviceState->pressed, 0, sizeof(bool) * Input_Count);
-        memset(deviceState->released, 0, sizeof(bool) * Input_Count);
-        memset(deviceState->timePressed, 0, sizeof(real32) * Input_Count);
-    }
+    device->analogueCount = analogueCount;
+    device->prevAnalogue = (real32 *)malloc(sizeof(real32) * analogueCount);
+    device->analogue = (real32 *)malloc(sizeof(real32) * analogueCount);
 
-    queue.charSize = 32;
-    queue.charCount = 0;
-    queue.inputChars = (char *)malloc(queue.charSize);
-    
-    return queue;
+    memset(device->framesHeld, -1, sizeof(int32) * discreteCount);
+    memset(device->pressed, 0, sizeof(bool) * discreteCount);
+    memset(device->released, 0, sizeof(bool) * discreteCount);
+    memset(device->timePressed, 0, sizeof(real32) * discreteCount);
+
+    memset(device->analogue, 0, sizeof(real32) * analogueCount);
+    memset(device->prevAnalogue, 0, sizeof(real32) * analogueCount);
 }
 
-void PushInputPress(InputQueue *queue, InputID input, int32 deviceID = 0) {
-    // @WARNING: this could go out of bounds of our input buffer
-    InputEvent e;
-    e.input = input;
-    e.release = false;
-    e.deviceID = deviceID;
-    queue->events[queue->count++] = e;
+void PushInputEvent(InputManager *input, InputEvent e) {
+    PushBack(&input->events, e);
 }
 
-void PushInputRelease(InputQueue *queue, InputID input, int32 deviceID = 0) {
-    InputEvent e;
-    e.input = input;
-    e.release = true;
-    e.deviceID = deviceID;
-    queue->events[queue->count++] = e;
-}
-
-void PushInputChar(InputQueue *queue, char c) {
-    queue->inputChars[queue->charCount++] = c;
+void PushInputChar(InputManager *input, char c) {
+    input->inputChars[input->charCount++] = c;
 }
 
 // User functions
-bool InputPressed(InputQueue *queue, InputID input, int32 deviceID = 0) {
-    return queue->deviceStates[deviceID].pressed[input];
+
+bool InputPressed(InputDevice *device, int32 inputID) {
+    return device->pressed[inputID] && device->framesHeld[inputID] == 0;
 }
 
-bool InputReleased(InputQueue *queue, InputID input, int32 deviceID = 0) {
-    return queue->deviceStates[deviceID].released[input];
+bool InputReleased(InputDevice *device, int32 inputID) {
+    return device->released[inputID];
 }
 
-bool InputHeld(InputQueue *queue, InputID input, int32 deviceID = 0) {
-    return queue->deviceStates[deviceID].framesHeld[input] > 0;
+bool InputHeld(InputDevice *device, int32 inputID) {
+    return device->framesHeld[inputID] > 0;
 }
 
-bool InputHeldSeconds(InputQueue *queue, InputID input, real32 time, int32 deviceID = 0) {
-    bool held = queue->deviceStates[deviceID].framesHeld[input] > 0;
+bool InputHeldSeconds(InputDevice *device, int32 inputID, real32 time) {
+    bool held = device->framesHeld[inputID] > 0;
 
-    return held && (Game->time - queue->deviceStates[deviceID].timePressed[input] > time);
+    return held && (Game->time - device->timePressed[inputID] > time);
 }
-
-
-bool InputPressed(InputID input, int32 deviceID = 0) {
-    return Input->deviceStates[deviceID].pressed[input];
-}
-
-bool InputReleased(InputID input, int32 deviceID = 0) {
-    return Input->deviceStates[deviceID].released[input];
-}
-
-bool InputHeld(InputID input, int32 deviceID = 0) {
-    return Input->deviceStates[deviceID].framesHeld[input] > 0;
-}
-
-bool InputHeldSeconds(InputID input, real32 time, int32 deviceID = 0) {
-    bool held = Input->deviceStates[deviceID].framesHeld[input] > 0;
-
-    return held && (Game->time - Input->deviceStates[deviceID].timePressed[input] > time);
-}
-
 
 // @NOTE: to be cleared at the end of the frame so we have access to inputChars thruout update. 
-void ClearInputQueue(InputQueue *queue) {
-    queue->count = 0;
-    memset(queue->events, 0, queue->size);
+void ClearInputManager(InputManager *input) {
+    DynamicArrayClear(&input->events);
 
-    queue->charCount = 0;
-    memset(queue->inputChars, 0, queue->charSize);
+    input->charCount = 0;
+    memset(input->inputChars, 0, input->charSize);
 }
 
-void UpdateInput(InputQueue *queue) {
+void UpdateInput(InputManager *input) {
 
-    queue->mousePosNorm.x = queue->mousePos.x / (Game->screenWidth * 1.0f);
-    queue->mousePosNorm.y = queue->mousePos.y / (Game->screenHeight * 1.0f);
+    input->mousePosNorm.x = input->mousePos.x / (Game->screenWidth * 1.0f);
+    input->mousePosNorm.y = input->mousePos.y / (Game->screenHeight * 1.0f);
 
     // @DESIGN: this is exactly the type of equation its very useful to know!
-    queue->mousePosNormSigned.x = (queue->mousePosNorm.x - 0.5f) * 2;
-    queue->mousePosNormSigned.y = (queue->mousePosNorm.y - 0.5f) * 2;
+    input->mousePosNormSigned.x = (input->mousePosNorm.x - 0.5f) * 2;
+    input->mousePosNormSigned.y = (input->mousePosNorm.y - 0.5f) * 2;
 
-    for (int d = 0; d < queue->deviceCount; d++) {
-        InputDeviceState *deviceState = &queue->deviceStates[d];
+    for (int d = 0; d < input->deviceCount; d++) {
+        InputDevice *device = &input->devices[d];
+
+        if (device->type == InputDeviceType_Invalid) { continue; }
         
-        for (int i = 0; i < Input_Count; i++) {
-            deviceState->released[i] = false;
+        for (int i = 0; i < device->discreteCount; i++) {
+            device->released[i] = false;
             
             // @NOTE: until we get a release event we consider a key to be pressed
-            if (deviceState->framesHeld[i] >= 0) {
-                deviceState->framesHeld[i]++;
-                deviceState->pressed[i] = false;
+            if (device->framesHeld[i] >= 0) {
+                device->framesHeld[i]++;
+                device->pressed[i] = false;
             }
         }
     }
     
-    for (int i = 0; i < queue->count; i++) {
-        InputEvent event = queue->events[i];
-        InputID input = event.input;
+    for (int i = 0; i < input->events.count; i++) {
+        InputEvent event = input->events[i];
+        int32 index = event.index;
         
+        //printf("event %d %d frames %d\n", i, event.release, input->framesHeld[input]);
 
-        //printf("event %d %d frames %d\n", i, event.release, queue->framesHeld[input]);
+        //InputDevice *device = &input->devices[event.deviceID];
+        InputDevice *device = event.device;
 
-        InputDeviceState *deviceState = &queue->deviceStates[event.deviceID];
-
-        if (event.release) {
-            deviceState->timePressed[input] = -1;
-            deviceState->framesHeld[input] = -1;
-            deviceState->pressed[input] = false;
-            deviceState->released[input] = true;
+        if (!event.discreteValue) {
+            if (device->framesHeld[index] > 0) {
+                device->released[index] = true;
+            }
+            
+            device->timePressed[index] = -1;
+            device->framesHeld[index] = -1;
+            device->pressed[index] = false;
         }
         else {
-            if (deviceState->framesHeld[input] < 0) {
+            if (device->framesHeld[index] < 0) {
                 //printf("pressed\n");
 
-                deviceState->timePressed[input] = Game->time;
-                deviceState->framesHeld[input] = 0;
-                deviceState->pressed[input] = true;
-                deviceState->released[input] = false;
+                device->timePressed[index] = Game->time;
+                device->framesHeld[index] = 0;
+                device->pressed[index] = true;
+                device->released[index] = false;
             }
             else {
                 // @NOTE: we shouldnt even get a pressed event when the key is being held

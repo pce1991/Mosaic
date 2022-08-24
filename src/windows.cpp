@@ -49,6 +49,10 @@ WindowsPlatform *Platform = NULL;
 
 #include "game.cpp"
 
+#include "windows_input.cpp"
+
+
+
 bool PlatformRunning = true;
 
 
@@ -338,168 +342,6 @@ void StartWASAPIThread(GamePlatform *platform) {
 }
 
 
-void WindowsGetInput(InputQueue *inputQueue) {
-
-    MSG msg;
-    while(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-
-        switch (msg.message) {
-            case WM_KEYDOWN: {
-                TranslateMessage(&msg);
-                
-                int keycode = msg.wParam;
-
-                if (keycode == 0x1B) {
-                    PushInputPress(inputQueue, Input_Escape, 0);
-                }
-                
-                if (keycode == VK_BACK) {
-                    PushInputPress(inputQueue, Input_Backspace, 0);
-                }
-
-                if (keycode == VK_RETURN) {
-                    PushInputPress(inputQueue, Input_Return, 0);
-                }
-
-                if (keycode == 0x41) {
-                    PushInputPress(inputQueue, Input_Left, 0);
-                }
-                if (keycode == 0x44) {
-                    PushInputPress(inputQueue, Input_Right, 0);
-                }
-                if (keycode == 0x53) {
-                    PushInputPress(inputQueue, Input_Down, 0);
-                }
-                if (keycode == 0x57) {
-                    PushInputPress(inputQueue, Input_Up, 0);
-                }
-
-                if (keycode == 0x25) {
-                    PushInputPress(inputQueue, Input_LeftArrow, 0);
-                }
-                if (keycode == 0x26) {
-                    PushInputPress(inputQueue, Input_UpArrow, 0);
-                }
-                if (keycode == 0x27) {
-                    PushInputPress(inputQueue, Input_RightArrow, 0);
-                }
-                if (keycode == 0x28) {
-                    PushInputPress(inputQueue, Input_DownArrow, 0);
-                }
-
-
-                if (keycode == 0x5A) {
-                    PushInputPress(inputQueue, Input_Z, 0);
-                }
-
-                if (keycode == 0x52) {
-                    PushInputPress(inputQueue, Input_R, 0);
-                }
-
-                // @TODO: look up the keycode values for the number row
-                // and push events for those
-
-                if (keycode == VK_SPACE) {
-                    PushInputPress(inputQueue, Input_Space, 0);
-                }
-            } break;
-
-            case WM_KEYUP: {
-                int keycode = msg.wParam;
-                    
-                if (keycode == 0x1B) {
-                    PushInputRelease(inputQueue, Input_Escape, 0);
-                }
-
-                if (keycode == VK_BACK) {
-                    PushInputRelease(inputQueue, Input_Backspace, 0);
-                }
-
-                if (keycode == VK_RETURN) {
-                    PushInputRelease(inputQueue, Input_Return, 0);
-                }
-
-                
-                if (keycode == 0x41) {
-                    PushInputRelease(inputQueue, Input_Left, 0);
-                }
-                if (keycode == 0x44) {
-                    PushInputRelease(inputQueue, Input_Right, 0);
-                }
-                if (keycode == 0x53) {
-                    PushInputRelease(inputQueue, Input_Down, 0);
-                }
-                if (keycode == 0x57) {
-                    PushInputRelease(inputQueue, Input_Up, 0);
-                }
-
-                
-                if (keycode == 0x25) {
-                    PushInputRelease(inputQueue, Input_LeftArrow, 0);
-                }
-                if (keycode == 0x26) {
-                    PushInputRelease(inputQueue, Input_UpArrow, 0);
-                }
-                if (keycode == 0x27) {
-                    PushInputRelease(inputQueue, Input_RightArrow, 0);
-                }
-                if (keycode == 0x28) {
-                    PushInputRelease(inputQueue, Input_DownArrow, 0);
-                }
-                
-
-                if (keycode == 0x5A) {
-                    PushInputRelease(inputQueue, Input_Z, 0);
-                }
-
-                if (keycode == 0x52) {
-                    PushInputRelease(inputQueue, Input_R, 0);
-                }
-
-                if (keycode == VK_SPACE) {
-                    PushInputRelease(inputQueue, Input_Space, 0);
-                }
-
-            } break;
-
-            case WM_CHAR: {
-                uint16 character = (uint16)msg.wParam;
-                inputQueue->inputChars[inputQueue->charCount++] = character;
-            } break;
-
-            case WM_MOUSEMOVE : {
-                int posX = GET_X_LPARAM(msg.lParam);
-                int posY = GET_Y_LPARAM(msg.lParam);
-
-                inputQueue->mousePos.x = posX;
-                inputQueue->mousePos.y = Game->screenHeight - posY;
-            } break;
-
-                    
-            case WM_LBUTTONDOWN : {
-                PushInputPress(inputQueue, Input_MouseLeft, 0);
-            } break;
-
-            case WM_LBUTTONUP : {
-                PushInputRelease(inputQueue, Input_MouseLeft, 0);
-            } break;
-                    
-            case WM_RBUTTONDOWN : {
-                PushInputPress(inputQueue, Input_MouseRight, 0);
-            } break;
-
-            case WM_RBUTTONUP : {
-                PushInputRelease(inputQueue, Input_MouseRight, 0);
-            } break;
-
-            default : {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
-    }
-}
-
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndLine, int nCndShow) {
     CoInitialize(NULL);
 
@@ -627,7 +469,13 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
     gameMem->running = true;
 
-    InputQueue *inputQueue = &gameMem->inputQueue;
+    InputManager *inputManager = &gameMem->inputManager;
+    AllocateInputManager(inputManager, &gameMem->permanentArena, 32, 4);
+    gameMem->keyboard = &inputManager->devices[0];
+    gameMem->mouse = &inputManager->devices[1];
+
+    AllocateInputDevice(gameMem->keyboard, InputDeviceType_Keyboard, Input_KeyboardDiscreteCount, 0);
+    AllocateInputDevice(gameMem->mouse, InputDeviceType_Mouse, Input_MouseDiscreteCount, Input_MouseAnalogueCount);
 
     // Used for software rendering.
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183376(v=vs.85).aspx
@@ -673,8 +521,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
         timeSinceRender += gameMem->deltaTime;
 
-        ClearInputQueue(inputQueue);
-        WindowsGetInput(inputQueue);
+        ClearInputManager(inputManager);
+        WindowsGetInput(inputManager);
 
         // @TODO: use an actual accumulator
         if (timeSinceRender < FRAME_RATE) {

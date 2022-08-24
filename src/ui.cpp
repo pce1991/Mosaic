@@ -9,7 +9,7 @@ bool InputString(vec2 position, vec2 dimensions, real32 textSize, bool *active, 
     DrawRectScreen(rectPos, dimensions, V4(0.5f));
     //DrawTextScreen(position, textSize, V4(1, 0, 0, 1), str);
 
-    if (InputPressed(Input, Input_MouseLeft)) {
+    if (InputPressed(Game->keyboard, Input_MouseLeft)) {
         *active = true;
     }
 
@@ -21,7 +21,7 @@ bool InputString(vec2 position, vec2 dimensions, real32 textSize, bool *active, 
         }
     }
 
-    if (InputPressed(Input, Input_Return)) {
+    if (InputPressed(Game->keyboard, Input_Return)) {
         *pressedEnter = true;
     }
 
@@ -38,7 +38,7 @@ bool Button(vec2 position, vec2 dimensions, vec4 color, real32 textSize, vec4 te
     rect.max = position + V2(dimensions.x, dimensions.y);
 
     if (PointRectTest(rect, V2(Input->mousePos))) {
-        if (InputPressed(Input, Input_MouseLeft)) {
+        if (InputPressed(Game->mouse, Input_MouseLeft)) {
             return true;
         }
 

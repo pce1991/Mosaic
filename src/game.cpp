@@ -197,7 +197,7 @@ bool ReadConfigFile(char *path) {
 
 void GameInit(GameMemory *gameMem) {
     Game = gameMem;
-    Input = &Game->inputQueue;
+    Input = &Game->inputManager;
 
     AllocateMemoryArena(&Game->permanentArena, Megabytes(256));
     AllocateMemoryArena(&Game->frameMem, Megabytes(32));
@@ -206,10 +206,6 @@ void GameInit(GameMemory *gameMem) {
     AllocateDebugLogNode(Game->log.head, LOG_BUFFER_CAPACITY);
     Game->log.current = Game->log.head;
     Game->log.head->next = NULL;
-
-    // @TODO: super weird and bad we allocate the queue in the game and not the platform because
-    // that's where we know how many devices we have obviously
-    gameMem->inputQueue = AllocateInputQueue(32, 2);
 
     Camera *cam = &gameMem->camera;
     cam->size = 1;
@@ -335,11 +331,11 @@ void WriteSoundSamples(GameMemory *game, int32 sampleCount, real32 *buffer) {
 
 void GameUpdateAndRender(GameMemory *gameMem) {
     
-    UpdateInput(&Game->inputQueue);
+    UpdateInput(&Game->inputManager);
 
-    InputQueue *input = &gameMem->inputQueue;
+    InputManager *input = &gameMem->inputManager;
 
-    if (InputPressed(input, Input_Escape)) {
+    if (InputPressed(Game->keyboard, Input_Escape)) {
         gameMem->running = false;
     }
 
@@ -369,5 +365,5 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     gameMem->frame++;
     ClearMemoryArena(&Game->frameMem);
 
-    ClearInputQueue(input);
+    ClearInputManager(input);
 }
