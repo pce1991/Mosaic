@@ -126,5 +126,8 @@ real32 DeltaTime = 0;
 GameMemory *Game = NULL;
 InputManager *Input = NULL;
 
+InputDevice *Keyboard = NULL;
+InputDevice *Mouse = NULL;
+
 #define ArrayLength(array, type) sizeof(array)/sizeof(type)
 

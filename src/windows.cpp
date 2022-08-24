@@ -477,6 +477,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     AllocateInputDevice(gameMem->keyboard, InputDeviceType_Keyboard, Input_KeyboardDiscreteCount, 0);
     AllocateInputDevice(gameMem->mouse, InputDeviceType_Mouse, Input_MouseDiscreteCount, Input_MouseAnalogueCount);
 
+    Keyboard = gameMem->keyboard;
+    Mouse = gameMem->mouse;
+
     // Used for software rendering.
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183376(v=vs.85).aspx
     BITMAPINFO bitmapInfo;
