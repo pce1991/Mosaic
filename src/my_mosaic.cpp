@@ -3,26 +3,53 @@ void MyMosaicInit() {
     
 }
 
-int32 x = 0;
+float32 red = 0.0f;
+int32 xPos = 0;
+
+bool toggleBlue = true;
 
 void MyMosaicUpdate() {
-    SetTileColor(0, 0, 1, 0, 0);
 
-    if (InputHeld(Game->keyboard, Input_Space)) {
-        SetTileColor(0, 0, 1, 1, 0);
+    // This is an example of a function that returns a value
+    // which means we can store that value in a variable.
+    bool pressed = InputPressed(Keyboard, Input_Space);
+    if (pressed) {
+        red = red + 0.1f;
     }
 
-    if (InputHeldSeconds(Game->keyboard, Input_Space, 1.0f)) {
-        SetTileColor(0, 0, 1, 1, 1);
-    }
+    if (InputPressed(Keyboard, Input_Tab)) {
+        // if (toggleBlue) {
+        //     toggleBlue = false;
+        // }
+        // else if (!toggleBlue) {
+        //     toggleBlue = true;
+        // }
 
-    if (InputPressed(Game->keyboard, Input_RightArrow)) {
-        x++;
-    }
+        // if (toggleBlue) {
+        //     toggleBlue = false;
+        // }
+        // else {
+        //     toggleBlue = true;
+        // }
 
-    if (InputPressed(Game->mouse, Input_MouseLeft)) {
-        x++;
+        toggleBlue = !toggleBlue;
     }
     
-    SetTileColor(x, 0, 1, 1, 0);
+    if (InputPressed(Keyboard, Input_RightArrow)) {
+        xPos = xPos + 1;
+    }
+
+    if (xPos > 15) {
+        //xPos = 15;
+        xPos = 0;
+    }
+
+    // What if we wanted to make sure that xPos never leaves our grid
+    
+    if (toggleBlue) {
+        SetTileColor(xPos, 0, red, 0.2f, 0.8f);
+    }
+    else {
+        SetTileColor(xPos, 0, red, 0.2f, 0.2f);
+    }
 }

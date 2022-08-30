@@ -1,0 +1,8 @@
+
+void MyInit() {
+    
+}
+
+void MyGameUpdate() {
+    
+}

@@ -28,30 +28,22 @@ void MyInit() {
 }
 
 
-vec2 position = V2(1, 4);
+vec2 position = V2(4, 0);
 
 vec2 scale = V2(1, 1);
-
-vec2 lemonPosition = V2(0, 0);
 
 void MyGameUpdate() {
     // This sets the background color. 
     ClearColor(RGB(0.0f, 0.0f, 0.0f));
-    
-    // version that doesnt take an angle.
-    DrawSprite(V2(0), V2(4, 4), 0, &Data->sprite2);
 
-    if (InputHeld(Input, Input_Up)) {
-        lemonPosition.y += 2 * Game->deltaTime;
+    if (InputHeld(Keyboard, Input_UpArrow)) {
+        position.y += 2 * Game->deltaTime;
     }
 
     // position in pixels
     vec2 mousePos = Input->mousePosNormSigned;
     mousePos.x = mousePos.x * 8;
     mousePos.y = mousePos.y * 4.5f;
-    DrawSprite(mousePos, V2(0.5f, 0.5f), &lemonSprite);
-
-    DrawRect(V2(0, 0), V2(1, 1), RGB(1.0f, 0.3f, 0.3f));
 
     //DrawRect(V2(-2, -2), scale, RGB(0, 1, 1));
 
@@ -60,7 +52,7 @@ void MyGameUpdate() {
     //DrawCoolRect(V2(0, 0), V2(1, 1), 0, RGB(0.0f, 0.3f, 0.3f));
 
 
-    if (InputPressed(Input, Input_Space)) {
+    if (InputPressed(Keyboard, Input_Space)) {
         PlaySound(&Game->audioPlayer, Data->sound, 1.0f, true);
     }
     
@@ -80,4 +72,10 @@ void MyGameUpdate() {
     // The width of our screen is 16 (-8 to 8) (left to right)
     // The height of our screen is 9 (-4.5 to 4.5) (bottom to top)
 
+    // version that doesnt take an angle.
+    DrawSprite(V2(0), V2(4, 4), DegToRad(90), &Data->sprite2);
+
+    DrawSprite(mousePos, V2(0.5f, 0.5f), &lemonSprite);
+    DrawRect(V2(0, 0), V2(1, 1), RGB(1.0f, 0.3f, 0.3f));
+    DrawSprite(position, V2(0.5f, 0.5f), &Data->sprite);
 }

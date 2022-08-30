@@ -1,0 +1,9 @@
+windows.cpp
+src\windows.cpp(48): warning C4005: 'ASSERT': macro redefinition
+C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\Mstcpip.h(83): note: see previous definition of 'ASSERT'
+C:\Users\pce\Projects\Mosaic\src\math/color.h(2): warning C4005: 'RGB': macro redefinition
+C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\um\wingdi.h(1856): note: see previous definition of 'RGB'
+C:\Users\pce\Projects\Mosaic\src\mosaic.cpp(361): error C2065: 'Tile': undeclared identifier
+C:\Users\pce\Projects\Mosaic\src\mosaic.cpp(361): error C2065: 't': undeclared identifier
+C:\Users\pce\Projects\Mosaic\src\mosaic.cpp(362): error C2065: 't': undeclared identifier
+C:\Users\pce\Projects\Mosaic\src\mosaic.cpp(363): error C2065: 't': undeclared identifier

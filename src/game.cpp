@@ -296,16 +296,6 @@ void GameInit(GameMemory *gameMem) {
         };
         CompileShader(&gameMem->textShader, ARRAY_LENGTH(char *, uniforms), uniforms);
     }
-
-    {
-        LoadShader("shaders/single_light.vert", "shaders/single_light.frag", &gameMem->singleLight);
-        const char *uniforms[] = {
-                                  "model",
-                                  "viewProjection",
-                                  "color",
-        };
-        CompileShader(&gameMem->singleLight, 3, uniforms);
-    }
 #endif
 
     AudioPlayerInit(&Game->audioPlayer, &Game->permanentArena);
