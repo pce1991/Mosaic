@@ -6,6 +6,13 @@ struct MTile{
     vec4 color;
 };
 
+struct MosaicText {
+    vec2 cursor;
+
+    real32 size;
+    vec4 color;
+};
+
 struct MosaicMem {
     // @TODO: separate this stuff out into internal state that the user doesnt touch
     real32 lineThickness;
@@ -32,6 +39,8 @@ struct MosaicMem {
     
     MTile*hoveredTile;
     MTile*hoveredTilePrev;
+    
+    MosaicText text;
 
     void *myData;
 };
@@ -88,10 +97,17 @@ void SetGridColor(real32 r, real32 g, real32 b);
 
 bool TilePositionsOverlap(vec2 a, vec2 b);
 bool TilePositionsOverlap(vec2i a, vec2i b);
+bool TilePositionsOverlap(real32 ax, real32 ay, real32 bx, real32 by);
+bool TilePositionsOverlap(int32 ax, int32 ay, int32 bx, int32 by);
 
 real32 GetTileCenter(real32 n);
 
 void DrawTextTop(vec4 color, const char *fmt, ...);
+
+// The origin of the text will be at the bottom left of the tile position you give.
+void DrawTextTile(vec2 position, float32 size, vec4 color, const char *fmt, ...);
+
+void PushText(const char *fmt, ...);
 
 MTile*GetHoveredTile();
 

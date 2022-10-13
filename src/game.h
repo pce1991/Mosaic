@@ -10,6 +10,7 @@
 
 #include "my_memory.h"
 
+#include "hashtable.h"
 #include "dynamic_array.h"
 
 

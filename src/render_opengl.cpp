@@ -724,6 +724,19 @@ void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, c
     va_end(args);
 }
 
+
+void DrawText(vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    
+    DrawText_(&Game->monoFont, pos, size, color, false, str, INFINITY, center, NULL);
+
+    va_end(args);
+}
+
 void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
@@ -736,6 +749,18 @@ void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fm
     va_end(args);
 }
 
+void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    
+    DrawText_(&Game->monoFont, pos, size, color, false, str, INFINITY, false, NULL);
+
+    va_end(args);
+}
+
 void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, real32 width, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
@@ -743,7 +768,6 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    // @GACK:
     size *= Game->screenWidth;
 
     pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
@@ -760,12 +784,27 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    // @GACK:
     size *= Game->screenWidth;
 
     pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
 
     DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, center, NULL);
+    
+    va_end(args);
+}
+
+void DrawTextScreen(vec2 pos, real32 size, vec4 color, bool center, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    size *= Game->screenWidth;
+
+    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+
+    DrawText_(&Game->monoFont, V2(pos.x, pos.y), size, color, true, str, INFINITY, center, NULL);
     
     va_end(args);
 }
@@ -782,6 +821,22 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const ch
     pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
 
     DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, false, NULL);
+    
+    va_end(args);
+}
+
+void DrawTextScreen(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+    
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    size *= Game->screenWidth;
+
+    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+
+    DrawText_(&Game->monoFont, V2(pos.x, pos.y), size, color, true, str, INFINITY, false, NULL);
     
     va_end(args);
 }

@@ -430,7 +430,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     AdjustWindowRectEx(&windowRect, dwStyle, false, dwExStyle);
     
     SetWindowPos(window, HWND_NOTOPMOST,
-                 64, 64,
+                 0, 0,
                  windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
                  SWP_NOZORDER);
     ShowWindow(window, SW_SHOW);

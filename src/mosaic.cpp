@@ -537,6 +537,42 @@ void DrawTextTop(vec4 color, const char *fmt, ...) {
     va_end(args);
 }
 
+void DrawTextTile(vec2 pos, float32 size, vec4 color, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    vec2 floorPos = V2(floorf(pos.x), -floorf(pos.y));
+    
+    vec2 position = Mosaic->gridOrigin + floorPos + V2(0.0f, -1.0f);
+    DrawText(&Game->monoFont, position, size, color, false, str);
+
+    va_end(args);
+}
+
+void PushText(const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    MosaicText *text = &Mosaic->text;
+
+    DrawTextScreen(&Game->monoFont, text->cursor, text->size, text->color, false, str);
+
+    FontTable *font = &Game->monoFont;
+
+    text->cursor.y += font->lineHeight * text->size;
+}
+
+void SetTextCursor(real32 x, real32 y) {
+    MosaicText *text = &Mosaic->text;
+    text->cursor.x = x;
+    text->cursor.y = y;
+}
 
 void MosaicRender() {
     MTile*tiles = Mosaic->tiles;

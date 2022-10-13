@@ -1,55 +1,28 @@
 
+
 void MyMosaicInit() {
-    
+    SetMosaicGridSize(16, 16);
+
 }
-
-float32 red = 0.0f;
-int32 xPos = 0;
-
-bool toggleBlue = true;
 
 void MyMosaicUpdate() {
+    ClearTiles(0, 0, 0);
 
-    // This is an example of a function that returns a value
-    // which means we can store that value in a variable.
-    bool pressed = InputPressed(Keyboard, Input_Space);
-    if (pressed) {
-        red = red + 0.1f;
-    }
+    // The position will always clamp to the bottom left corner of whatever tile
+    // the position is inside.
+    DrawTextTile(V2(0, 0), 0.3f, RGB(1, 1, 1), "Tile text");
+    DrawTextTile(V2(0, 1), 0.3f, RGB(1, 1, 1), "Tile text");
+    DrawTextTile(V2(1, 2), 0.3f, RGB(1, 1, 1), "Tile text");
 
-    if (InputPressed(Keyboard, Input_Tab)) {
-        // if (toggleBlue) {
-        //     toggleBlue = false;
-        // }
-        // else if (!toggleBlue) {
-        //     toggleBlue = true;
-        // }
+    // @NOTE: we can draw text at a tile position "off" the screen,
+    DrawTextTile(V2(16, 4), 0.3f, RGB(1, 1, 1), "Tile text");
+    DrawTextTile(V2(17, 5), 0.3f, RGB(1, 1, 1), "Tile text");
 
-        // if (toggleBlue) {
-        //     toggleBlue = false;
-        // }
-        // else {
-        //     toggleBlue = true;
-        // }
-
-        toggleBlue = !toggleBlue;
-    }
+    // works in normalized space where screen coordinates go from 0 to 1
+    DrawTextScreen(V2(0.5f, 0.5f), 0.02f, RGB(1, 0, 0), "Screen text");
     
-    if (InputPressed(Keyboard, Input_RightArrow)) {
-        xPos = xPos + 1;
-    }
-
-    if (xPos > 15) {
-        //xPos = 15;
-        xPos = 0;
-    }
-
-    // What if we wanted to make sure that xPos never leaves our grid
-    
-    if (toggleBlue) {
-        SetTileColor(xPos, 0, red, 0.2f, 0.8f);
-    }
-    else {
-        SetTileColor(xPos, 0, red, 0.2f, 0.2f);
-    }
+    SetTileColor(0, 0, 0.0f, 0.5f, 0.8f);
+    SetTileColor(0, 1, 0.0f, 0.5f, 0.8f);
+    SetTileColor(1, 2, 0.0f, 0.5f, 0.8f);
 }
+

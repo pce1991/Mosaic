@@ -153,6 +153,7 @@ SoundHandle PlaySound(AudioPlayer *player, SoundClip clip, real32 volume, bool l
     int32 index;
     if (PopBack(&player->freeList, &index)) {
         sound = &player->sounds[index];
+        *sound = {};
     }
     else {
         sound = PushBackPtr(&player->sounds);
