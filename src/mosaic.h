@@ -106,6 +106,7 @@ void DrawTextTop(vec4 color, const char *fmt, ...);
 
 // The origin of the text will be at the bottom left of the tile position you give.
 void DrawTextTile(vec2 position, float32 size, vec4 color, const char *fmt, ...);
+void DrawTextTile(vec2 pos, float32 size, vec4 color, bool centered, const char *fmt, ...);
 
 void PushText(const char *fmt, ...);
 

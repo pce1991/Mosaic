@@ -552,6 +552,21 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, const char *fmt, ...) {
     va_end(args);
 }
 
+void DrawTextTile(vec2 pos, float32 size, vec4 color, bool center, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    vec2 floorPos = V2(floorf(pos.x), -floorf(pos.y));
+    
+    vec2 position = Mosaic->gridOrigin + floorPos + V2(0.0f, -1.0f);
+    DrawText(&Game->monoFont, position, size, color, center, str);
+
+    va_end(args);
+}
+
 void PushText(const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
@@ -608,6 +623,7 @@ void MosaicUpdateInternal() {
     
     Mosaic->hoveredTilePrev = Mosaic->hoveredTile;
     Mosaic->hoveredTile= GetHoveredTile();
+    ClearTiles(V4(0));
 }
 
 // This function gets called by our game engine every frame.
