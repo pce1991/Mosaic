@@ -47,7 +47,7 @@
 // @NOTE: there are only 32 buffers for text rendering so on one frame you can only have
 //        32 calls to DrawText(). You can increase this number if you're willing to allocate
 //        more memory.
-#define GlyphBufferCount 32
+#define GlyphBufferCount 256
 #define GlyphBufferCapacity 256
 
 struct GameMemory {
