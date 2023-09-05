@@ -1,4 +1,5 @@
 
+Maybe bring back DynamicArrays because they're easier to see in the debugger?
 
 * Pass in file to compile
   Much easier to check out different files if they don't have to mess with mosaic.cpp
@@ -85,3 +86,5 @@
   Take screenshot. A) it'll help the book, B) it'll be cool for students.
 * OSX
   Metal
+
+  Maybe just start using SDL? It does make things trickier when we get to platform land.

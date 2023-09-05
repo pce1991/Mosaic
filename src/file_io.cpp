@@ -36,6 +36,27 @@ bool OpenFileForRead(char *path, FileHandle *file, MAllocator *alloc) {
     return true;
 }
 
+bool OpenFileForRead(char *path, FileHandle *file) {
+    file->file = fopen(path, "rb");
+    file->mode = FileMode_Read;
+    
+    if (file->file == NULL) {
+        return false;
+    }
+
+    fseek(file->file, 0, SEEK_END);
+
+    file->size = ftell(file->file);
+    file->offset = 0;
+
+    fseek(file->file, 0, SEEK_SET);
+
+    file->data = (u8 *)malloc(file->size);
+    fread(file->data, 1, file->size, file->file);
+    
+    return true;
+}
+
 void CloseFile(FileHandle *file) {
     if (file->mode == FileMode_Write) {
         fwrite(file->data, 1, file->offset, file->file);
@@ -96,12 +117,42 @@ void ReadReal32(FileHandle *file, real32 *ptr) {
 }
 
 
+inline bool ConsumeByteMatching(FileHandle *handle, char c) {
+    if (((uint8 *)handle->data)[handle->offset] == c) {
+        handle->offset++;
+        return true;
+    }
+
+    return false;
+}
+
+
+inline bool ConsumeBytesMatching(FileHandle *handle, uint8 *bytes, uint32 len) {
+    uint32 prevOffset = handle->offset;
+    
+    for (int i = 0; i < len; i++) {
+        if (!ConsumeByteMatching(handle, bytes[i])) {
+            handle->offset = prevOffset;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+inline bool ConsumeBytesMatching(FileHandle *handle, const char *str) {
+    int32 length = strlen(str);
+    return ConsumeBytesMatching(handle, (uint8 *)str, length);
+}
+
 
 // We allocate space to write into, but only write that data into the actual file when we close.
 // This minimizes disk access, but it does mean we want to know our maximum size up front.
 bool OpenFileForWrite(char *path, FileHandle *file, MAllocator *alloc, u32 size) {
+    *file = {};
     file->file = fopen(path, "wb");
     file->mode = FileMode_Write;
+    file->offset = 0;
     
     if (file->file == NULL) {
         return false;
@@ -109,6 +160,24 @@ bool OpenFileForWrite(char *path, FileHandle *file, MAllocator *alloc, u32 size)
 
     file->size = size;
     file->data = (u8 *)alloc->allocate(alloc, file->size);
+    
+    return true;
+}
+
+// We allocate space to write into, but only write that data into the actual file when we close.
+// This minimizes disk access, but it does mean we want to know our maximum size up front.
+bool OpenFileForWrite(char *path, FileHandle *file, u32 size) {
+    *file = {};
+    file->file = fopen(path, "wb");
+    file->mode = FileMode_Write;
+    file->offset = 0;
+    
+    if (file->file == NULL) {
+        return false;
+    }
+
+    file->size = size;
+    file->data = (u8 *)malloc(file->size);
     
     return true;
 }

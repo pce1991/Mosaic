@@ -85,10 +85,6 @@ void DynamicArrayEnsureCapacity(DynamicArray<T> *array, uint32 capacity) {
     
     if (array->chunkCount * array->elementsPerChunk < capacity) {
         uint32 chunksToAdd = ((capacity / array->elementsPerChunk) - array->chunkCount) + 1;
-        
-        if (array->chunkCount > 0) {
-            chunksToAdd++;
-        }
 
         for (int i = 0; i < chunksToAdd; i++) {
             DynamicArrayAllocateChunk(array);
