@@ -74,7 +74,7 @@ void DynamicArrayAllocateChunk(DynamicArray<T> *array) {
         array->tailChunk = chunk->nextChunk;
     }
 
-     
+    array->chunkCount++;
 }
 
 template <typename T>
@@ -84,7 +84,7 @@ void DynamicArrayEnsureCapacity(DynamicArray<T> *array, uint32 capacity) {
     ASSERT(array->elementsPerChunk > 0);
     
     if (array->chunkCount * array->elementsPerChunk < capacity) {
-        uint32 chunksToAdd = ((capacity / array->elementsPerChunk) - array->chunkCount);
+        uint32 chunksToAdd = ((capacity / array->elementsPerChunk) - array->chunkCount) + 1;
         
         if (array->chunkCount > 0) {
             chunksToAdd++;
