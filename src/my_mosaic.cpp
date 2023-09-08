@@ -1,3 +1,5 @@
+// Manual can be found here:
+// https://github.com/pce1991/MosaicBook#readme
 
 void MyMosaicInit() {
     SetMosaicGridSize(16, 16);

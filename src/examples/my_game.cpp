@@ -1,3 +1,5 @@
+// Manual can be found here:
+// https://github.com/pce1991/MosaicBook#readme
 
 struct MyData {
     Sprite sprite;
@@ -6,25 +8,20 @@ struct MyData {
     SoundClip sound;
 };
 
-MyData *Data = NULL;
+MyData Data = {};
 
 Sprite lemonSprite;
 
 void MyInit() {
-    Game->myData = malloc(sizeof(MyData));
-    memset(Game->myData, 0, sizeof(MyData));
-
-    Data = (MyData *)Game->myData;
-
     // All sprites must be png files
     // You provide the path to the png like "directory/to/my/file/file_name.png"
     // In this case I have put the pngs inside the "data" directory.
-    LoadSprite(&Data->sprite, "data/galaga_ship.png");
-    LoadSprite(&Data->sprite2, "data/van_gogh.png");
+    LoadSprite(&Data.sprite, "data/galaga_ship.png");
+    LoadSprite(&Data.sprite2, "data/van_gogh.png");
 
     LoadSprite(&lemonSprite, "data/bad_lemon.png");
 
-    LoadSoundClip("data/sfx/flute_breathy_c4.wav", &Data->sound);
+    LoadSoundClip("data/sfx/flute_breathy_c4.wav", &Data.sound);
 }
 
 
@@ -53,7 +50,7 @@ void MyGameUpdate() {
 
 
     if (InputPressed(Keyboard, Input_Space)) {
-        PlaySound(&Game->audioPlayer, Data->sound, 1.0f, true);
+        PlaySound(&Game->audioPlayer, Data.sound, 1.0f, true);
     }
     
     // scale.x -= 0.2f * Game->deltaTime;
@@ -73,9 +70,9 @@ void MyGameUpdate() {
     // The height of our screen is 9 (-4.5 to 4.5) (bottom to top)
 
     // version that doesnt take an angle.
-    DrawSprite(V2(0), V2(4, 4), DegToRad(90), &Data->sprite2);
+    DrawSprite(V2(0), V2(4, 4), DegToRad(90), &Data.sprite2);
 
     DrawSprite(mousePos, V2(0.5f, 0.5f), &lemonSprite);
     DrawRect(V2(0, 0), V2(1, 1), RGB(1.0f, 0.3f, 0.3f));
-    DrawSprite(position, V2(0.5f, 0.5f), &Data->sprite);
+    DrawSprite(position, V2(0.5f, 0.5f), &Data.sprite);
 }
