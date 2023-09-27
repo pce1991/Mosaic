@@ -103,6 +103,7 @@ bool TilePositionsOverlap(int32 ax, int32 ay, int32 bx, int32 by);
 real32 GetTileCenter(real32 n);
 
 void DrawTextTop(vec4 color, const char *fmt, ...);
+void DrawTextTop(vec4 color, real32 scale, const char *fmt, ...);
 
 // The origin of the text will be at the bottom left of the tile position you give.
 void DrawTextTile(vec2 position, float32 size, vec4 color, const char *fmt, ...);
