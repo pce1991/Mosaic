@@ -74,7 +74,7 @@ void DynamicArrayAllocateChunk(DynamicArray<T> *array) {
         array->tailChunk = chunk->nextChunk;
     }
 
-     
+    array->chunkCount++;
 }
 
 template <typename T>
