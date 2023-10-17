@@ -537,6 +537,19 @@ void DrawTextTop(vec4 color, const char *fmt, ...) {
     va_end(args);
 }
 
+void DrawTextTop(vec4 color, real32 scale, const char *fmt, ...) {
+    va_list args;
+    va_start (args, fmt);
+
+    char str[GlyphBufferCapacity];
+    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.1f);
+    DrawText(&Game->monoFont, position, 0.35f * scale, color, true, str);
+
+    va_end(args);
+}
+
 void DrawTextTile(vec2 pos, float32 size, vec4 color, const char *fmt, ...) {
     va_list args;
     va_start (args, fmt);
