@@ -1470,3 +1470,9 @@ vec3 Ceilv(vec3 a) {
     return result;
 }
 
+vec2 Rotate(real32 angle, vec2 v) {
+    vec2 result;
+    result.x = cosf(angle) * v.x - sinf(angle) * v.y;
+    result.y = sinf(angle) * v.x + cosf(angle) * v.y;
+    return result;
+}
