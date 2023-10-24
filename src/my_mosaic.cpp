@@ -40,6 +40,8 @@ struct Goal {
 };
 
 const int32 BallSize = 3;
+const real32 BallMinSpeed = 14;
+
 
 struct Ball {
     vec2 position;
@@ -59,20 +61,22 @@ struct Axel {
 const int32 AxelCount = 3;
 
 struct Team {
+    int32 score;
+    
     vec4 color;
     Axel axels[AxelCount];
 };
 
 struct GameMem {
     Player player;
-    
+
     Team teams[2];
     Goal goals[2];
 
     Ball ball;
 };
 
-const int32 ArenaWidth = 128;
+const int32 ArenaWidth = 180;
 const int32 ArenaHeight = 80;
 
 struct GameMem Foose = {};
@@ -93,7 +97,7 @@ void StartRound() {
 
     ball->position = V2(ArenaWidth / 2, ArenaHeight / 2);
     
-    real32 speed = 16;
+    real32 speed = 17;
     ball->velocity = Rotate(DegToRad(RandfRange(-30, 30)), V2(-1, 0)) * speed;
 
     for (int t = 0; t < 2; t++) {
@@ -116,16 +120,27 @@ void MyMosaicInit() {
 
     vec2 center = V2(ArenaWidth / 2, ArenaHeight / 2);
 
-    int32 AxelColumns[] = {
-                           // offset 10 from the center
-                           54,
-                           34,
-                           14,
+    int32 AxelColumns[6];
 
-                           74,
-                           94,
-                           104,
-    };
+    AxelColumns[0] = (ArenaWidth / 2) - 20;
+    AxelColumns[1] = AxelColumns[0] - 30;
+    AxelColumns[2] = AxelColumns[1] - 30;
+
+    AxelColumns[3] = (ArenaWidth / 2) + 20;
+    AxelColumns[4] = AxelColumns[3] + 30;
+    AxelColumns[5] = AxelColumns[4] + 30;
+
+    {
+        Goal *goal = &Foose.goals[0];
+        goal->position.x = 0;
+        goal->position.y = (ArenaHeight - GoalHeight) / 2;
+    }
+
+    {
+        Goal *goal = &Foose.goals[1];
+        goal->position.x = ArenaWidth - GoalWidth;
+        goal->position.y = (ArenaHeight - GoalHeight) / 2;
+    }
     
     {
         Team *team = &Foose.teams[0];
@@ -400,6 +415,16 @@ void MyMosaicUpdate() {
     {
         Ball *ball = &Foose.ball;
 
+        real32 damping = 0.2;
+        ball->velocity = ball->velocity - (ball->velocity * damping * DeltaTime);
+
+        real32 speed = Length(ball->velocity);
+
+        // so our ball never slows to a complete stop.
+        if (speed < BallMinSpeed) {
+            ball->velocity = Normalize(ball->velocity) * BallMinSpeed;
+        }
+        
         ball->position = ball->position + ball->velocity * DeltaTime;
 
         // check for collisions
@@ -408,15 +433,23 @@ void MyMosaicUpdate() {
 
         if (min.y < 0) {
             ball->velocity.y *= -1;
+
+            ball->position.y += (0 - min.y);
         }
         else if (max.y >= ArenaHeight) {
             ball->velocity.y *= -1;
+
+            ball->position.y += (ArenaHeight - max.y);
         }
         else if (min.x < 0) {
             ball->velocity.x *= -1;
+
+            ball->position.x += (0 - min.x);
         }
         else if (max.x >= ArenaWidth) {
             ball->velocity.x *= -1;
+
+            ball->position.x += (ArenaWidth - max.x);
         }
 
         // check collision against player
@@ -439,25 +472,42 @@ void MyMosaicUpdate() {
                     if (TestAABBAABB(min, max, pieceMin, pieceMax, &dir)) {
                         ball->position = ball->position + dir;
 
-                        real32 force = 1.2f;
+                        real32 force = 8.0f;
                         if (dir.x < 0) {
                             ball->velocity.x *= -1;
-                            //ball->velocity.x *= force;
                         }
                         else if (dir.x > 0) {
                             ball->velocity.x *= -1;
-                            //ball->velocity.x *= force;
                         }
                         else if (dir.y < 0) {
                             ball->velocity.y *= -1;
-                            //ball->velocity.y *= force;
                         }
                         else if (dir.x > 0) {
                             ball->velocity.y *= -1;
-                            //ball->velocity.y *= force;
                         }
+
+                        ball->velocity = ball->velocity + (dir * force);
                     }
                 }
+            }
+        }
+
+        for (int i = 0; i < 2; i++) {
+            Goal *goal = &Foose.goals[i];
+
+            vec2 goalMin = goal->position;
+            vec2 goalMax = goalMin + V2(GoalWidth, GoalHeight);
+
+            vec2 dir;
+            if (TestAABBAABB(min, max, goalMin, goalMax, &dir)) {
+                if (i == 0) {
+                    Foose.teams[1].score++;
+                }
+                else {
+                    Foose.teams[0].score++;
+                }
+
+                StartRound();
             }
         }
     }
@@ -468,7 +518,12 @@ void MyMosaicUpdate() {
     }
 
     RenderTeam(&Foose.teams[0]);
+    //RenderTeam(&Foose.teams[1]);
+    
     DrawGoal(&Foose.goals[0]);
+    DrawGoal(&Foose.goals[1]);
+
+    DrawTextTile(V2(ArenaWidth / 2, ArenaHeight + 3), 2.0f, V4(1), true, "Score %d | %d", Foose.teams[0].score, Foose.teams[1].score);
 
     //RenderTeam(&Foose.teams[1]);
 
