@@ -3,12 +3,12 @@
 
 // @DESIGN: ball passes thru you unless you type the words which activates collision
 
-// @TODO: if you input things incorrectly then we reset
-
-//@TODO: definite piece position as offset on axel so that they're always consistent and we don't
-// get the jitter on some pieces
-
 // @TODO: what if game was about keeping the ball from reaching either side rather than scoring a goal?
+
+// @TODO: main menu
+
+// @BUG: ball can get really fast if the goalie hits the ball behind it, idk
+// @BUG: looks like ball counts as scored too early on the right goal? 
 
 
 const int32 InputLength = 8;
@@ -40,7 +40,7 @@ struct Goal {
 };
 
 const int32 BallSize = 3;
-const real32 BallMinSpeed = 14;
+const real32 BallMinSpeed = 19;
 
 
 struct Ball {
@@ -61,6 +61,7 @@ struct Axel {
 const int32 AxelCount = 3;
 
 struct Team {
+    bool isPlayer;
     int32 score;
     
     vec4 color;
@@ -144,7 +145,7 @@ void MyMosaicInit() {
     
     {
         Team *team = &Foose.teams[0];
-        *team = {};
+        team->isPlayer = true;
         
         team->color = V4(0.7f, 0.2f, 0.0f, 1.0f);
 
@@ -162,6 +163,8 @@ void MyMosaicInit() {
             vec2 cursor = V2(0, 0);
             for (int i = 0; i < 3; i++) {
                 axel->pieces[i].localPosition = cursor;
+                axel->pieces[i].collisionActive = false;
+                axel->pieces[i].timeCollisionActivated = 0;
 
                 cursor.y += strideY;
             }
@@ -181,6 +184,8 @@ void MyMosaicInit() {
             vec2 cursor = V2(0);
             for (int i = 0; i < 3; i++) {
                 axel->pieces[i].localPosition = cursor;
+                axel->pieces[i].collisionActive = false;
+                axel->pieces[i].timeCollisionActivated = 0;
 
                 cursor.y += strideY;
             }
@@ -194,6 +199,69 @@ void MyMosaicInit() {
             axel->position = V2(AxelColumns[2], ArenaHeight / 2);
 
             axel->pieces[0].localPosition = V2(0);
+            axel->pieces[0].collisionActive = false;
+            axel->pieces[0].timeCollisionActivated = 0;
+
+        }
+    }
+
+    {
+        Team *team = &Foose.teams[1];
+        
+        team->color = V4(0.0f, 0.2f, 0.7f, 1.0f);
+
+        {
+            Axel *axel = &team->axels[0];
+            axel->pieceCount = 3;
+            axel->pieces = (Piece*)malloc(sizeof(Piece) * axel->pieceCount);
+
+            int32 offsetY = 20;
+            int32 trimmedHeight = ArenaHeight - offsetY;
+            int32 strideY = trimmedHeight / 3;
+            
+            axel->position = V2(AxelColumns[3], offsetY);
+
+            vec2 cursor = V2(0, 0);
+            for (int i = 0; i < 3; i++) {
+                axel->pieces[i].localPosition = cursor;
+                axel->pieces[i].collisionActive = false;
+                axel->pieces[i].timeCollisionActivated = 0;
+
+                cursor.y += strideY;
+            }
+        }
+
+        {
+            Axel *axel = &team->axels[1];
+            axel->pieceCount = 2;
+            axel->pieces = (Piece*)malloc(sizeof(Piece) * axel->pieceCount);
+
+            int32 offsetY = 20;
+            int32 trimmedHeight = ArenaHeight - offsetY;
+            int32 strideY = trimmedHeight / 2;
+
+            axel->position = V2(AxelColumns[4], offsetY);
+            
+            vec2 cursor = V2(0);
+            for (int i = 0; i < 3; i++) {
+                axel->pieces[i].localPosition = cursor;
+                axel->pieces[i].collisionActive = false;
+                axel->pieces[i].timeCollisionActivated = 0;
+                
+                cursor.y += strideY;
+            }
+        }
+
+        {
+            Axel *axel = &team->axels[2];
+            axel->pieceCount = 1;
+            axel->pieces = (Piece*)malloc(sizeof(Piece) * axel->pieceCount);
+
+            axel->position = V2(AxelColumns[5], ArenaHeight / 2);
+
+            axel->pieces[0].localPosition = V2(0);
+            axel->pieces[0].collisionActive = false;
+            axel->pieces[0].timeCollisionActivated = 0;
         }
     }
 
@@ -228,8 +296,10 @@ void RenderTeam(Team *team) {
     for (int a = 0; a < AxelCount; a++) {
         Axel *axel = &team->axels[a];
 
-        vec2 textPos = V2(axel->position.x, 0);
-        DrawTextTile(textPos, 2.0f, V4(1), axel->string);
+        if (team->isPlayer) {
+            vec2 textPos = V2(axel->position.x, 0);
+            DrawTextTile(textPos, 2.0f, V4(1), axel->string);
+        }
 
         for (int j = 0; j < axel->pieceCount; j++) {
             Piece *piece = &axel->pieces[j];
@@ -292,7 +362,7 @@ void MyMosaicUpdate() {
                 Axel *axel = &team->axels[a];
 
                 // activate collision
-                {
+                if (team->isPlayer) {
                     int32 axelStringLength = 0;
 
                     for (int32 c = 0; c < InputLength; c++) {
@@ -333,6 +403,7 @@ void MyMosaicUpdate() {
 
                 int32 closestPieceIndex = -1;
                 real32 closestY = 999999;
+                real32 closestX = 999999;
                 real32 dirY = 0;
 
                 // find which piece is closest to the ball along the y axis and move to get it closer
@@ -340,6 +411,7 @@ void MyMosaicUpdate() {
                     Piece *piece = &axel->pieces[i];
 
                     real32 yDiff = ball->position.y - piece->worldPosition.y;
+                    real32 xDiff = ball->position.x - piece->worldPosition.x;
 
                     if (Abs(yDiff) < closestY) {
                         closestY = Abs(yDiff);
@@ -353,11 +425,36 @@ void MyMosaicUpdate() {
 
                         closestPieceIndex = i;
                     }
+
+                    // don't check abs because we care about 
+                    if (xDiff < closestX) {
+                        closestX = xDiff;
+                    }
                 }
 
                 Print("Closest piece %d", closestPieceIndex);
 
-                real32 speed = 10;
+                if (!team->isPlayer) {
+                    if (closestX < 0 && closestX > -5) {
+                        real32 cooldown = 2.0f;
+                        real32 timeSince = Time - axel->pieces[0].timeCollisionActivated;
+
+                        if (timeSince >= cooldown) {
+                            for (int32 i = 0; i < axel->pieceCount; i++) {
+                                Piece *piece = &axel->pieces[i];
+                                piece->collisionActive = true;
+                                piece->timeCollisionActivated = Time;
+                            }
+                        }
+                    }
+                }
+
+                real32 speed = 12;
+
+                if (!team->isPlayer) {
+                    speed = 6 + (4 * ((sinf(Time * 0.5f) + 1) * 0.5f));
+                }
+
                 axel->velocity = V2(0, dirY * speed);
                 axel->position.y += axel->velocity.y * DeltaTime;
 
@@ -472,7 +569,7 @@ void MyMosaicUpdate() {
                     if (TestAABBAABB(min, max, pieceMin, pieceMax, &dir)) {
                         ball->position = ball->position + dir;
 
-                        real32 force = 8.0f;
+                        real32 force = 12.0f;
                         if (dir.x < 0) {
                             ball->velocity.x *= -1;
                         }
@@ -486,7 +583,13 @@ void MyMosaicUpdate() {
                             ball->velocity.y *= -1;
                         }
 
-                        ball->velocity = ball->velocity + (dir * force);
+                        // compare the centers to each other
+                        vec2 playerCenter = Lerp(pieceMin, pieceMax, 0.5f);
+                        vec2 ballCenter = Lerp(min, max, 0.5f);
+
+                        vec2 kickDir = Normalize(ballCenter - playerCenter);
+
+                        ball->velocity = ball->velocity + (kickDir * force);
                     }
                 }
             }
@@ -518,7 +621,7 @@ void MyMosaicUpdate() {
     }
 
     RenderTeam(&Foose.teams[0]);
-    //RenderTeam(&Foose.teams[1]);
+    RenderTeam(&Foose.teams[1]);
     
     DrawGoal(&Foose.goals[0]);
     DrawGoal(&Foose.goals[1]);
