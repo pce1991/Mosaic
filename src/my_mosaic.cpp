@@ -10,9 +10,6 @@
 
 // @TODO: what if game was about keeping the ball from reaching either side rather than scoring a goal?
 
-// @TODO: wth is the ball's y position jittering? like it shows it's at 55 the whole time, but it keeps bouncing up and down
-// okay we do get a piece at 34.9999, but why is our last piece at 75?
-// So this is most noticable on the edges but it can happen anywhere
 
 const int32 InputLength = 8;
 
