@@ -1,4 +1,3 @@
-
 // @TODO: standardize if our position is the top left or the center
 // center is easier visually, but is kinda quirky when it comes to bounding boxes
 
@@ -9,7 +8,11 @@
 //@TODO: definite piece position as offset on axel so that they're always consistent and we don't
 // get the jitter on some pieces
 
-// @TODO: what if game was about keeping the ball from reaching either side rather than scoring a goal? 
+// @TODO: what if game was about keeping the ball from reaching either side rather than scoring a goal?
+
+// @TODO: wth is the ball's y position jittering? like it shows it's at 55 the whole time, but it keeps bouncing up and down
+// okay we do get a piece at 34.9999, but why is our last piece at 75?
+// So this is most noticable on the edges but it can happen anywhere
 
 const int32 InputLength = 8;
 
@@ -22,7 +25,9 @@ const int32 PieceSize = 5;
 real32 CollisionDuration = 0.5f;
 
 struct Piece {
-    vec2 position;
+    // this is the top left position relative to the axel
+    vec2 localPosition;
+    vec2 worldPosition;
 
     bool collisionActive;
     real32 timeCollisionActivated;
@@ -30,11 +35,11 @@ struct Piece {
 
 // @TOOD: get the pieces
 
-const int32 GoalHalfHeight = 8;
-const int32 GoalHalfWidth = 2;
+const int32 GoalHeight = 32;
+const int32 GoalWidth = 4;
 
 struct Goal {
-    vec2 center;
+    vec2 position;
 };
 
 const int32 BallSize = 3;
@@ -47,9 +52,9 @@ struct Ball {
 struct Axel {
     char string[InputLength];
 
-    int32 x;
+    vec2 position;
     vec2 velocity;
-    
+
     int32 pieceCount;
     Piece *pieces;
 };
@@ -77,9 +82,12 @@ struct GameMem Foose = {};
 
  
 void GenerateAxelString(char *string) {
-    string[0] = 'a';
-    string[1] = 'b';
-    string[2] = 'c';
+    int32 length = RandiRange(2, 4);
+
+    for (int i = 0; i < length; i++) {
+        // our chars will automatically get cast to ints
+        string[i] = (char)RandiRange('a', 'z');
+    }
 }
 
 
@@ -88,7 +96,7 @@ void StartRound() {
 
     ball->position = V2(ArenaWidth / 2, ArenaHeight / 2);
     
-    real32 speed = 20;
+    real32 speed = 16;
     ball->velocity = Rotate(DegToRad(RandfRange(-30, 30)), V2(-1, 0)) * speed;
 
     for (int t = 0; t < 2; t++) {
@@ -133,15 +141,15 @@ void MyMosaicInit() {
             axel->pieceCount = 3;
             axel->pieces = (Piece*)malloc(sizeof(Piece) * axel->pieceCount);
 
-            axel->x = AxelColumns[0];
-
             int32 offsetY = 20;
             int32 trimmedHeight = ArenaHeight - offsetY;
             int32 strideY = trimmedHeight / 3;
             
-            vec2 cursor = V2(AxelColumns[0], offsetY);
+            axel->position = V2(AxelColumns[0], offsetY);
+
+            vec2 cursor = V2(0, 0);
             for (int i = 0; i < 3; i++) {
-                axel->pieces[i].position = cursor;
+                axel->pieces[i].localPosition = cursor;
 
                 cursor.y += strideY;
             }
@@ -152,17 +160,15 @@ void MyMosaicInit() {
             axel->pieceCount = 2;
             axel->pieces = (Piece*)malloc(sizeof(Piece) * axel->pieceCount);
 
-            axel->x = AxelColumns[1];
-
             int32 offsetY = 20;
             int32 trimmedHeight = ArenaHeight - offsetY;
             int32 strideY = trimmedHeight / 2;
 
-            // maybe better to say what the stride is, center them, then find offset from that
+            axel->position = V2(AxelColumns[1], offsetY);
             
-            vec2 cursor = V2(AxelColumns[1], offsetY);
+            vec2 cursor = V2(0);
             for (int i = 0; i < 3; i++) {
-                axel->pieces[i].position = cursor;
+                axel->pieces[i].localPosition = cursor;
 
                 cursor.y += strideY;
             }
@@ -173,9 +179,9 @@ void MyMosaicInit() {
             axel->pieceCount = 1;
             axel->pieces = (Piece*)malloc(sizeof(Piece) * axel->pieceCount);
 
-            axel->x = AxelColumns[2];
+            axel->position = V2(AxelColumns[2], ArenaHeight / 2);
 
-            axel->pieces[0].position = V2(AxelColumns[2], ArenaHeight / 2);
+            axel->pieces[0].localPosition = V2(0);
         }
     }
 
@@ -185,7 +191,7 @@ void MyMosaicInit() {
 void DrawPiece(Piece *piece, vec4 color) {
     for (int y = 0; y < PieceSize; y++) {
         for (int x = 0; x < PieceSize; x++) {
-            SetTileColor(piece->position.x + x, piece->position.y + y, color);
+            SetTileColor(piece->worldPosition.x + x, piece->worldPosition.y + y, color);
         }
     }
 }
@@ -199,9 +205,9 @@ void DrawBall(Ball *ball) {
 }
 
 void DrawGoal(Goal *goal) {
-    for (int y = 0; y < GoalHalfHeight; y++) {
-        for (int x = 0; x < GoalHalfWidth; x++) {
-            SetTileColor(goal->center.x + x, goal->center.y + y, V4(0.3f, 0.3f, 0.3f, 1.0f));
+    for (int y = 0; y < GoalHeight; y++) {
+        for (int x = 0; x < GoalWidth; x++) {
+            SetTileColor(goal->position.x + x, goal->position.y + y, V4(0.3f, 0.3f, 0.3f, 1.0f));
         }
     }
 }
@@ -210,7 +216,7 @@ void RenderTeam(Team *team) {
     for (int a = 0; a < AxelCount; a++) {
         Axel *axel = &team->axels[a];
 
-        vec2 textPos = V2(axel->x, 0);
+        vec2 textPos = V2(axel->position.x, 0);
         DrawTextTile(textPos, 2.0f, V4(1), axel->string);
 
         for (int j = 0; j < axel->pieceCount; j++) {
@@ -240,6 +246,13 @@ void MyMosaicUpdate() {
             }
             
             player->inputIndex = 0;
+        }
+        else if (InputPressed(Keyboard, Input_Backspace)) {
+            player->input[player->inputIndex] = 0;
+
+            if (player->inputIndex > 0) {
+                player->inputIndex--;
+            }
         }
         else {
             if (Input->charCount > 0) {
@@ -292,6 +305,8 @@ void MyMosaicUpdate() {
                         }
 
                         foundMatch = true;
+
+                        GenerateAxelString(axel->string);
                     }
                 }
 
@@ -304,6 +319,7 @@ void MyMosaicUpdate() {
                     }
                 }
 
+                int32 closestPieceIndex = -1;
                 real32 closestY = 999999;
                 real32 dirY = 0;
 
@@ -311,34 +327,41 @@ void MyMosaicUpdate() {
                 for (int32 i = 0; i < axel->pieceCount; i++) {
                     Piece *piece = &axel->pieces[i];
 
-                    real32 yDiff = ball->position.y - piece->position.y;
+                    real32 yDiff = ball->position.y - piece->worldPosition.y;
 
                     if (Abs(yDiff) < closestY) {
                         closestY = Abs(yDiff);
 
-                        if (yDiff < 0.5f) {
+                        if (yDiff < -0.5f) {
                             dirY = -1;
                         }
                         else if (yDiff > 0.5f) {
                             dirY = 1;
                         }
+
+                        closestPieceIndex = i;
                     }
                 }
 
-                real32 speed = 8;
+                Print("Closest piece %d", closestPieceIndex);
+
+                real32 speed = 10;
                 axel->velocity = V2(0, dirY * speed);
+                axel->position.y += axel->velocity.y * DeltaTime;
+
+                //axel->position.y = 40 + (5 * sinf(Time));
 
                 vec2 axelMin = V2(INFINITY);
                 vec2 axelMax = V2(-INFINITY);
                 
                 for (int32 i = 0; i < axel->pieceCount; i++) {
                     Piece *piece = &axel->pieces[i];
-                    piece->position = piece->position + (axel->velocity * DeltaTime);
+                    piece->worldPosition = piece->localPosition + axel->position;
 
-                    vec2 pieceMax = piece->position + V2(PieceSize);
+                    vec2 pieceMax = piece->worldPosition + V2(PieceSize);
 
-                    axelMin = Min(piece->position, axelMin);
-                    axelMax = Max(pieceMax, axelMin);
+                    axelMin = Min(piece->worldPosition, axelMin);
+                    axelMax = Max(pieceMax, axelMax);
                 }
 
                 // resolve collision with the top of the field
@@ -350,9 +373,17 @@ void MyMosaicUpdate() {
                     borderOverlap = axelMax.y - ArenaHeight;
                 }
 
+                if (borderOverlap != 0) {
+                    axel->position.y -= borderOverlap;
+                    axel->position.y = roundf(axel->position.y);
+                }
+
+                vec2 axelRounded = axel->position;
+
+                // update the worldPositionof the pieces if the axel has been moved
                 for (int32 i = 0; i < axel->pieceCount; i++) {
                     Piece *piece = &axel->pieces[i];
-                    piece->position.y -= borderOverlap;
+                    piece->worldPosition = piece->localPosition + axelRounded;
                 }
             }
 
@@ -402,8 +433,8 @@ void MyMosaicUpdate() {
                 for (int32 i = 0; i < axel->pieceCount; i++) {
                     Piece *piece = &axel->pieces[i];
 
-                    vec2 pieceMin = piece->position;
-                    vec2 pieceMax = piece->position + V2(PieceSize);
+                    vec2 pieceMin = piece->worldPosition;
+                    vec2 pieceMax = piece->worldPosition + V2(PieceSize);
 
                     if (!piece->collisionActive) { continue; }
 
