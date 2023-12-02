@@ -21,8 +21,8 @@ void SeedRand(int32 seed) {
 
 int32 Randi() {
     defaultLCGState.state = LCG_MULT * defaultLCGState.state + LCG_INC;
-    
-    return Abs(defaultLCGState.state);
+
+    return Abs((defaultLCGState.state >> 16) & 0x7FFF);
 }
 
 int32 RandUpper(int32 upperLimit) {
