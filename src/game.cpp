@@ -220,8 +220,10 @@ void GameInit(GameMemory *gameMem) {
     gameMem->cameraPosition = V3(0, 0, 3);
     gameMem->cameraRotation = AxisAngle(V3(0, 1, 0), gameMem->camAngle);
 
-    UpdateCamera(cam, gameMem->cameraPosition, gameMem->cameraRotation);
+    cam->position = V3(0, 0, 3);
+    cam->rotation = AxisAngle(V3(0, 1, 0), gameMem->camAngle);
 
+    UpdateCamera(cam);
     
     // INIT GRAPHICS
     AllocateTriangle(&gameMem->tri);

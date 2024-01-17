@@ -28,7 +28,7 @@
 #include "mosaic.cpp"
 
 #elif MY_GAME
-#include "examples/my_game.cpp"
+#include "my_game.cpp"
 
 #elif NETWORK_SIMPLE
 #include "examples/network_simple.cpp"

@@ -37,42 +37,28 @@ void MyGameUpdate() {
         position.y += 2 * Game->deltaTime;
     }
 
+    //Game->camera.position = V3(0, 0, 3) + V3(sinf(Time), 0, 0);
+    Game->camera.size = 1 + ((1 + sinf(Time)) * 0.5f);
+
+    // Always make sure you call UpdateCamera so it can recompute the projection matrix
+    UpdateCamera(&Game->camera);
+    
+    
     // position in pixels
     vec2 mousePos = Input->mousePosNormSigned;
-    mousePos.x = mousePos.x * 8;
-    mousePos.y = mousePos.y * 4.5f;
-
-    //DrawRect(V2(-2, -2), scale, RGB(0, 1, 1));
-
-    //DrawRect(V2(-2, -2), scale, V4(0.0f, 1.0f, 1.0f, 0.5f));
-
-    //DrawCoolRect(V2(0, 0), V2(1, 1), 0, RGB(0.0f, 0.3f, 0.3f));
-
-
+    mousePos.x = mousePos.x * (Game->camera.width * Game->camera.size * 0.5f);
+    mousePos.y = mousePos.y * (Game->camera.height * Game->camera.size * 0.5f);
+        
+    mousePos = mousePos + Game->camera.position.xy;
+    
     if (InputPressed(Keyboard, Input_Space)) {
         PlaySound(&Game->audioPlayer, Data.sound, 1.0f, true);
     }
     
-    // scale.x -= 0.2f * Game->deltaTime;
-    // scale.y -= 0.2f * Game->deltaTime;
-    // once scale goes negative we will have inverted the shape,
-    // it will continue to grow.
+    DrawSprite(V2(0), V2(4, 4), &Data.sprite2);
 
-    //position.y -= 2 * Game->deltaTime;
-
-    // things are drawn in the order you call the functions.
-    // The latest draw call will be on top of all previous, and so on.
-
-    // (0, 0) is center of the screen
-    // increasing values of y move up
-    // We have negative coordinates
-    // The width of our screen is 16 (-8 to 8) (left to right)
-    // The height of our screen is 9 (-4.5 to 4.5) (bottom to top)
-
-    // version that doesnt take an angle.
-    DrawSprite(V2(0), V2(4, 4), DegToRad(90), &Data.sprite2);
-
-    DrawSprite(mousePos, V2(0.5f, 0.5f), &lemonSprite);
+    // version that take an angle.
+    DrawSprite(mousePos, V2(0.5f, 0.5f), DegToRad(Time * 90), &lemonSprite);
     DrawRect(V2(0, 0), V2(1, 1), RGB(1.0f, 0.3f, 0.3f));
     DrawSprite(position, V2(0.5f, 0.5f), &Data.sprite);
 }
