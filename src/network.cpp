@@ -98,6 +98,12 @@ uint32 GetMyAddress() {
 // We'll have different updates based on if the game is a server or a client.
 // This way the server can send out the chunky information and clients know what to receieve.
 
+void InitNetwork(MemoryArena *arena) {
+    NetworkInfo *network = &Game->networkInfo;
+
+    network->packetsToSend = MakeDynamicArray<GamePacket>(arena, 256);
+    network->packetsReceived = MakeDynamicArray<ReceivedPacket>(arena, 256);
+}
 
 void ReceivePackets(Socket *socket) {
     NetworkInfo *network = &Game->networkInfo;

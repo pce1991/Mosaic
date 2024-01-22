@@ -58,6 +58,8 @@ MessagingExample myData = {};
 
 void MyInit() {
     myData.isServer = IS_SERVER == 1;
+
+    InitNetwork(&Game->permanentArena);
     
     Socket socket = {};
     if (myData.isServer) {

@@ -37,15 +37,12 @@ struct MyData {
 // The server is going to listen for pings and then send pings to all the clients
 // The client knows the servers address, but the server doesnt know who the client is yet
 
-MyData *Data = NULL;
+MyData Data = {};
 
 void MyInit() {
-    Game->myData = malloc(sizeof(MyData));
-    memset(Game->myData, 0, sizeof(MyData));
-    
-    Data = (MyData *)Game->myData;
-
     NetworkInfo *network = &Game->networkInfo;
+
+    InitNetwork(&Game->permanentArena);
 
     // Create sockets that we'll use to communicate.
 
@@ -64,7 +61,7 @@ void MyInit() {
 void ClientUpdate() {
     NetworkInfo *network = &Game->networkInfo;
 
-    ClientData *client = &Data->clientData;
+    ClientData *client = &Data.clientData;
 
     GamePacket packet = {};
     packet.id = PacketID;
@@ -114,7 +111,7 @@ void ClientUpdate() {
 void ServerUpdate() {
     NetworkInfo *network = &Game->networkInfo;
     
-    ServerData *server = &Data->serverData;
+    ServerData *server = &Data.serverData;
     
     for (int i = 0; i < network->packetsReceived.count; i++) {
         ReceivedPacket *r = &network->packetsReceived[i];
