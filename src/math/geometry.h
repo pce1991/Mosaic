@@ -801,3 +801,45 @@ bool TestAABBAABB(vec2 aMin, vec2 aMax, vec2 bMin, vec2 bMax, vec2 *dir) {
     return true;
 }
 
+bool TestAABBAABB(vec2 minA, vec2 maxA, vec2 minB, vec2 maxB, vec2 *dir) {
+    // Is the bug that the positions can be negative?
+    r32 lengthX = Min(maxA.x, maxB.x) - Max(minA.x, minB.x);
+    r32 lengthY = Min(maxA.y, maxB.y) - Max(minA.y, minB.y);
+
+    // This tells us if there is separation on either axis
+    if (lengthX < 0) { return false; }
+    if (lengthY < 0) { return false; }
+    // If we get here there is no separation, and we want to find the axis with the least length
+    
+    if (lengthX < lengthY) {
+        if (maxB.x < maxA.x) {
+            dir->x = Abs(maxB.x - minA.x);
+        }
+        else {
+            dir->x = -Abs(minB.x - maxA.x);
+        }
+    }
+    else {
+        if (maxB.y < maxA.y) {
+            dir->y = Abs(maxB.y - minA.y);
+        }
+        else {
+            dir->y = -Abs(minB.y - maxA.y);
+        }
+    }
+
+    return true;
+}
+
+bool TestAABBAABB(vec2 minA, vec2 maxA, vec2 minB, vec2 maxB) {
+    // Is the bug that the positions can be negative?
+    r32 lengthX = Min(maxA.x, maxB.x) - Max(minA.x, minB.x);
+    r32 lengthY = Min(maxA.y, maxB.y) - Max(minA.y, minB.y);
+
+    // This tells us if there is separation on either axis
+    if (lengthX < 0) { return false; }
+    if (lengthY < 0) { return false; }
+
+    return true;
+}
+
