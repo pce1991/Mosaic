@@ -456,53 +456,29 @@ inline bool PointInCircle(vec2 point, vec2 center, real32 radius) {
     return result;
 }
 
-inline Circle Circumcircle(vec2 a, vec2 b, vec2 c) {
-    Circle result = {};
 
-    real32 m1, m2, max, mbx, may, mby;
-    real32 dx, dy, drsqr;
-    real32 fabsayby = fabsf(a.y - b.y);
-    real32 fabsbycy = fabsf(b.y - c.y);
+inline bool TestCircleCircle(vec2 centerA, real32 radiusA, vec2 centerB, real32 radiusB) {
+    vec2 worldDisplacement = centerB - centerA;
+    real32 distanceSquared = LengthSq(worldDisplacement);
+    real32 radiusSum = radiusA + radiusB;
 
-    /* Check for coincident points */
-    if (fabsayby < FLT_EPSILON && fabsbycy < FLT_EPSILON) {
-        return result;
+    if (distanceSquared <= (radiusSum * radiusSum)) {
+        return true;
     }
 
-    if (fabsayby < FLT_EPSILON) {
-        m2 = - (c.x-b.x) / (c.y-b.y);
-        mbx = (b.x + c.x) / 2.0;
-        mby = (b.y + c.y) / 2.0;
-        result.center.x = (b.x + a.x) / 2.0;
-        result.center.y = m2 * (result.center.x - mbx) + mby;
-    }
-    else if (fabsbycy < FLT_EPSILON) {
-        m1 = - (b.x-a.x) / (b.y-a.y);
-        max = (a.x + b.x) / 2.0;
-        may = (a.y + b.y) / 2.0;
-        result.center.x = (c.x + b.x) / 2.0;
-        result.center.y = m1 * (result.center.x - max) + may;
-    }
-    else {
-        m1 = - (b.x-a.x) / (b.y-a.y);
-        m2 = - (c.x-b.x) / (c.y-b.y);
-        max = (a.x + b.x) / 2.0;
-        mbx = (b.x + c.x) / 2.0;
-        may = (a.y + b.y) / 2.0;
-        mby = (b.y + c.y) / 2.0;
-        result.center.x = (m1 * max - m2 * mbx + mby - may) / (m1 - m2);
-        if (fabsayby > fabsbycy) {
-            result.center.y = m1 * (result.center.x - max) + may;
-        } else {
-            result.center.y = m2 * (result.center.x - mbx) + mby;
-        }
+    return false;
+}
+
+inline bool SphereSphereTest(vec3 a, real32 radiusA, vec3 b, real32 radiusB) {
+    vec3 worldDisplacement = b - a;
+    real32 distanceSquared = LengthSq(worldDisplacement);
+    real32 radiusSum = radiusA + radiusB;
+
+    if (distanceSquared <= (radiusSum * radiusSum)) {
+        return true;
     }
 
-   dx = b.x - result.center.x;
-   dy = b.y - result.center.y;
-   result.radius = sqrtf(dx * dx + dy * dy);
-
-    return result;
+    return false;
 }
 
 bool SegmentCircleIntersection(vec2 p0, vec2 p1, vec2 center, r32 radius, r32 *t) {
@@ -719,53 +695,6 @@ inline bool RaycastAABB(vec2 aabbMin, vec2 aabbMax, Ray ray, real32 *tMin, bool 
     if (testInside && TestPointAABB(V2(ray.origin.x, ray.origin.y), aabbMin, aabbMax)) {
         *tMin = tMax;    
     }
-
-    return true;
-}
-
-
-// This function takes a pointer to a vec2. That means when we change the values of dir,
-// we are changing the values at the memory address we passed in! We WANT the value of dir
-// to change based on the computation of this function.
-// This uses the SeparatingAxisTheorem
-// @NOTE: this will not set the component of dir that doesn't need
-// to be moved, so make sure it's cleared Dir will push A out of B
-bool RectTest(Rect a, Rect b, vec2 aPosition, vec2 bPosition, vec2 *dir) {
-
-    Rect aGlobal;
-    aGlobal.min = (a.min + aPosition);
-    aGlobal.max = (a.max + aPosition);
-
-    Rect bGlobal;
-    bGlobal.min = (b.min + bPosition);
-    bGlobal.max = (b.max + bPosition);
-
-    // Is the bug that the positions can be negative?
-    r32 lengthX = Min(aGlobal.max.x, bGlobal.max.x) - Max(aGlobal.min.x, bGlobal.min.x);
-    r32 lengthY = Min(aGlobal.max.y, bGlobal.max.y) - Max(aGlobal.min.y, bGlobal.min.y);
-
-    // This tells us if there is separation on either axis
-    if (lengthX < 0) { return false; }
-    if (lengthY < 0) { return false; }
-    // If we get here there is no separation, and we want to find the axis with the least length
-    
-    if (lengthX < lengthY) {
-        if (bGlobal.max.x < aGlobal.max.x) {
-            dir->x = Abs(bGlobal.max.x - aGlobal.min.x);
-        }
-        else {
-            dir->x = -Abs(bGlobal.min.x - aGlobal.max.x);
-        }
-    }
-    else {
-        if (bGlobal.max.y < aGlobal.max.y) {
-            dir->y = Abs(bGlobal.max.y - aGlobal.min.y);
-        }
-        else {
-            dir->y = -Abs(bGlobal.min.y - aGlobal.max.y);
-        }
-    }
-
 
     return true;
 }
