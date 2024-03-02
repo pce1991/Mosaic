@@ -33,6 +33,108 @@ void DynamicArrayAllocateChunk(DynamicArray_Untyped *array, uint32 elementSize) 
     array->chunkCount++;
 }
 
+inline void *DynamicArrayGetData(DynamicArray_Untyped const *array, int32 elementSize, int32 index) {
+
+    s32 dynamicIndex = index / array->elementsPerChunk;
+    ArrayChunk *chunk = array->headChunk;
+    for (int32 i = 0; i < dynamicIndex; i++) {
+        chunk = chunk->nextChunk;
+    }
+
+    return ((uint8 *)chunk->data + (elementSize * (index % array->elementsPerChunk)));    
+}
+
+
+inline ArrayChunk *GetNthChunk(DynamicArray_Untyped const *array, int32 index) {
+    ArrayChunk *chunk = array->headChunk;
+    int32 count = 0;
+    while (count < index) {
+        chunk = chunk->nextChunk;
+        count++;
+
+        if (chunk == NULL) {
+            return NULL;
+        }
+    }
+
+    return chunk;
+}
+
+void DynamicArrayAllocateDynamic(DynamicArray_Untyped *array, uint32 elementSize) {
+    ArrayChunk *newDynamic = NULL;
+    newDynamic = (ArrayChunk *)AllocateMem(array->allocator, sizeof(ArrayChunk) + (array->elementsPerChunk * elementSize));
+    
+    newDynamic->nextChunk = NULL;
+
+    if (array->headChunk == NULL) {
+        array->headChunk = newDynamic;
+        array->tailChunk = newDynamic;
+    }
+    else {
+        ArrayChunk *dynamic = array->tailChunk;
+        dynamic->nextChunk = newDynamic;
+        array->tailChunk = dynamic->nextChunk;
+    }
+
+    array->chunkCount++;
+}
+
+void DynamicArrayEnsureCapacity(DynamicArray_Untyped *array, uint32 elementSize, uint32 capacity) {
+
+    //ASSERT(array->allocator != NULL);
+    //ASSERT(array->elementsPerChunk > 0);
+
+    if (array->elementsPerChunk == 0) {
+        array->elementsPerChunk = 8;
+    }
+    
+    if (array->chunkCount * array->elementsPerChunk < capacity) {
+        uint32 dynamicsToAdd = ((capacity / array->elementsPerChunk) - array->chunkCount) + 1;
+
+        for (int i = 0; i < dynamicsToAdd; i++) {
+            DynamicArrayAllocateDynamic(array, elementSize);
+        }
+    }
+}
+
+inline uint32 PushBack(DynamicArray_Untyped *array, u32 size, void *data)  {
+    DynamicArrayEnsureCapacity(array, size, array->count + 1);
+    uint32 index = array->count;
+    array->count++;
+
+    void *ptr = DynamicArrayGetData(array, size, index);
+
+    memcpy(ptr, data, size);
+    
+    return index;
+}
+
+inline void *PushBackPtr(DynamicArray_Untyped *array, u32 size)  {
+    DynamicArrayEnsureCapacity(array, size, array->count + 1);
+    uint32 index = array->count;
+    array->count++;
+
+    void *ptr = DynamicArrayGetData(array, size, index);
+    memset(ptr, 0, size);
+    return ptr;
+}
+
+
+inline DynamicArray_Untyped MakeDynamicArray(MAllocator *allocator, uint32 size, uint32 elementsPerChunk, uint32 chunkCount = 1) {
+    DynamicArray_Untyped array = {};
+    array.allocator = allocator;
+
+    if (elementsPerChunk == 0) {
+        elementsPerChunk = 1;
+    }
+
+    array.elementsPerChunk = elementsPerChunk;
+
+    DynamicArrayEnsureCapacity(&array, size, elementsPerChunk);
+    return array;
+}
+
+
 template <typename T>
 struct DynamicArray {
     MAllocator *allocator;

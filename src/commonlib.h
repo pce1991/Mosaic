@@ -27,3 +27,8 @@ uint32 Hash(const char *str) {
 
     return result;
 }
+
+#define HasFlag(bitfield, flag) ((bitfield) & (flag))
+#define HasFlags(bitfield, flag) ((flag) != 0 && ((bitfield) & (flag)) == (flag))
+#define AddFlag(bitfield, flag) ((bitfield) | (flag))
+#define ClearFlag(bitfield, flag) ((bitfield) & ~(flag))
