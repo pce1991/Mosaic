@@ -10,7 +10,7 @@ typedef struct {
 // @NOTE: this is global state!!!
 LCGState defaultLCGState;
 
-#define MY_RAND_MAX ((1 << 31) - 1)
+#define MY_RAND_MAX INT_MAX
 
 void SeedRand(int32 seed) {
     defaultLCGState.seed = seed;
