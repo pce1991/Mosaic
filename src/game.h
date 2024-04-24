@@ -7,6 +7,7 @@
 #include "types.h"
 
 #include "commonlib.h"
+#include "strings.h"
 
 #include "my_memory.h"
 
