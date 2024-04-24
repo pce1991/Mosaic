@@ -142,6 +142,9 @@ void DeleteEntities(EntityManager *manager) {
     for (int i = 0; i < manager->entitiesToDelete.count; i++) {
         EntityHandle handle = manager->entitiesToDelete[i];
         EntityInfo *info = GetEntityInfo(manager, handle);
+
+        if (info == NULL) { continue; }
+
         RemoveEntityFromStorage(manager, info);
 
         info->generation++;
