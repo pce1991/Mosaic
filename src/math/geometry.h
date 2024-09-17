@@ -438,26 +438,13 @@ inline bool IsTriangleDegenerate(vec3 a, vec3 b, vec3 c) {
 }
 
 
-// Delaunay Triangulation
-// [0] https://en.wikipedia.org/wiki/Bowyer%E2%80%93Watson_algorithm
-// [1] http://paulbourke.net/papers/triangulate/triangulate.c
-struct Circle {
-    vec2 center;
-    real32 radius;
-};
-
-inline bool PointInCircle(Circle circle, vec2 point) {
-    bool result = Distance(circle.center, point) <= circle.radius;
-    return result;
-}
-
-inline bool PointInCircle(vec2 point, vec2 center, real32 radius) {
+inline bool PointCircleTest(vec2 point, vec2 center, real32 radius) {
     bool result = Distance(center, point) <= radius;
     return result;
 }
 
 
-inline bool TestCircleCircle(vec2 centerA, real32 radiusA, vec2 centerB, real32 radiusB) {
+inline bool CircleCircleTest(vec2 centerA, real32 radiusA, vec2 centerB, real32 radiusB) {
     vec2 worldDisplacement = centerB - centerA;
     real32 distanceSquared = LengthSq(worldDisplacement);
     real32 radiusSum = radiusA + radiusB;
