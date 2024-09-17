@@ -108,9 +108,9 @@ EntityHandle AddEntity_(EntityManager *manager, EntityType type, void *data) {
     if (manager->freelist.count > 0) {
         PopBack(&manager->freelist, &handle.id);
         info = &manager->entityInfo[handle.id];
-        uint32 generation = info->generation + 1;
+        uint32 generation = info->generation;
         *info = {};
-        info->generation = generation;
+        info->generation = info->generation;
     }
     else {
         handle.id = manager->entityInfo.count;
@@ -142,8 +142,12 @@ void DeleteEntities(EntityManager *manager) {
     for (int i = 0; i < manager->entitiesToDelete.count; i++) {
         EntityHandle handle = manager->entitiesToDelete[i];
         EntityInfo *info = GetEntityInfo(manager, handle);
+
+        if (info == NULL) { continue; }
+
         RemoveEntityFromStorage(manager, info);
 
+        info->generation++;
         info->flags = (EntityFlag)AddFlag(info->flags, EntityFlag_Deleted);
 
         PushBack(&manager->freelist, handle.id);
