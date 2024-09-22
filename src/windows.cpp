@@ -64,7 +64,7 @@ struct OpenGLInfo {
     const uint8 *extensions;
 };
 
-#define AUDIO_SAMPLERATE 44100
+#define AUDIO_SAMPLERATE 48000
 #define AUDIO_NUM_CHANNELS 2
 #define AUDIO_BITS_PER_SAMPLE 32
 

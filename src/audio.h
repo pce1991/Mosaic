@@ -1,5 +1,5 @@
 
-#define HZ 44100
+#define HZ 48000
 
 struct SoundClip {
     uint32 sampleRate;
