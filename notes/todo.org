@@ -88,3 +88,13 @@ Maybe bring back DynamicArrays because they're easier to see in the debugger?
   Metal
 
   Maybe just start using SDL? It does make things trickier when we get to platform land.
+* Audio
+** Comment from Daniel
+For certain: 
+-When running through this code, "waveFormat" gets initialized with all the settings specified in windows.cpp
+-When it gets to line 241, the "IsFormatSupported" function checks if "waveFormat" can be used, but it can't because sharemode only supports what the windows setting is (in my case 192000Hz). This function also provides a closest format for when it's not compatible (which is 192000Hz)
+-After that, since the format we provided isn't supported, line 250 sets "waveFormat" to be the closest support format provided by "IsFormatSupported", and that's what gets used for the application.
+ 
+So for sure, the audio client is getting initialized to whatever the user's Windows setting is every time, ignoring the params/defines in windows.cpp (unless they match completely). Then when it adds sounds to the buffer it's just adding the 48k sound (or whatever frequency the sound is) into a 192k (or whatever windows is set to) buffer, so they're playing too fast (4x in my case)
+ 
+I'm less certain about this part, but from what I read online it doesn't seem like WASAPI will automatically resample anything, so I think resampling would have to be implemented somehow.

@@ -239,19 +239,22 @@ void InitWASAPI(WinAudioOutput *audio) {
                 WAVEFORMATEXTENSIBLE *closestWaveFormat;
                 result = pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED, waveFormat, (WAVEFORMATEX **)&closestWaveFormat);
 
+                // if our format isn't supported that should be fine because the
+                // auto-conversion specified in Initialize should compensate.
+                // Leaving this code in thos so to demonstrate detecting a false
+                // result.
                 if (result == S_FALSE) {
                     if (closestWaveFormat->Format.nSamplesPerSec != waveFormat->nSamplesPerSec) {
-                        // @TODO: need to resample, there appears to be an API...
-                        // https://msdn.microsoft.com/en-us/library/windows/desktop/ff819070(v=vs.85).aspx
-                        // https://sourceforge.net/p/playpcmwin/wiki/HowToUseResamplerMFT/
                     }
-
-                    waveFormat = (WAVEFORMATEX *)closestWaveFormat;
+                    //waveFormat = (WAVEFORMATEX *)closestWaveFormat;
                 }
-                    
+
                 result = pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                                                  AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+                                                  AUDCLNT_STREAMFLAGS_EVENTCALLBACK |
+                                                  AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
+                                                  AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
                                                   bufferDuration, 0, waveFormat, NULL);
+
                 if (SUCCEEDED(result)) {
 
                     result = pAudioClient->GetBufferSize(&actualBufferSampleCount);

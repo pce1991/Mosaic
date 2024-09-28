@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="DynamicArray&lt;*&gt;">
+        <DisplayString>{{size={count}}}</DisplayString>
+        <Expand>
+            <Item Name="count" ExcludeView="simple">count</Item>
+            <Item Name="elementsPerChunk" ExcludeView="simple">elementsPerChunk</Item>
+
+            <!-- Horrible that we cant use [] with CustomListItems -->
+            <CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
+              <Variable Name="index" InitialValue="0" />
+              <Variable Name="subIndex" InitialValue="0" />
+              <Variable Name="chunk" InitialValue="headChunk" />
+
+              <Size>count</Size>
+              
+              <Loop>
+                <!-- &lt; is a less than symbol -->
+                <If Condition="index &lt; count">
+                  <Item> (($T1 *)chunk->data)[index % elementsPerChunk]</Item>
+                  <Exec> index += 1 </Exec>
+                  <Exec> subIndex += 1 </Exec>
+                  <If Condition="subIndex >= elementsPerChunk">
+                    <Exec> chunk = chunk->nextChunk </Exec>
+                    <Exec> subIndex = 0 </Exec>
+                  </If>
+                </If>
+              </Loop>
+              <Item> (($T1 *)headChunk->data)[index],na</Item>
+            </CustomListItems>
+        </Expand>
+    </Type>
+</AutoVisualizer>

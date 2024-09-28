@@ -1,6 +1,8 @@
 // Manual can be found here:
 // https://github.com/pce1991/MosaicBook#readme
 
+DynamicArray<int32> test;
+
 struct MyData {
     Sprite sprite;
     Sprite sprite2;
@@ -13,6 +15,7 @@ MyData Data = {};
 Sprite lemonSprite;
 
 void MyInit() {
+    
     // All sprites must be png files
     // You provide the path to the png like "directory/to/my/file/file_name.png"
     // In this case I have put the pngs inside the "data" directory.
