@@ -216,12 +216,8 @@ void GameInit(GameMemory *gameMem) {
                                    cam->height * -0.5f * cam->size, cam->height * 0.5f * cam->size,
                                    0.0, 100.0f);
 
-    gameMem->camAngle = 0;
-    gameMem->cameraPosition = V3(0, 0, 3);
-    gameMem->cameraRotation = AxisAngle(V3(0, 1, 0), gameMem->camAngle);
-
     cam->position = V3(0, 0, 3);
-    cam->rotation = AxisAngle(V3(0, 1, 0), gameMem->camAngle);
+    cam->rotation = AxisAngle(V3(0, 1, 0), 0.0f);
 
     UpdateCamera(cam);
     
@@ -341,7 +337,7 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     }
 
     Camera *cam = &gameMem->camera;
-    UpdateCamera(&gameMem->camera, gameMem->cameraPosition, gameMem->cameraRotation);
+    UpdateCamera(&gameMem->camera);
 
     Game->steppingFrame = false;
 

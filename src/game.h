@@ -84,9 +84,9 @@ struct GameMemory {
     FontTable serifFont;
 
     Camera camera;
-    vec3 cameraPosition;
-    quaternion cameraRotation;
-    real32 camAngle;
+    // vec3 cameraPosition;
+    // quaternion cameraRotation;
+    //real32 camAngle;
 
     AudioPlayer audioPlayer;
 
