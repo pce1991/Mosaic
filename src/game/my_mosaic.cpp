@@ -159,18 +159,6 @@ void UpdateCrawler(Crawler &crawler, Canvas &canvas) {
         }
 
         int32 newIndex = -1;
-#if 0
-        
-
-        if (unoccupiedNeighbors.count > 0) {
-            int r = RandfRange(0, unoccupiedNeighbors.count);
-            newIndex = unoccupiedNeighbors[r];
-        }
-        else {
-            int r = RandfRange(0, neighbors.count);
-            newIndex = neighbors[r];
-        }
-#else
 
         // What if we just added them to the stack in a random order and still popped
         // from the back (do we have to pop from the front??)
@@ -180,10 +168,26 @@ void UpdateCrawler(Crawler &crawler, Canvas &canvas) {
             randomDirection = true;
         }
 
+#if 0
+        DynamicArray<int32> indices = MakeDynamicArray<int32>(&Game->frameMem, 4);
+        DynamicArray<int32> randomIndices = MakeDynamicArray<int32>(&Game->frameMem, 4);
+
+        For (i, unoccupiedNeighbors.count) {
+            PushBack(&indices, i);
+        }
+
+        ForRev (i, unoccupiedNeighbors.count) {
+            int32 index = RandfRange(0, indices.count);
+            PushBack(&randomIndices, indices[i]);
+            RemoveAtIndex(&indices, index);
+        }
+#endif
+
         // @TODO: and it can't be already be in our stack!
         For (i, unoccupiedNeighbors.count) {
-
-            vec2i pos = GetCellPosition(unoccupiedNeighbors[i], canvas);
+            //int32 index = randomIndices[i];
+            int32 index = i;
+            vec2i pos = GetCellPosition(unoccupiedNeighbors[index], canvas);
             bool unique = true;
 
             For (j, crawler.positionStack.count) {
@@ -205,11 +209,10 @@ void UpdateCrawler(Crawler &crawler, Canvas &canvas) {
         }
         else {
             vec2i newPosition;
-            if (PopFront(&crawler.positionStack, &newPosition)) {
+            if (PopBack(&crawler.positionStack, &newPosition)) {
                 newIndex = GetCellIndex(newPosition, canvas);
             }
         }
-#endif
 
         //Print("seed %d %d", defaultLCGState.seed, r);
         crawler.position = GetCellPosition(newIndex, canvas);
@@ -222,8 +225,16 @@ void UpdateCrawler(Crawler &crawler, Canvas &canvas) {
             for (int x = -1; x <= 1; x++) {
                 if (x == 0 && y == 0) { continue; }
                 if (x != 0 && y != 0) { continue; }
+
+                vec2i newPos = crawler.colorPosition + V2i(x, y);
+
+                if (newPos.x < 0 || newPos.x >= canvas.sprite.width ||
+                    newPos.y < 0 || newPos.y >= canvas.sprite.height) {
+                    continue;
+                }
                 
-                int32 index = GetCellIndex(crawler.colorPosition + V2i(x, y), canvas);
+                int32 index = PositionToIndex(newPos,
+                                              canvas.sprite.width, canvas.sprite.height);
                 if (index >= 0) {
                     PushBack(&neighbors, index);
                 }
@@ -237,13 +248,45 @@ void UpdateCrawler(Crawler &crawler, Canvas &canvas) {
             }
         }
 
+        if (unoccupiedNeighbors.count > 0) {
+            int32 closestNeighborIndex = -1;
+            int32 closestNeighbor = -1;
+            real32 minDist = INFINITY;
+
+            int32 currColorIndex = PositionToIndex(crawler.colorPosition, canvas.sprite.width, canvas.sprite.height);
+            vec4 currColor = V4(canvas.sprite.data[(currColorIndex * 4) + 0] / 255.0f,
+                                canvas.sprite.data[(currColorIndex * 4) + 1] / 255.0f,
+                                canvas.sprite.data[(currColorIndex * 4) + 2] / 255.0f,
+                                1.0f);
+
+            For (i, unoccupiedNeighbors.count) {
+                int32 colorIndex = unoccupiedNeighbors[i];
+                vec4 color = V4(canvas.sprite.data[(colorIndex * 4) + 0] / 255.0f,
+                                canvas.sprite.data[(colorIndex * 4) + 1] / 255.0f,
+                                canvas.sprite.data[(colorIndex * 4) + 2] / 255.0f,
+                                1.0f);
+
+                vec4 diff = color - currColor;
+                real32 dist = Length(diff);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestNeighbor = unoccupiedNeighbors[i];
+                    closestNeighborIndex = i;
+                }
+            }
+
+            // So that it goes on the end which means when we pop back it's gonna be the
+            // next one we go to. 
+            RemoveAtIndex(&unoccupiedNeighbors, closestNeighborIndex);
+            PushBack(&unoccupiedNeighbors, closestNeighbor);
+        }
+
         int32 newIndex = -1;
 
         bool randomDirection = false;
 
         For (i, unoccupiedNeighbors.count) {
-
-            vec2i pos = GetCellPosition(unoccupiedNeighbors[i], canvas);
+            vec2i pos = IndexTo2D(unoccupiedNeighbors[i], canvas.sprite.width, canvas.sprite.height);
             bool unique = true;
 
             For (j, crawler.colorPositionStack.count) {
@@ -264,13 +307,20 @@ void UpdateCrawler(Crawler &crawler, Canvas &canvas) {
                 PositionToIndex(crawler.colorPositionStack[(int32)RandfRange(0, crawler.colorPositionStack.count)], canvas.sprite.width, canvas.sprite.height);
         }
         else {
+            // @PERF: why does this effect the performance so much? 
             vec2i newPosition;
-            if (PopFront(&crawler.colorPositionStack, &newPosition)) {
+            if (PopBack(&crawler.colorPositionStack, &newPosition)) {
                 newIndex = PositionToIndex(newPosition, canvas.sprite.width, canvas.sprite.height);
             }
         }
 
-        crawler.colorPosition = IndexTo2D(newIndex, canvas.sprite.width, canvas.sprite.height);
+        // @BUG: if we have a 64 x 64 texture we shouldn't reach the end of our
+        // colorPositionStack until we've colored everything right??? So how is this ever
+        // happening
+        //ASSERT(newIndex >= 0);
+        if (newIndex >= 0) {
+            crawler.colorPosition = IndexTo2D(newIndex, canvas.sprite.width, canvas.sprite.height);
+        }
     }
 
 
@@ -279,8 +329,10 @@ void UpdateCrawler(Crawler &crawler, Canvas &canvas) {
         canvas.filledCount++;
         canvas.cells[newIndex].filled = true;
 
-
-        int32 colorIndex = GetCellIndex(crawler.colorPosition, canvas);
+        int32 colorIndex = PositionToIndex(crawler.colorPosition, canvas.sprite.width, canvas.sprite.height);
+        
+        canvas.pixelVisits[colorIndex] = true;
+        
         vec4 color = V4(canvas.sprite.data[(colorIndex * 4) + 0] / 255.0f,
                         canvas.sprite.data[(colorIndex * 4) + 1] / 255.0f,
                         canvas.sprite.data[(colorIndex * 4) + 2] / 255.0f,
