@@ -459,7 +459,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
     startSystemTime = systemTime;
     SeedRand(startSystemTime.QuadPart);
-
     
     WSAStartup(MAKEWORD(2,2), &Platform->wsaData);
 

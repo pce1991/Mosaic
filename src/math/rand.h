@@ -20,7 +20,7 @@ void SeedRand(int32 seed) {
 }
 
 int32 Randi() {
-    defaultLCGState.state = (LCG_MULT * defaultLCGState.state + LCG_INC) & MY_RAND_MAX;
+    defaultLCGState.state = ((LCG_MULT * defaultLCGState.state + LCG_INC) & MY_RAND_MAX);
 
     return (defaultLCGState.state);
 }

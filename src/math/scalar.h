@@ -340,6 +340,10 @@ inline real32 Abs(real32 x) {
     return fabsf(x);
 }
 
+inline real32 Absf(real32 x) {
+    return fabsf(x);
+}
+
 inline int32 Abs(int32 x) {
     return abs(x);
 }

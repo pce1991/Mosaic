@@ -123,6 +123,7 @@ struct DynamicArray {
     uint32 count;
     uint32 elementsPerChunk;
 
+    uint32 capacity;
     uint32 chunkCount;
 
     ArrayChunk *headChunk;
@@ -173,6 +174,8 @@ void DynamicArrayEnsureCapacity(DynamicArray<T> *array, uint32 capacity) {
             DynamicArrayAllocateChunk(array);
         }
     }
+
+    array->capacity = array->chunkCount * array->elementsPerChunk;
 }
 
 template <typename T>
@@ -240,6 +243,18 @@ inline bool PopBack(DynamicArray<T> *array, T *element = NULL) {
     }
 
     return result;
+}
+
+template <typename T>
+inline bool PopFront(DynamicArray<T> *array, T *element = NULL) {
+    if (array->count == 0) { return false; }
+
+    if (element != NULL) {
+        *element = (*array)[0];
+    }
+    RemoveAtIndex(array, 0);
+
+    return true;
 }
 
 template <typename T>
