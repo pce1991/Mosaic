@@ -15,6 +15,15 @@ struct FileHandle {
     u8 *data;
 };
 
+
+struct Token {
+    int32 type;
+
+    char *start;
+    int32 length;
+};
+
+
 bool OpenFileForRead(char *path, FileHandle *file, MAllocator *alloc) {
     file->file = fopen(path, "rb");
     file->mode = FileMode_Read;
@@ -126,6 +135,29 @@ inline bool ConsumeByteMatching(FileHandle *handle, char c) {
     return false;
 }
 
+typedef bool CharacterTest(uint32 codepoint);
+inline bool ConsumeBytePassing(FileHandle *handle, CharacterTest *Test) {
+    if (Test(((uint8 *)handle->data)[handle->offset])) {
+        handle->offset++;
+        return true;
+    }
+
+    return false;
+}
+
+inline u32 ConsumeBytesPassing(FileHandle *handle, CharacterTest *Test) {
+    u32 len = 0;
+    char c = 0;
+
+    while (ConsumeBytePassing(handle, Test)) {
+        len++;
+
+        if (handle->offset >= handle->size) {
+            break;
+        }
+    }
+    return len;
+}
 
 inline bool ConsumeBytesMatching(FileHandle *handle, uint8 *bytes, uint32 len) {
     uint32 prevOffset = handle->offset;
@@ -234,3 +266,170 @@ inline void WriteReal32(FileHandle *file, real32 value) {
 }
 
 
+inline bool ConsumeIntLiteral(FileHandle *file, char **start, uint32 *len) {
+    char c = ((uint8 *)file->data)[file->offset];
+
+    bool isInt = false;
+
+    if (PeekChar(file) == '-') {
+        *start = (char *)(((uint8 *)file->data)) + file->offset;
+
+        if (file->offset + 1 < file->size) {
+            char next = *((char *)(((uint8 *)file->data)) + file->offset + 1);
+
+            if (IsDigit(next)) {
+                (*len)++;
+                ReadChar(file);
+                isInt = true;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
+    }
+
+    while (ConsumeBytePassing(file, &IsDigit)) {
+        if (!isInt) {
+            *start = (char *)(((uint8 *)file->data)) + file->offset - 1;
+
+            isInt = true;
+        }
+
+        (*len)++;
+    }
+
+    return isInt;
+}
+
+
+inline bool ConsumeFloatLiteral(FileHandle *file, char **start, uint32 *len) {
+    char c = ((uint8 *)file->data)[file->offset];
+
+    bool isFloat = false;
+
+    u32 startOffset = file->offset;
+
+    if (PeekChar(file) == '-') {
+        *start = (char *)(((uint8 *)file->data)) + file->offset;
+
+        if (file->offset + 1 < file->size) {
+            char next = *((char *)(((uint8 *)file->data)) + file->offset + 1);
+
+            if (IsDigit(next)) {
+                (*len)++;
+                ReadChar(file);
+                isFloat = true;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
+    }
+
+    while (ConsumeBytePassing(file, &IsDigit)) {
+        if (!isFloat) {
+            *start = (char *)(((uint8 *)file->data)) + file->offset - 1;
+
+            isFloat = true;
+        }
+        (*len)++;
+    }
+
+    if (ConsumeByteMatching(file, '.')) {
+        (*len)++;
+        
+        while (ConsumeBytePassing(file, &IsDigit)) {
+            (*len)++;
+        }   
+    }
+    else {
+        file->offset = startOffset;
+        isFloat = false;
+    }
+
+    return isFloat;
+}
+
+inline bool ConsumeStringLiteral(FileHandle *file, char **start, uint32 *len) {
+    char c = ((uint8 *)file->data)[file->offset];
+
+    bool isString = false;
+
+    *len = 0;
+
+    if (PeekChar(file) == '\"') {
+        *start = (char *)(((uint8 *)file->data)) + file->offset;
+        ReadChar(file);
+        
+        char next = *((char *)(((uint8 *)file->data)) + file->offset);
+
+        if (next != '\"') {
+            *start = ((char *)(((uint8 *)file->data)) + file->offset);
+        }
+        else {
+            ReadChar(file);
+            return true;
+        }
+        
+        isString = true;
+
+        char c = next;
+        while (c != '\"') {
+            *len = *len + 1;
+            c = ReadChar(file);
+        }
+
+        *len = *len - 1;
+
+        // To consume the last quote string
+        ReadChar(file);
+    }
+    else {
+        isString = false;
+    }
+
+    return isString;
+}
+
+bool ConsumeIdentifierToken(FileHandle *file, char **tokenStart, int32 *tokenLen) {
+    char firstChar = ((uint8 *)file->data)[file->offset];
+
+    bool isIdentifier = false;
+
+    while (IsAlphaASCII(firstChar) && ConsumeBytePassing(file, &ValidFileSymbol)) {
+        if (!isIdentifier) {
+            *tokenStart = (char *)(((uint8 *)file->data)) + file->offset - 1;
+
+            isIdentifier = true;
+        }
+
+        *tokenLen = *tokenLen + 1;
+    }
+
+    return isIdentifier;
+}
+
+inline u32 ReadBytesUntilWhitespace(FileHandle *handle, char *word, uint32 wordSize = 0) {
+    u32 len = 0;
+    char c = 0;
+    while (!IsWhitespace(c)) {
+        uint32 bytesRead = ReadBytes(handle, 1, &c);
+
+        if (bytesRead == 0) { break; }
+
+        if (!IsWhitespace(c)) {
+            if (word) {
+                ASSERT(wordSize + 1 < len);
+                word[len++] = c;
+            }
+        }
+    }
+
+    return len;
+}
