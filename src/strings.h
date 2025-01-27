@@ -67,3 +67,30 @@ inline uint32 LowercaseASCII(uint32 codepoint) {
 
     return codepoint;
 }
+
+
+inline bool ValidFileSymbol(uint32 codepoint) {
+    return IsAlphaASCII(codepoint) || IsDigit(codepoint) || codepoint == '_' || codepoint == '-' || codepoint == '.' || codepoint == '/';
+}
+
+inline bool ValidIdentifierSymbol(uint32 codepoint) {
+    return IsAlphaASCII(codepoint) || IsDigit(codepoint) || codepoint == '_';
+}
+
+uint32 StringToInt32(const char *str) {
+    // 10 is the base, not the length of the string
+    int64 value = strtoll(str, NULL, 10);
+    return (int32)value;
+}
+
+uint32 StringToUInt32(const char *str) {
+    uint64 value = strtoul(str, NULL, 10);
+    return (u32)value;
+}
+
+real32 StringToReal32(const char *str) {
+    char *endPtr;
+    real32 value = strtof(str, NULL);
+    return value;
+}
+

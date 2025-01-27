@@ -266,7 +266,7 @@ inline void WriteReal32(FileHandle *file, real32 value) {
 }
 
 
-inline bool ConsumeIntLiteral(FileHandle *file, char **start, uint32 *len) {
+inline bool ConsumeIntLiteral(FileHandle *file, char **start, int32 *len) {
     char c = ((uint8 *)file->data)[file->offset];
 
     bool isInt = false;
@@ -305,7 +305,7 @@ inline bool ConsumeIntLiteral(FileHandle *file, char **start, uint32 *len) {
 }
 
 
-inline bool ConsumeFloatLiteral(FileHandle *file, char **start, uint32 *len) {
+inline bool ConsumeFloatLiteral(FileHandle *file, char **start, int32 *len) {
     char c = ((uint8 *)file->data)[file->offset];
 
     bool isFloat = false;
@@ -402,7 +402,7 @@ bool ConsumeIdentifierToken(FileHandle *file, char **tokenStart, int32 *tokenLen
 
     bool isIdentifier = false;
 
-    while (IsAlphaASCII(firstChar) && ConsumeBytePassing(file, &ValidFileSymbol)) {
+    while (IsAlphaASCII(firstChar) && ConsumeBytePassing(file, &ValidIdentifierSymbol)) {
         if (!isIdentifier) {
             *tokenStart = (char *)(((uint8 *)file->data)) + file->offset - 1;
 
