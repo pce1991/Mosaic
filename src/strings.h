@@ -94,3 +94,31 @@ real32 StringToFloat32(const char *str) {
     return value;
 }
 
+
+inline bool StringEquals(const char *a, const char *b) {
+    if (a == NULL || b == NULL) {
+        return a == b;
+    }
+
+    return (strcmp(a, b) == 0);
+}
+
+inline bool StringEquals(const char *a, const char *b, uint32 lengthA, uint32 lengthB) {
+    if (a == NULL || b == NULL) {
+        return a == b;
+    }
+
+    if (lengthA != lengthB) {
+        return false;
+    }
+
+    return memcmp(a, b, lengthA) == 0;
+}
+
+inline bool StringEquals(const char *a, const char *b, uint32 length) {
+    if (a == NULL || b == NULL) {
+        return a == b;
+    }
+
+    return memcmp(a, b, length) == 0;
+}
