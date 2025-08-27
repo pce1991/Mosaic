@@ -88,9 +88,9 @@ uint32 StringToUInt32(const char *str) {
     return (u32)value;
 }
 
-real32 StringToFloat32(const char *str) {
+float32 StringToFloat32(const char *str) {
     char *endPtr;
-    real32 value = strtof(str, NULL);
+    float32 value = strtof(str, NULL);
     return value;
 }
 

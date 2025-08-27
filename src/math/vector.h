@@ -1467,6 +1467,7 @@ vec3 Ceilv(vec3 a) {
     result.x = Ceilf(a.x);
     result.y = Ceilf(a.y);
     result.z = Ceilf(a.z);
+    
     return result;
 }
 

@@ -1,436 +1,436 @@
 
 struct ArrayChunk {
-    ArrayChunk *nextChunk;
-    uint8 data[0];
+  ArrayChunk *nextChunk;
+  uint8 data[0];
 };
 
 struct DynamicArray_Untyped {
-    MAllocator *allocator;
+  MAllocator *allocator;
 
-    uint32 count;
-    uint32 elementsPerChunk;
+  uint32 count;
+  uint32 elementsPerChunk;
 
-    uint32 chunkCount;
+  uint32 chunkCount;
 
-    ArrayChunk *headChunk;
-    ArrayChunk *tailChunk;
+  ArrayChunk *headChunk;
+  ArrayChunk *tailChunk;
 };
 
 void DynamicArrayAllocateChunk(DynamicArray_Untyped *array, uint32 elementSize) {
-    ArrayChunk *newChunk = (ArrayChunk *)AllocateMem(array->allocator, sizeof(ArrayChunk) + (array->elementsPerChunk * elementSize));
-    newChunk->nextChunk = NULL;
+  ArrayChunk *newChunk = (ArrayChunk *)AllocateMem(array->allocator, sizeof(ArrayChunk) + (array->elementsPerChunk * elementSize));
+  newChunk->nextChunk = NULL;
 
-    if (array->headChunk == NULL) {
-        array->headChunk = newChunk;
-        array->tailChunk = newChunk;
-    }
-    else {
-        ArrayChunk *chunk = array->tailChunk;
-        chunk->nextChunk = newChunk;
-        array->tailChunk = chunk->nextChunk;
-    }
+  if (array->headChunk == NULL) {
+    array->headChunk = newChunk;
+    array->tailChunk = newChunk;
+  }
+  else {
+    ArrayChunk *chunk = array->tailChunk;
+    chunk->nextChunk = newChunk;
+    array->tailChunk = chunk->nextChunk;
+  }
 
-    array->chunkCount++;
+  array->chunkCount++;
 }
 
 inline void *DynamicArrayGetData(DynamicArray_Untyped const *array, int32 elementSize, int32 index) {
 
-    s32 dynamicIndex = index / array->elementsPerChunk;
-    ArrayChunk *chunk = array->headChunk;
-    for (int32 i = 0; i < dynamicIndex; i++) {
-        chunk = chunk->nextChunk;
-    }
+  s32 dynamicIndex = index / array->elementsPerChunk;
+  ArrayChunk *chunk = array->headChunk;
+  for (int32 i = 0; i < dynamicIndex; i++) {
+    chunk = chunk->nextChunk;
+  }
 
-    return ((uint8 *)chunk->data + (elementSize * (index % array->elementsPerChunk)));    
+  return ((uint8 *)chunk->data + (elementSize * (index % array->elementsPerChunk)));    
 }
 
 
 inline ArrayChunk *GetNthChunk(DynamicArray_Untyped const *array, int32 index) {
-    ArrayChunk *chunk = array->headChunk;
-    int32 count = 0;
-    while (count < index) {
-        chunk = chunk->nextChunk;
-        count++;
+  ArrayChunk *chunk = array->headChunk;
+  int32 count = 0;
+  while (count < index) {
+    chunk = chunk->nextChunk;
+    count++;
 
-        if (chunk == NULL) {
-            return NULL;
-        }
+    if (chunk == NULL) {
+      return NULL;
     }
+  }
 
-    return chunk;
+  return chunk;
 }
 
 void DynamicArrayEnsureCapacity(DynamicArray_Untyped *array, uint32 elementSize, uint32 capacity) {
 
-    //ASSERT(array->allocator != NULL);
-    //ASSERT(array->elementsPerChunk > 0);
+  //ASSERT(array->allocator != NULL);
+  //ASSERT(array->elementsPerChunk > 0);
 
-    if (array->elementsPerChunk == 0) {
-        array->elementsPerChunk = 8;
-    }
+  if (array->elementsPerChunk == 0) {
+    array->elementsPerChunk = 8;
+  }
     
-    if (array->chunkCount * array->elementsPerChunk < capacity) {
-        uint32 dynamicsToAdd = ((capacity / array->elementsPerChunk) - array->chunkCount) + 1;
+  if (array->chunkCount * array->elementsPerChunk < capacity) {
+    uint32 dynamicsToAdd = ((capacity / array->elementsPerChunk) - array->chunkCount) + 1;
 
-        for (int i = 0; i < dynamicsToAdd; i++) {
-            DynamicArrayAllocateChunk(array, elementSize);
-        }
+    for (int i = 0; i < dynamicsToAdd; i++) {
+      DynamicArrayAllocateChunk(array, elementSize);
     }
+  }
 }
 
 inline uint32 PushBack(DynamicArray_Untyped *array, u32 size, void *data)  {
-    DynamicArrayEnsureCapacity(array, size, array->count + 1);
-    uint32 index = array->count;
-    array->count++;
+  DynamicArrayEnsureCapacity(array, size, array->count + 1);
+  uint32 index = array->count;
+  array->count++;
 
-    void *ptr = DynamicArrayGetData(array, size, index);
+  void *ptr = DynamicArrayGetData(array, size, index);
 
-    memcpy(ptr, data, size);
+  memcpy(ptr, data, size);
     
-    return index;
+  return index;
 }
 
 inline void *PushBackPtr(DynamicArray_Untyped *array, u32 size)  {
-    DynamicArrayEnsureCapacity(array, size, array->count + 1);
-    uint32 index = array->count;
-    array->count++;
+  DynamicArrayEnsureCapacity(array, size, array->count + 1);
+  uint32 index = array->count;
+  array->count++;
 
-    void *ptr = DynamicArrayGetData(array, size, index);
-    memset(ptr, 0, size);
-    return ptr;
+  void *ptr = DynamicArrayGetData(array, size, index);
+  memset(ptr, 0, size);
+  return ptr;
 }
 
 
 inline DynamicArray_Untyped MakeDynamicArray(MAllocator *allocator, uint32 size, uint32 elementsPerChunk, uint32 chunkCount = 1) {
-    DynamicArray_Untyped array = {};
-    array.allocator = allocator;
+  DynamicArray_Untyped array = {};
+  array.allocator = allocator;
 
-    if (elementsPerChunk == 0) {
-        elementsPerChunk = 1;
-    }
+  if (elementsPerChunk == 0) {
+    elementsPerChunk = 1;
+  }
 
-    array.elementsPerChunk = elementsPerChunk;
+  array.elementsPerChunk = elementsPerChunk;
 
-    DynamicArrayEnsureCapacity(&array, size, elementsPerChunk);
-    return array;
+  DynamicArrayEnsureCapacity(&array, size, elementsPerChunk);
+  return array;
 }
 
 
 template <typename T>
 struct DynamicArray {
-    MAllocator *allocator;
+  MAllocator *allocator;
 
-    uint32 count;
-    uint32 elementsPerChunk;
+  uint32 count;
+  uint32 elementsPerChunk;
 
-    uint32 capacity;
-    uint32 chunkCount;
+  uint32 capacity;
+  uint32 chunkCount;
 
-    ArrayChunk *headChunk;
-    ArrayChunk *tailChunk;
+  ArrayChunk *headChunk;
+  ArrayChunk *tailChunk;
 
-    inline T& operator[](const int index) const {
-        // (index / elementsPerChunk) to get the chunk
-        // then index % chunkCount to get the index
+  inline T& operator[](const int index) const {
+    // (index / elementsPerChunk) to get the chunk
+    // then index % chunkCount to get the index
 
-        s32 chunkIndex = index / elementsPerChunk;
-        ArrayChunk *chunk = headChunk;
-        for (int32 i = 0; i < chunkIndex; i++) {
-            chunk = chunk->nextChunk;
-        }
-
-        return *(T *)(chunk->data + (sizeof(T) * (index % elementsPerChunk)));
+    s32 chunkIndex = index / elementsPerChunk;
+    ArrayChunk *chunk = headChunk;
+    for (int32 i = 0; i < chunkIndex; i++) {
+      chunk = chunk->nextChunk;
     }
+
+    return *(T *)(chunk->data + (sizeof(T) * (index % elementsPerChunk)));
+  }
 };
 
 template <typename T>
 void DynamicArrayAllocateChunk(DynamicArray<T> *array) {
-    ArrayChunk *newChunk = (ArrayChunk *)AllocateMem(array->allocator, sizeof(ArrayChunk) + (array->elementsPerChunk * sizeof(T)));
-    newChunk->nextChunk = NULL;
+  ArrayChunk *newChunk = (ArrayChunk *)AllocateMem(array->allocator, sizeof(ArrayChunk) + (array->elementsPerChunk * sizeof(T)));
+  newChunk->nextChunk = NULL;
 
-    if (array->headChunk == NULL) {
-        array->headChunk = newChunk;
-        array->tailChunk = newChunk;
-    }
-    else {
-        ArrayChunk *chunk = array->tailChunk;
-        chunk->nextChunk = newChunk;
-        array->tailChunk = chunk->nextChunk;
-    }
+  if (array->headChunk == NULL) {
+    array->headChunk = newChunk;
+    array->tailChunk = newChunk;
+  }
+  else {
+    ArrayChunk *chunk = array->tailChunk;
+    chunk->nextChunk = newChunk;
+    array->tailChunk = chunk->nextChunk;
+  }
 
-    array->chunkCount++;
+  array->chunkCount++;
 }
 
 template <typename T>
 void DynamicArrayEnsureCapacity(DynamicArray<T> *array, uint32 capacity) {
 
-    ASSERT(array->allocator != NULL);
-    ASSERT(array->elementsPerChunk > 0);
+  ASSERT(array->allocator != NULL);
+  ASSERT(array->elementsPerChunk > 0);
     
-    if (array->chunkCount * array->elementsPerChunk < capacity) {
-        uint32 chunksToAdd = ((capacity / array->elementsPerChunk) - array->chunkCount) + 1;
+  if (array->chunkCount * array->elementsPerChunk < capacity) {
+    uint32 chunksToAdd = ((capacity / array->elementsPerChunk) - array->chunkCount) + 1;
 
-        for (int i = 0; i < chunksToAdd; i++) {
-            DynamicArrayAllocateChunk(array);
-        }
+    for (int i = 0; i < chunksToAdd; i++) {
+      DynamicArrayAllocateChunk(array);
     }
+  }
 
-    array->capacity = array->chunkCount * array->elementsPerChunk;
+  array->capacity = array->chunkCount * array->elementsPerChunk;
 }
 
 template <typename T>
 inline DynamicArray<T> MakeDynamicArray(MAllocator *allocator, uint32 elementsPerChunk, uint32 chunkCount = 1) {
-    DynamicArray<T> array = {};
-    array.allocator = allocator;
-    array.elementsPerChunk = elementsPerChunk;
+  DynamicArray<T> array = {};
+  array.allocator = allocator;
+  array.elementsPerChunk = elementsPerChunk;
 
-    DynamicArrayEnsureCapacity(&array, chunkCount * elementsPerChunk);
-    return array;
+  DynamicArrayEnsureCapacity(&array, chunkCount * elementsPerChunk);
+  return array;
 }
 
 template <typename T>
 inline void DeallocateDynamicArray(DynamicArray<T> *array) {
-    ArrayChunk *chunk = array->headChunk;
-    ArrayChunk *nextChunk = chunk->nextChunk;
-    while (chunk != NULL) {
-        DeallocateMem(array->allocator, chunk);
+  ArrayChunk *chunk = array->headChunk;
+  ArrayChunk *nextChunk = chunk->nextChunk;
+  while (chunk != NULL) {
+    DeallocateMem(array->allocator, chunk);
 
-        chunk = nextChunk;
+    chunk = nextChunk;
 
-        if (chunk) {
-            nextChunk = nextChunk->nextChunk;
-        }
+    if (chunk) {
+      nextChunk = nextChunk->nextChunk;
     }
+  }
 }
 
 template <typename T>
 inline uint32 PushBack(DynamicArray<T> *array, T elem)  {
-    DynamicArrayEnsureCapacity(array, array->count + 1);
-    uint32 index = array->count;
-    array->count++;
-    (*array)[index] = elem;
-    return index;
+  DynamicArrayEnsureCapacity(array, array->count + 1);
+  uint32 index = array->count;
+  array->count++;
+  (*array)[index] = elem;
+  return index;
 }
 
 template <typename T>
 inline T *PushBackPtr(DynamicArray<T> *array)  {
-    DynamicArrayEnsureCapacity(array, array->count + 1);
-    uint32 index = array->count;
-    array->count++;
-    T *result = &(*array)[index];
-    memset(result, 0, sizeof(T));
-    return result;
+  DynamicArrayEnsureCapacity(array, array->count + 1);
+  uint32 index = array->count;
+  array->count++;
+  T *result = &(*array)[index];
+  memset(result, 0, sizeof(T));
+  return result;
 }
 
 template <typename T>
 inline void PushBackUnique(DynamicArray<T> *array, T elem) {
-    if (!Contains(array, elem)) {
-        PushBack(array, elem);
-    }
+  if (!Contains(array, elem)) {
+    PushBack(array, elem);
+  }
 }
 
 template <typename T>
 inline bool PopBack(DynamicArray<T> *array, T *element = NULL) {
-    bool result = false;
+  bool result = false;
 
-    if (array->count > 0) {
-        if (element != NULL) {
-            int32 index = array->count - 1;
-            *element = (*array)[index];
-        }
-        array->count--;
-        result = true;
+  if (array->count > 0) {
+    if (element != NULL) {
+      int32 index = array->count - 1;
+      *element = (*array)[index];
     }
+    array->count--;
+    result = true;
+  }
 
-    return result;
+  return result;
 }
 
 template <typename T>
 inline bool PopFront(DynamicArray<T> *array, T *element = NULL) {
-    if (array->count == 0) { return false; }
+  if (array->count == 0) { return false; }
 
-    if (element != NULL) {
-        *element = (*array)[0];
-    }
-    RemoveAtIndex(array, 0);
+  if (element != NULL) {
+    *element = (*array)[0];
+  }
+  RemoveAtIndex(array, 0);
 
-    return true;
+  return true;
 }
 
 template <typename T>
 inline void DynamicArrayClear(DynamicArray<T> *array) {
-    array->count = 0;
+  array->count = 0;
 }
 
 template <typename T>
 inline void DynamicArrayClearToCount(DynamicArray<T> *array, uint32 count) {
-    DynamicArrayEnsureCapacity(array, count);
+  DynamicArrayEnsureCapacity(array, count);
 
-    ArrayChunk *chunk = array->headChunk;
-    while (chunk != NULL) {
-        memset(chunk->data, 0, array->elementsPerChunk * sizeof(T));
-        chunk = chunk->nextChunk;
-    }
+  ArrayChunk *chunk = array->headChunk;
+  while (chunk != NULL) {
+    memset(chunk->data, 0, array->elementsPerChunk * sizeof(T));
+    chunk = chunk->nextChunk;
+  }
     
-    array->count = count;
+  array->count = count;
 }
 
 template <typename T>
 inline void ExtendDynamicArray(DynamicArray<T> *array, DynamicArray<T> from) {
-    for (int i = 0; i < from.count; i++) {
-        PushBack(array, from[i]);
-    }
+  for (int i = 0; i < from.count; i++) {
+    PushBack(array, from[i]);
+  }
 }
 
 template <typename T>
 inline void InsertAtIndex(DynamicArray<T> *array, uint32 index, T element) {
-    ASSERT(index <= array->count);
-    ASSERT(array->elementsPerChunk != 0);
+  ASSERT(index <= array->count);
+  ASSERT(array->elementsPerChunk != 0);
 
-    DynamicArrayEnsureCapacity(array, array->count + 1);
+  DynamicArrayEnsureCapacity(array, array->count + 1);
 
-    // @TODO: This can be way more performant by doing MoveMems()
+  // @TODO: This can be way more performant by doing MoveMems()
 
-    array->count++;
-    for (int i = array->count - 1; i > index; i--) {
-        (*array)[i] = (*array)[i - 1];
-    }
+  array->count++;
+  for (int i = array->count - 1; i > index; i--) {
+    (*array)[i] = (*array)[i - 1];
+  }
 
-    (*array)[index] = element;
+  (*array)[index] = element;
 }
 
 template <typename T>
 inline ArrayChunk *GetNthChunk(DynamicArray<T> *array, int32 index) {
-    ArrayChunk *chunk = array->headChunk;
-    int32 count = 0;
-    while (count < index) {
-        chunk = chunk->nextChunk;
-        count++;
+  ArrayChunk *chunk = array->headChunk;
+  int32 count = 0;
+  while (count < index) {
+    chunk = chunk->nextChunk;
+    count++;
 
-        if (chunk == NULL) {
-            return NULL;
-        }
+    if (chunk == NULL) {
+      return NULL;
     }
+  }
 
-    return chunk;
+  return chunk;
 }
 
 template <typename T>
 inline void RemoveAtIndex(DynamicArray<T> *array, uint32 index) {
-    ASSERT(index < array->count);
-    ASSERT(array->elementsPerChunk != 0);
-    ASSERT(array->chunkCount > 0);
+  ASSERT(index < array->count);
+  ASSERT(array->elementsPerChunk != 0);
+  ASSERT(array->chunkCount > 0);
 
-    if (index == array->count - 1) {
-        array->count--;
-        return;
-    }
-
-    uint32 firstChunkIndex = index / array->elementsPerChunk;
-    uint32 lastChunkIndex = Min(array->count / array->elementsPerChunk, array->chunkCount);
-
-    {
-        uint32 indexInChunk = index % array->elementsPerChunk;
-        uint32 elementsInChunk = firstChunkIndex < lastChunkIndex ?
-            array->elementsPerChunk :
-            (array->count % array->elementsPerChunk);
-
-        uint32 elementsToMoveInChunk = elementsInChunk - indexInChunk - 1;
-        if (elementsToMoveInChunk > 0) {
-            ArrayChunk *chunk = GetNthChunk(array, firstChunkIndex);
-            memmove(chunk->data + sizeof(T) * indexInChunk,
-                    chunk->data + sizeof(T) * (indexInChunk + 1),
-                    sizeof(T) * elementsToMoveInChunk);
-        }
-    }
-
-    // At this point there is a one element "hole" at the end of the
-    // first chunk. Fill it in from the first value in the next chunk,
-    // then shift the elements in next chunk, which creates a hole at
-    // the end of the next chunk, and repeat...
-    for (uint32 chunkIndex = firstChunkIndex + 1; chunkIndex <= lastChunkIndex; chunkIndex++) {
-        ArrayChunk *prevChunk = GetNthChunk(array, chunkIndex - 1);
-        ArrayChunk *chunk = GetNthChunk(array, chunkIndex);
-
-        uint32 elementsInChunk = chunkIndex < lastChunkIndex ?
-            array->elementsPerChunk :
-            (array->count % array->elementsPerChunk);
-
-        if (elementsInChunk == 0) {
-            break;
-        }
-
-        memcpy(prevChunk->data + sizeof(T) * (array->elementsPerChunk - 1), chunk->data, sizeof(T));
-        memmove(chunk->data, chunk->data + sizeof(T), sizeof(T) * (elementsInChunk - 1));
-    }
-
+  if (index == array->count - 1) {
     array->count--;
+    return;
+  }
+
+  uint32 firstChunkIndex = index / array->elementsPerChunk;
+  uint32 lastChunkIndex = Min(array->count / array->elementsPerChunk, array->chunkCount);
+
+  {
+    uint32 indexInChunk = index % array->elementsPerChunk;
+    uint32 elementsInChunk = firstChunkIndex < lastChunkIndex ?
+      array->elementsPerChunk :
+      (array->count % array->elementsPerChunk);
+
+    uint32 elementsToMoveInChunk = elementsInChunk - indexInChunk - 1;
+    if (elementsToMoveInChunk > 0) {
+      ArrayChunk *chunk = GetNthChunk(array, firstChunkIndex);
+      memmove(chunk->data + sizeof(T) * indexInChunk,
+              chunk->data + sizeof(T) * (indexInChunk + 1),
+              sizeof(T) * elementsToMoveInChunk);
+    }
+  }
+
+  // At this point there is a one element "hole" at the end of the
+  // first chunk. Fill it in from the first value in the next chunk,
+  // then shift the elements in next chunk, which creates a hole at
+  // the end of the next chunk, and repeat...
+  for (uint32 chunkIndex = firstChunkIndex + 1; chunkIndex <= lastChunkIndex; chunkIndex++) {
+    ArrayChunk *prevChunk = GetNthChunk(array, chunkIndex - 1);
+    ArrayChunk *chunk = GetNthChunk(array, chunkIndex);
+
+    uint32 elementsInChunk = chunkIndex < lastChunkIndex ?
+      array->elementsPerChunk :
+      (array->count % array->elementsPerChunk);
+
+    if (elementsInChunk == 0) {
+      break;
+    }
+
+    memcpy(prevChunk->data + sizeof(T) * (array->elementsPerChunk - 1), chunk->data, sizeof(T));
+    memmove(chunk->data, chunk->data + sizeof(T), sizeof(T) * (elementsInChunk - 1));
+  }
+
+  array->count--;
 }
 
 template <typename T>
 inline void RemoveAtIndexBySwap(DynamicArray<T> *array, uint32 index) {
-    ASSERT(index < array->count);
-    ASSERT(array->elementsPerChunk != 0);
+  ASSERT(index < array->count);
+  ASSERT(array->elementsPerChunk != 0);
 
-    if (index != array->count - 1) {
-        (*array)[index] = (*array)[array->count - 1];
-    }
+  if (index != array->count - 1) {
+    (*array)[index] = (*array)[array->count - 1];
+  }
 
-    array->count--;
+  array->count--;
 }
 
 template <typename T>
 inline bool Contains(DynamicArray<T> *array, T element, uint32 *index = NULL) {
-    bool result = false;
+  bool result = false;
 
-    for (int i = 0; i < array->count; i++) {
-        if ((*array)[i] == element) {
-            if (index != NULL) { *index = i; }
-            result = true;
-            break;
-        }
+  for (int i = 0; i < array->count; i++) {
+    if ((*array)[i] == element) {
+      if (index != NULL) { *index = i; }
+      result = true;
+      break;
     }
+  }
 
-    return result;
+  return result;
 }
 
 template <typename T>
 inline T Last(DynamicArray<T> *array) {
-    ASSERT(array->count > 0);
+  ASSERT(array->count > 0);
 
-    T result = (*array)[array->count - 1];
-    return result;
+  T result = (*array)[array->count - 1];
+  return result;
 }
 
 template <typename T>
 inline T *LastPtr(DynamicArray<T> *array) {
-    ASSERT(array->count > 0);
+  ASSERT(array->count > 0);
 
-    T *result = &(*array)[array->count - 1];
-    return result;
+  T *result = &(*array)[array->count - 1];
+  return result;
 }
 
 template <typename T>
 inline void RemoveLast(DynamicArray<T> *array) {
-    ASSERT(array->count > 0);
-    RemoveAtIndex(array, array->count - 1);
+  ASSERT(array->count > 0);
+  RemoveAtIndex(array, array->count - 1);
 }
 
 template <typename T>
 inline void CopyDynamicArrayIntoBuffer(DynamicArray<T> *array, void *buffer) {
 
-    uint32 chunkSize = sizeof(T) * array->elementsPerChunk;
+  uint32 chunkSize = sizeof(T) * array->elementsPerChunk;
 
-    ArrayChunk *chunk = array->headChunk;
-    while (chunk != NULL) {
-        if (chunk != chunk->tailChunk) {
-            memcpy(buffer, array->chunks[i]->data, sizeof(T) * array->elementsPerChunk);
-        }
-        else {
-            u32 remainingCount = array->count - ((array->chunkCount - 1) * array->elementsPerChunk);
-            memcpy(buffer, chunk->data, sizeof(T) * remainingCount);
-        }
-
-        buffer = (uint8 *)buffer + (sizeof(T) * array->elementsPerChunk);
+  ArrayChunk *chunk = array->headChunk;
+  while (chunk != NULL) {
+    if (chunk != chunk->tailChunk) {
+      memcpy(buffer, array->chunks[i]->data, sizeof(T) * array->elementsPerChunk);
     }
+    else {
+      u32 remainingCount = array->count - ((array->chunkCount - 1) * array->elementsPerChunk);
+      memcpy(buffer, chunk->data, sizeof(T) * remainingCount);
+    }
+
+    buffer = (uint8 *)buffer + (sizeof(T) * array->elementsPerChunk);
+  }
 }
