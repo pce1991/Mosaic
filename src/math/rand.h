@@ -1,53 +1,79 @@
 
+// found that Microsoft used this for C++ lib in 2005, seems fine
+#define LCG_MULT 214013u
+#define LCG_INC 2531011u
+
+// an alternative
+// #define LCG_MULT 1664525u
+// #define LCG_INC 1013904223u
+
 typedef struct {
-    int32 seed;
-    int32 state;
+    uint32 seed;
+    uint32 state;
 } LCGState;
 
-#define LCG_MULT 1103515245
-#define LCG_INC 12345
+LCGState defaultLCGState = {};
 
-// @NOTE: this is global state!!!
-LCGState defaultLCGState;
-
-#define MY_RAND_MAX INT_MAX
-
-void SeedRand(int32 seed) {
+void SeedRand(uint32 seed) {
     defaultLCGState.seed = seed;
     defaultLCGState.state = seed;
-
-    Print("SEED %d", seed);
 }
 
-int32 Randi() {
-    defaultLCGState.state = ((LCG_MULT * defaultLCGState.state + LCG_INC) & MY_RAND_MAX);
-
-    return (defaultLCGState.state);
+uint32 Randi() {
+    defaultLCGState.state = defaultLCGState.state * LCG_MULT + LCG_INC;
+    return defaultLCGState.state;
 }
 
-int32 RandUpper(int32 upperLimit) {
-    return Randi() % upperLimit;
+uint32 Randi(uint32 upperLimit) {
+  // we use the high-bits we get from Randi which have better distribution
+  // and then map those onto our correct range.
+  return (uint32)(((uint64)Randi() * upperLimit) >> 32);
 }
 
 int32 RandiRange(int32 lowerLimit, int32 upperLimit) {
-    int32 range = upperLimit - lowerLimit;
-    int32 result = lowerLimit + (Randi() % range);
-
-    return result;
+    return lowerLimit + (int32)Randi((uint32)(upperLimit - lowerLimit));
 }
 
-real32 Randf() {
-    real32 result = (real32)Randi() / (real32)MY_RAND_MAX;
-    return result;
+float32 Randf() {
+    return (float32)Randi() / (float32)UINT32_MAX;
 }
 
-real32 RandfUpper(real32 upperLimit) {
-    real32 result = ((real32)Randi() / (real32)MY_RAND_MAX) * upperLimit;
-    return result;
+float32 RandfUpper(float32 upperLimit) {
+    return Randf() * upperLimit;
 }
 
-real32 RandfRange(real32 lowerLimit, real32 upperLimit) {
-    real32 range = upperLimit - lowerLimit;
-    real32 result = lowerLimit + RandfUpper(range);
-    return result;
+float32 RandfRange(float32 lowerLimit, float32 upperLimit) {
+    return lowerLimit + RandfUpper(upperLimit - lowerLimit);
 }
+
+
+void SeedRand(LCGState *state, uint32 seed) {
+    state->seed = seed;
+    state->state = seed;
+}
+
+uint32 Randi(LCGState *state) {
+    state->state = state->state * LCG_MULT + LCG_INC;
+    return state->state;
+}
+
+uint32 Randi(LCGState *state, uint32 upperLimit) {
+  return Randi(state) % upperLimit;
+}
+
+int32 RandiRange(LCGState *state, int32 lowerLimit, int32 upperLimit) {
+  return lowerLimit + (int32)Randi(state, (uint32)(upperLimit - lowerLimit));
+}
+
+float32 Randf(LCGState *state) {
+  return (float32)Randi(state) / (float32)UINT32_MAX;
+}
+
+float32 RandfUpper(LCGState *state, float32 upperLimit) {
+    return Randf(state) * upperLimit;
+}
+
+float32 RandfRange(LCGState *state, float32 lowerLimit, float32 upperLimit) {
+  return lowerLimit + RandfUpper(state, upperLimit - lowerLimit);
+}
+
