@@ -224,13 +224,18 @@ void LoadSprite(Sprite *sprite, char *path) {
     int32 x, y, n;
     uint8 *data = stbi_load(path, &x, &y, &n, 4);
 
-    AllocateSprite(sprite, x, y);
+    if (data != NULL) {
+      AllocateSprite(sprite, x, y);
 
-    memcpy(sprite->data, data, sprite->size);
+      memcpy(sprite->data, data, sprite->size);
 
-    free(data);
+      free(data);
 
-    OpenGL_InitTexture(sprite);
+      OpenGL_InitTexture(sprite);
+    }
+    else {
+      Print("ERROR LOADING SPRITE %s", path);
+    }
 }
 
 void LoadSprite(Sprite *sprite) {
@@ -462,6 +467,26 @@ void DrawLine(vec2 a, vec2 b, real32 width, vec4 color) {
 
 
     DrawRect(c, V2(length, width), angle, color);
+}
+
+void DrawRay(vec2 a, vec2 dir, real32 width, vec4 color) {
+  DrawLine(a, a + dir, width, color);
+}
+
+void DrawCircle(vec2 c, float32 radius, float32 width, vec4 color) {
+  uint32 const segments = 12;
+
+  float const thetaStep = 2.0f * _PI / (float32)segments;
+
+  for (int i = 1; i < segments + 3; ++i) {
+    float theta = (i - 1) * thetaStep;
+    vec2 p1 = V2(1, 0) * radius * cosf(theta) + V2(0, 1) * radius * sinf(theta);
+    
+    float theta2 = i * thetaStep;
+    vec2 p2 = V2(1, 0) * radius * cosf(theta2) + V2(0, 1) * radius * sinf(theta2);
+
+    DrawLine(p1 + c, p2 + c, width, color);
+  }
 }
 
 

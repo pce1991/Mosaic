@@ -22,13 +22,13 @@ void MyInit() {
     LoadSprite(&Data.sprite, "data/textures/galaga_ship.png");
     LoadSprite(&Data.sprite2, "data/textures/van_gogh.png");
 
-    LoadSprite(&lemonSprite, "data/texutres/bad_lemon.png");
+    LoadSprite(&lemonSprite, "data/textures/bad_lemon.png");
 
     LoadSoundClip("data/sfx/flute_breathy_c4.wav", &Data.sound);
 }
 
 
-vec2 position = V2(4, 0);
+vec2 position = V2(5, 0);
 
 vec2 scale = V2(1, 1);
 
@@ -62,6 +62,13 @@ void MyGameUpdate() {
 
     // version that take an angle.
     DrawSprite(mousePos, V2(0.5f, 0.5f), DegToRad(Time * 90), &lemonSprite);
-    DrawRect(V2(0, 0), V2(1, 1), RGB(1.0f, 0.3f, 0.3f));
+    DrawRect(V2(-7, 0), V2(1, 1), RGB(1.0f, 0.3f, 0.3f));
     DrawSprite(position, V2(0.5f, 0.5f), &Data.sprite);
+
+    DrawLine(V2(3, 0), V2(4, 0), 0.025f, V4(1));
+    DrawLine(V2(3, 0), V2(3, 1), 0.025f, V4(1,0,0,1));
+
+    DrawRay(V2(-5, -5), Rotate(Time, V2(1, 0)), 0.025f, V4(0.0f, 0.5f, 0.8f, 1.0f));
+
+    DrawCircle(V2(-5, -5), 1.0f, 0.025f, V4(1));
 }
