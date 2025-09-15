@@ -15,9 +15,18 @@ void Print(const char *fmt, ...) {
     OutputDebugString(buffer);
     OutputDebugString("\n");
 
+    {
+      HANDLE stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (stdOut != NULL && stdOut != INVALID_HANDLE_VALUE)
+      {
+        DWORD written = 0;
+        WriteConsoleA(stdOut, buffer, strlen(buffer), &written, NULL);
+        WriteConsoleA(stdOut, "\n", 1, &written, NULL);
+      }
+    }
+
     va_end(args);
 }
-
 
 void PrintNoLine(const char *fmt, ...) {
     char buffer[PRINT_MAX_BUFFER_LEN];
@@ -30,9 +39,17 @@ void PrintNoLine(const char *fmt, ...) {
 
     OutputDebugString(buffer);
 
+    {
+      HANDLE stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (stdOut != NULL && stdOut != INVALID_HANDLE_VALUE)
+      {
+        DWORD written = 0;
+        WriteConsoleA(stdOut, buffer, strlen(buffer), &written, NULL);
+      }
+    }
+
     va_end(args);
 }
-
 
 
 void WinMoveMouse(HWND window, int32 screenX, int32 screenY, int32 height) {
