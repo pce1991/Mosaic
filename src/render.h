@@ -11,6 +11,9 @@ struct ShaderUniform {
 };
 
 struct Shader {
+  const char *vertPath;
+  const char *fragPath;
+  
     uint32 vertSize;
     char *vertSrc;
     

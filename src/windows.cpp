@@ -522,6 +522,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     
     gameMem->systemTime = (real32)systemTime.QuadPart;
 
+    Print("Starting Game Loop");
+    Print("");
+
     while(gameMem->running && PlatformRunning) {
 
         LARGE_INTEGER prevSystemTime = systemTime;
@@ -548,7 +551,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 #if OPENGL
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
-
+        
         GameUpdateAndRender(gameMem);
 
         SwapBuffers(hdc);

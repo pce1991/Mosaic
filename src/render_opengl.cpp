@@ -13,6 +13,9 @@ inline bool glCheckError_(char *file, uint32 line) {
 void LoadShader(const char *vertPath, const char *fragPath, Shader *shader) {
     FILE *file = fopen(vertPath, "r");
 
+    shader->vertPath = vertPath;
+    shader->fragPath = fragPath;
+
     if (file != NULL) {
         fseek(file, 0, SEEK_END);
         shader->vertSize = ftell(file);
@@ -113,7 +116,7 @@ void CompileShader(Shader *shader, uint32 uniformCount, const char **uniformName
         glCompileShader(shader->vertID);
         glCheckError();
 
-        Print("checking vert shader");
+        //Print("checking vert shader");
         ShaderCompiled(shader->vertID, &infoLog);
     }
     if (shader->fragSrc != NULL) {
@@ -123,7 +126,7 @@ void CompileShader(Shader *shader, uint32 uniformCount, const char **uniformName
         glCompileShader(shader->fragID);
         glCheckError();
 
-        Print("checking frag shader");
+        //Print("checking frag shader");
         ShaderCompiled(shader->vertID, &infoLog);
     }
 
@@ -166,10 +169,10 @@ void CompileShader(Shader *shader, uint32 uniformCount, const char **uniformName
         glCheckError();
         
         if (uniform->id >= 0) {
-            Print("Setting uniform %s", uniform->name);    
+          //Print("Setting uniform %s", uniform->name);    
         }
         else {
-            Print("failed to set %s", uniform->name);    
+          Print("failed to set %s for files %s %s", uniform->name, shader->vertPath, shader->fragPath);
         }
         ShaderCompiled(shader->vertID, &infoLog);
     }
