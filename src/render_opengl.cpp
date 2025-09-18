@@ -520,6 +520,20 @@ void DrawRect(RectBuffer *buffer, vec2 pos, vec2 scale, vec4 color) {
     }
 }
 
+void DrawRect(RectBuffer *buffer, vec2 pos, vec2 scale, float32 rotation, vec4 color) {
+    RectRenderData data = {};
+    data.color = color;
+    data.model = TRS(V3(pos.x, pos.y, 0), AxisAngle(V3(0, 0, 1), rotation), V3(scale.x, scale.y, 0.0f));
+    
+    if (buffer->count < buffer->capacity) {
+        buffer->data[buffer->count++] = data;
+    }
+    else {
+        ASSERT(false);
+        // Ran out of space in the rect buffer :(
+    }
+}
+
 void RenderRectBuffer(RectBuffer *buffer) {
     Mesh *mesh = &Game->quad;
     

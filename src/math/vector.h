@@ -1477,3 +1477,13 @@ vec2 Rotate(real32 angle, vec2 v) {
     result.y = sinf(angle) * v.x + cosf(angle) * v.y;
     return result;
 }
+
+
+vec2 RandDir() {
+  real32 angle = RandfRange(0.0f, _2PI);
+  vec2 v = V2(1, 0);
+  vec2 result;
+  result.x = cosf(angle) * v.x - sinf(angle) * v.y;
+  result.y = sinf(angle) * v.x + cosf(angle) * v.y;
+  return result;
+}
