@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
 
     # Zip the cleaned copy
-    zip_path = copy_dir + ".zip"
+    zip_path = original_dir + ".zip"
     zip_directory(copy_dir, zip_path)
 
     
