@@ -89,6 +89,11 @@ struct GamePlatform {
 };
 
 
+void AttachToConsole() {
+  
+}
+
+
 LRESULT CALLBACK MainWindowCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     LRESULT result = 0;
 
@@ -439,7 +444,12 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     ShowWindow(window, SW_SHOW);
     UpdateWindow(window);
 
-
+    {
+      //AllocConsole(); // Allocate a new console if none exists
+      // this will attatch us to the calling cmd prompt
+      AttachConsole(ATTACH_PARENT_PROCESS);
+    }
+    
 #if OPENGL
     OpenGLInfo glInfo;
     InitOpenGL(window, &glInfo);
@@ -512,6 +522,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     
     gameMem->systemTime = (real32)systemTime.QuadPart;
 
+    Print("Starting Game Loop");
+    Print("");
+
     while(gameMem->running && PlatformRunning) {
 
         LARGE_INTEGER prevSystemTime = systemTime;
@@ -538,7 +551,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 #if OPENGL
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
-
+        
         GameUpdateAndRender(gameMem);
 
         SwapBuffers(hdc);
@@ -547,6 +560,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     GameDeinit();
 
     WSACleanup();
-    
+
+    FreeConsole();    
     return 0;
 }

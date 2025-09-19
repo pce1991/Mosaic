@@ -253,6 +253,7 @@ void GameInit(GameMemory *gameMem) {
         CompileShader(&gameMem->shader, 3, uniforms);
     }
 
+#if 0
     {
         LoadShader("shaders/cool_mesh.vert", "shaders/cool_mesh.frag", &gameMem->coolShader);
         const char *uniforms[] = {
@@ -263,6 +264,7 @@ void GameInit(GameMemory *gameMem) {
         };
         CompileShader(&gameMem->coolShader, 4, uniforms);
     }
+#endif
 
     {
         LoadShader("shaders/instanced_quad_shader.vert", "shaders/instanced_quad_shader.frag", &gameMem->instancedQuadShader);
@@ -278,9 +280,8 @@ void GameInit(GameMemory *gameMem) {
             "model",
             "viewProjection",
             "texture0",
-            "time",
         };
-        CompileShader(&gameMem->texturedQuadShader, 4, uniforms);
+        CompileShader(&gameMem->texturedQuadShader, ARRAY_LENGTH(char *, uniforms), uniforms);
     }
 
     {
@@ -290,7 +291,6 @@ void GameInit(GameMemory *gameMem) {
                                   "viewProjection",
                                   "texcoordsMap",
                                   "fontTable",
-                                  "time",
         };
         CompileShader(&gameMem->textShader, ARRAY_LENGTH(char *, uniforms), uniforms);
     }

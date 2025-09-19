@@ -15,6 +15,39 @@ void Print(const char *fmt, ...) {
     OutputDebugString(buffer);
     OutputDebugString("\n");
 
+    {
+      HANDLE stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (stdOut != NULL && stdOut != INVALID_HANDLE_VALUE)
+      {
+        DWORD written = 0;
+        WriteConsoleA(stdOut, buffer, strlen(buffer), &written, NULL);
+        WriteConsoleA(stdOut, "\n", 1, &written, NULL);
+      }
+    }
+
+    va_end(args);
+}
+
+void PrintNoLine(const char *fmt, ...) {
+    char buffer[PRINT_MAX_BUFFER_LEN];
+
+    va_list args;
+    va_start (args, fmt);
+
+
+    vsnprintf(buffer, PRINT_MAX_BUFFER_LEN, fmt, args);
+
+    OutputDebugString(buffer);
+
+    {
+      HANDLE stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (stdOut != NULL && stdOut != INVALID_HANDLE_VALUE)
+      {
+        DWORD written = 0;
+        WriteConsoleA(stdOut, buffer, strlen(buffer), &written, NULL);
+      }
+    }
+
     va_end(args);
 }
 

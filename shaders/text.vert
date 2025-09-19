@@ -11,7 +11,6 @@ uniform mat4 model;
 uniform mat4 viewProjection;
 
 uniform sampler1D texcoordsMap;
-uniform float time;
 
 out vec2 texcoord;
 out vec4 fs_color;
