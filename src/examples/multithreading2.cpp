@@ -21,6 +21,7 @@ bool BoidsProcBStart = false;
 void UpdateBoidsA(void *data) {
   while (true) {
     if (BoidsProcAStart) {
+      
       float32 dist = 0;
       vec2 dir = {};
       for (int32 i = 0; i < boids.count / 2; i++) {
@@ -126,6 +127,9 @@ void MyGameUpdate() {
 #if 1
   BoidsProcAStart = true;
   BoidsProcBStart = true;
+  BoidsProcAFinished = false;
+  BoidsProcBFinished = false;
+      
 
   while (!BoidsProcAFinished && !BoidsProcBFinished) {
     continue;

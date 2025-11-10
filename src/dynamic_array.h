@@ -132,6 +132,7 @@ struct DynamicArray {
   inline T& operator[](const int index) const {
     // (index / elementsPerChunk) to get the chunk
     // then index % chunkCount to get the index
+    assert(index < count);
 
     s32 chunkIndex = index / elementsPerChunk;
     ArrayChunk *chunk = headChunk;
