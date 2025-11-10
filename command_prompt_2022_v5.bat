@@ -3,6 +3,6 @@ rem   If you want to bypass this step you can just run the "x64 Native Tools" co
 rem   to open a command prompt, however it won't automatically be in our game directory
 rem   so you must navigate to it using the "cd" command.
 
-Call "C:\Program Files (x86)\Microsoft Visual Studio\2022\VC\Auxiliary\Build\vcvarsall.bat" x64
+Call "C:\Program Files\Microsoft Visual Studio\2022\VC\Auxiliary\Build\vcvarsall.bat" x64
 
 cmd
