@@ -12,8 +12,6 @@
 
 #define ARRAY_LENGTH(type, array) (sizeof(array) / sizeof(type))
 
-#define ASSERT(...) assert(...)
-
 struct Str {
     int32 length;
     char *string;

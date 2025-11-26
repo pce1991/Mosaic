@@ -173,6 +173,7 @@ struct InputManager {
     char *inputChars;
 
     vec2i mousePos;
+    vec2 mousePosWorld;
     vec2 mousePosNorm;
     vec2 mousePosNormSigned;
 

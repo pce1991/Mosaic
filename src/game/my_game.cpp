@@ -1,5 +1,3 @@
-// Manual can be found here:
-// https://github.com/pce1991/MosaicBook#readme
 
 DynamicArray<int32> test;
 
@@ -14,7 +12,7 @@ MyData Data = {};
 
 Sprite lemonSprite;
 
-void MyInit() {
+void MyGameInit() {
     
     // All sprites must be png files
     // You provide the path to the png like "directory/to/my/file/file_name.png"

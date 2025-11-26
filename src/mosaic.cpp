@@ -5,7 +5,7 @@
 // @NOTE: Some of this stuff is internal and you don't ever want it to change.
 // Things like allocating the RectBuffer or calculating the levelAspect.
 // Other things like setting the gridWidth can be customized.
-void MyInit() {
+void MyGameInit() {
   Game->myData = malloc(sizeof(MosaicMem));
   memset(Game->myData, 0, sizeof(MosaicMem));
     

@@ -300,7 +300,7 @@ void GameInit(GameMemory *gameMem) {
 
     AllocateRectBuffer(256 * 256, &Game->rectBuffer);
 
-    MyInit();
+    MyGameInit();
 }
 
 void GameDeinit() {
@@ -338,6 +338,9 @@ void GameUpdateAndRender(GameMemory *gameMem) {
 
     Camera *cam = &gameMem->camera;
     UpdateCamera(&gameMem->camera);
+
+    Input->mousePosWorld = V2(Input->mousePosNormSigned.x * cam->width,
+                              Input->mousePosNormSigned.y * cam->height);
 
     Game->steppingFrame = false;
 
