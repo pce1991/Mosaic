@@ -339,8 +339,8 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     Camera *cam = &gameMem->camera;
     UpdateCamera(&gameMem->camera);
 
-    Input->mousePosWorld = V2(Input->mousePosNormSigned.x * cam->width,
-                              Input->mousePosNormSigned.y * cam->height);
+    Input->mousePosWorld = V2(Input->mousePosNormSigned.x * (cam->width / 2),
+                              Input->mousePosNormSigned.y * (cam->height / 2));
 
     Game->steppingFrame = false;
 
