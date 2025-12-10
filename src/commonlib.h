@@ -32,3 +32,35 @@ uint32 Hash(const char *str) {
 #define HasFlags(bitfield, flag) ((flag) != 0 && ((bitfield) & (flag)) == (flag))
 #define AddFlag(bitfield, flag) ((bitfield) | (flag))
 #define ClearFlag(bitfield, flag) ((bitfield) & ~(flag))
+
+
+#if _WIN32
+#define CompareAndSwap(dest, comparand, exchange) InterlockedCompareExchange((LONG volatile *)dest, (LONG)exchange, (LONG)comparand)
+#define CompareAndSwap64(dest, comparand, exchange) InterlockedCompareExchange64((LONG64 volatile *)dest, (LONG64)exchange, (LONG64)comparand)
+#define AtomicAdd(value, addend) _InterlockedExchangeAdd64((LONGLONG volatile *)value, (LONGLONG)addend)
+#define AtomicExchange(ptr, value) InterlockedExchange(ptr, value)
+#define AtomicExchange64(ptr, value) InterlockedExchange64((LONG64 *)ptr, (LONG64)value)
+#define ThreadYield() SwitchToThread()
+
+#define CycleCount() __rdtsc()
+#endif
+
+
+struct SpinLock {
+    uint32 value;
+};
+
+inline void AcquireLock(SpinLock *lock) {
+  while (true) {
+    if (0 == CompareAndSwap(&lock->value, 0, 1)) {
+      break;
+    }
+    // @TODO: maybe yield or pause
+  }
+}
+
+
+inline void ReleaseLock(SpinLock *lock) {
+  // I think on Linux we want to use __sync_lock_release instead
+  AtomicExchange(&lock->value, 0);
+}
