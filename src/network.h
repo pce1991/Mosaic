@@ -30,16 +30,22 @@ enum GamePacketType {
 // so it isn't posibble to just send one header packet that is (type size) and know that
 // the next packet is the payload.
 struct GamePacket {
-    // This is an ID which we require every packed to send. The server ignores any data it
-    // receives that doesnt begin with this id.
+    // This is an ID which we require every packed to send. The server
+    // ignores any data it receives that doesnt begin with this id.
     int32 id;
+    int32 hash;
     GamePacketType type;
     int32 frame;
 
-    // Sometimes we want to send over a chunk of data that has multiple parts.
-    // The ID tells us which it belongs to, the index tells the receiver how to reconstruct it. 
+    // Sometimes we want to send over a chunk of data that has
+    // multiple parts. The ID tells us which it belongs to, the index
+    // tells the receiver how to reconstruct it.
+    // The partID will be set when you call MakePacket but it's up
+    // to the user to set the partIndex and partCount, along with
+    // making sure that the partID is set
     int8 partID;
     int8 partIndex;
+    int8 partCount;
 
     // use memcpy to fill this data
     u8 data[256];
@@ -60,24 +66,36 @@ struct ReceivedPacket {
 
 
 struct NetworkInfo {
-    // List of addresses to contact.
-    // For a client they'd only have the severer prob and be like "tell the server to message user ID" and
-    // the server would look that up the info for that player and then message them.
-    // For pier-to-pier there'd still be a server everyone connects to simply to get the list of connected users
+  // List of addresses to contact. For a client they'd only have the
+  // severer prob and be like "tell the server to message user ID" and
+  // the server would look that up the info for that player and then
+  // message them. For pier-to-pier there'd still be a server everyone
+  // connects to simply to get the list of connected users
 
-    // @TODO: specify the ip address of the server in a file. Need to be able to run instance of engine
-    // as a server.
+  // @TODO: specify the ip address of the server in a file. Need to be
+  // able to run instance of engine as a server.
 
-    char *serverIPString;
+  char *serverIPString;
 
-    // @NOTE: this comes from the config file. Its use is so you can open multiple
-    // instances of the game on one local machine and allow them each communicate
-    // on different ports. In some cases it might be preferable to simple using 0 port
-    // and letting OS pick one for us.
-    uint16 configPort;
+  // @NOTE: this comes from the config file. Its use is so you can
+  // open multiple instances of the game on one local machine and
+  // allow them each communicate on different ports. In some cases it
+  // might be preferable to simple using 0 port and letting OS pick
+  // one for us.
+  uint16 configPort;
 
-    Socket socket;
+  Socket socket;
 
-    DynamicArray<ReceivedPacket> packetsReceived;
-    DynamicArray<GamePacket> packetsToSend;
+  DynamicArray<ReceivedPacket> packetsReceived;
+  DynamicArray<GamePacket> packetsToSend;
+
+  // every time you call MakePacket this number is incremented
+  // so that every packet sent has a unique ID.
+  // Note that this number is set when you create a packet, not when
+  // it's sent.
+  int32 nextID;
+
+  // this is an incrementing ID so every time you create a packet this
+  // ID will be incremented. 
+  int32 partID;
 };

@@ -137,3 +137,44 @@ void ReceivePackets(Socket *socket) {
     }
 }
 
+
+void SubmitPacket(DynamicArray<GamePacket> *packetsToSend, GamePacket *packet) {
+  NetworkInfo *network = &Game->networkInfo;
+  packet->id = ++network->nextID;
+
+  PushBack(packetsToSend, *packet);
+}
+
+void SubmitPackets(DynamicArray<GamePacket> *packetsToSend, DynamicArray<GamePacket> *packets) {
+  NetworkInfo *network = &Game->networkInfo;
+
+  int32 id = ++network->nextID;
+  int32 partID = ++network->partID;
+  
+  for (int32 i = 0; i < packets->count; i++) {
+    GamePacket *packet = &((*packets)[i]);
+    packet->id = id;
+    packet->partID = partID;
+    packet->partIndex = i;
+    packet->partCount = packets->count;
+
+    PushBack(packetsToSend, *packet);
+  }
+}
+
+void SubmitPackets(DynamicArray<GamePacket> *packetsToSend, GamePacket *packets, int32 packetCount) {
+  NetworkInfo *network = &Game->networkInfo;
+
+  int32 id = ++network->nextID;
+  int32 partID = ++network->partID;
+  
+  for (int32 i = 0; i < packetCount; i++) {
+    GamePacket *packet = &packets[i];
+    packet->id = id;
+    packet->partID = partID;
+    packet->partIndex = i;
+    packet->partCount = packetCount;
+
+    PushBack(packetsToSend, *packet);
+  }
+}
