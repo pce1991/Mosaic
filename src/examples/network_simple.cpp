@@ -39,7 +39,7 @@ struct MyData {
 
 MyData Data = {};
 
-void MyInit() {
+void MyGameInit() {
   NetworkInfo *network = &Game->networkInfo;
 
   InitNetwork(&Game->permanentArena);
@@ -71,7 +71,7 @@ void ClientUpdate() {
   // If you dont know what memcpy is, you need to look it up ASAP
   memcpy(packet.data, &Game->time, sizeof(real32));
 
-  SubmitPacket(&network->packetsToSend, packet);
+  SubmitPacket(&network->packetsToSend, &packet);
 
   // Here we send the packets where we want to.
   for (int i = 0; i < network->packetsToSend.count; i++) {
@@ -164,7 +164,7 @@ void ServerUpdate() {
     // If you dont know what memcpy is, you need to look it up ASAP
     memcpy(packet.data, &Game->time, sizeof(real32));
 
-    SubmitPacket(&network->packetsToSend, packet);
+    SubmitPacket(&network->packetsToSend, &packet);
 
     // Here we send the packets where we want to.
     // @NOTE: our server is very simple: it assumes only one client,
