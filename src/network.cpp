@@ -137,7 +137,11 @@ void ReceivePackets(Socket *socket) {
     }
 }
 
-
+// NOTE
+// When the packet is submitted to any array the ID is set, which means if you want to keep track
+// of the packet in some other buffer (such as a list of packets awaiting acknowledgment), you'll
+// need to copy the element over instead of going thru SubmitPacket, otherwise the packets will
+// have different IDs.
 void SubmitPacket(DynamicArray<GamePacket> *packetsToSend, GamePacket *packet) {
   NetworkInfo *network = &Game->networkInfo;
   packet->id = ++network->nextID;

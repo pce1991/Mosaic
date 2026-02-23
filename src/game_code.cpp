@@ -2,7 +2,8 @@
 #define MOSAIC 1
 #define MY_GAME 0
 
-#define NETWORK_SIMPLE 0
+#define NETWORK_SIMPLE 1
+
 
 #if MOSAIC
 #include "mosaic.cpp"
