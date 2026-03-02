@@ -39,18 +39,10 @@ void MyGameUpdate() {
     }
 
     //Game->camera.position = V3(0, 0, 3) + V3(sinf(Time), 0, 0);
-    Game->camera.size = 1 + ((1 + sinf(Time)) * 0.5f);
+    Game->camera.size = 1 + (((1 + sinf(Time)) * 0.5f) * 0.5f);
 
     // Always make sure you call UpdateCamera so it can recompute the projection matrix
     UpdateCamera(&Game->camera);
-    
-    
-    // position in pixels
-    vec2 mousePos = Input->mousePosNormSigned;
-    mousePos.x = mousePos.x * (Game->camera.width * Game->camera.size * 0.5f);
-    mousePos.y = mousePos.y * (Game->camera.height * Game->camera.size * 0.5f);
-        
-    mousePos = mousePos + Game->camera.position.xy;
     
     if (InputPressed(Keyboard, Input_Space)) {
         PlaySound(&Game->audioPlayer, Data.sound, 1.0f, true);
@@ -59,7 +51,22 @@ void MyGameUpdate() {
     DrawSprite(V2(0), V2(4, 4), &Data.sprite2);
 
     // version that take an angle.
-    DrawSprite(mousePos, V2(0.5f, 0.5f), DegToRad(Time * 90), &lemonSprite);
+    //DrawSprite(V2(0), V2(4, 4), DegToRad(Time * 90), &Data.sprite2);
+
+    // showing a few different ways to use mouse input.
+    // You can get the worldPosition of the mouse which is calculated
+    // internally by raycasting onto a plane at the origin of the world
+    // pointing towards camera. 
+    DrawRect(Input->mousePosWorld, V2(0.5f, 0.5f), V4(1));
+
+    // You could also use the pixel coordinates of the mouse.
+    // Note that the origin of the rectangle here is at the top-left,
+    // unlike DrawRect which centers the rectangle. 
+    //DrawRectScreen(V2(Input->mousePos.x, Input->mousePos.y), V2(32, 32), V4(1));
+
+    // Or use the normalized coordinates.
+    //DrawRectScreenNorm(Input->mousePosNorm, V2(0.1f, 0.1f), V4(1));
+    
     DrawRect(V2(-7, 0), V2(1, 1), RGB(1.0f, 0.3f, 0.3f));
     DrawSprite(position, V2(0.5f, 0.5f), &Data.sprite);
 

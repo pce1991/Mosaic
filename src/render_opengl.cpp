@@ -429,7 +429,7 @@ void DrawRectScreen(vec2 pos, vec2 scale, vec4 color) {
     
     mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 0.0f));
 
-    mat4 projMat = Orthographic(0, Game->screenWidth, Game->screenHeight, 0, -1, 1);
+    mat4 projMat = Orthographic(0, Game->screenWidth, 0, Game->screenHeight, -1, 1);
     
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);

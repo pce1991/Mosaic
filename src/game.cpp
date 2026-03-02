@@ -339,8 +339,22 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     Camera *cam = &gameMem->camera;
     UpdateCamera(&gameMem->camera);
 
-    Input->mousePosWorld = V2(Input->mousePosNormSigned.x * (cam->width / 2),
-                              Input->mousePosNormSigned.y * (cam->height / 2));
+    {
+      // this is assuming 2D
+      vec2 mousePosRelativeToCamera =
+        V2(Input->mousePosNormSigned.x * ((cam->size * cam->width) / 2),
+           Input->mousePosNormSigned.y * ((cam->size * cam->height) / 2));
+
+      Ray ray =
+        MakeRay(cam->position + V3(mousePosRelativeToCamera, 0),
+                V3(0, 0, -1));
+
+      float32 t;
+      RaycastPlane(V3(0, 0, 0), V3(0, 0, 1), ray, &t);
+        
+      Input->mousePosWorld = PointAt(ray, t).xy;
+    }
+
 
     Game->steppingFrame = false;
 

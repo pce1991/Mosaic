@@ -190,7 +190,7 @@ void DrawGrid() {
   }
 }
 
-MTile*GetHoveredTile() {
+MTile* GetHoveredTile() {
   Camera *cam = &Game->camera;
     
   vec2 mousePos = Input->mousePosNormSigned;

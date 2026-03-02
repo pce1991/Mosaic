@@ -82,6 +82,8 @@ Maybe bring back DynamicArrays because they're easier to see in the debugger?
   Rewrite the input system to have devices that we pass in instead of just a deviceID
 
   Also give user access to all keys on the board. It isnt even an interesting engine assignment to get input working this way.
+
+
 * Screenshots
   Take screenshot. A) it'll help the book, B) it'll be cool for students.
 * OSX
