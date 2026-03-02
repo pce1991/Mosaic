@@ -223,7 +223,7 @@ void InitMesh(Mesh *mesh) {
 
 void OpenGL_InitTexture(Sprite *texture);
     
-void LoadSprite(Sprite *sprite, char *path) {
+void LoadSprite(char *path, Sprite *sprite) {
     int32 x, y, n;
     uint8 *data = stbi_load(path, &x, &y, &n, 4);
 

@@ -17,12 +17,12 @@ void MyGameInit() {
     // All sprites must be png files
     // You provide the path to the png like "directory/to/my/file/file_name.png"
     // In this case I have put the pngs inside the "data" directory.
-    LoadSprite(&Data.sprite, "data/textures/galaga_ship.png");
-    LoadSprite(&Data.sprite2, "data/textures/van_gogh.png");
+  LoadSprite("data/textures/galaga_ship.png", &Data.sprite);
+  LoadSprite("data/textures/van_gogh.png", &Data.sprite2);
 
-    LoadSprite(&lemonSprite, "data/textures/bad_lemon.png");
+  LoadSprite("data/textures/bad_lemon.png", &lemonSprite);
 
-    LoadSoundClip("data/sfx/flute_breathy_c4.wav", &Data.sound);
+  LoadSoundClip("data/sfx/flute_breathy_c4.wav", &Data.sound);
 }
 
 

@@ -1,5 +1,5 @@
 
-#define MOSAIC 1
+#define MOSAIC 0
 #define MY_GAME 1
 
 #define NETWORK_SIMPLE 1
