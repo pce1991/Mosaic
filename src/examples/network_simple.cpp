@@ -113,6 +113,13 @@ void ServerUpdate() {
     ReceivedPacket *r = &network->packetsReceived[i];
     GamePacket *p = &r->packet;
 
+    if (p->type == GamePacketType_Ping) {
+      /// do one thing, 
+    }
+    else if (p->type == GamePacketType_PositionData) {
+      
+    }
+
     // Remember, the first 4 bytes of our packet tell have the id,
     // so if our packet doesnt have those same bytes set then this
     // is a message someone sent to our server, but it wasnt sent

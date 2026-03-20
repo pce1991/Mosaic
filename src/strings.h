@@ -77,6 +77,16 @@ inline bool ValidIdentifierSymbol(uint32 codepoint) {
     return IsAlphaASCII(codepoint) || IsDigit(codepoint) || codepoint == '_';
 }
 
+inline int32 StringLength(char *str) {
+  if (str == NULL) { return 0; }
+  return strlen(str);
+}
+
+inline int32 StringLength(const char *str) {
+  if (str == NULL) { return 0; }
+  return strlen(str);
+}
+
 uint32 StringToInt32(const char *str) {
     // 10 is the base, not the length of the string
     int64 value = strtoll(str, NULL, 10);

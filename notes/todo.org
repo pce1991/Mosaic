@@ -1,6 +1,10 @@
 
 Maybe bring back DynamicArrays because they're easier to see in the debugger?
 
+- What are the major pain-points
+  No UI system
+  Text size not uniform. No good layout for text. 
+
 * Pass in file to compile
   Much easier to check out different files if they don't have to mess with mosaic.cpp
 * FontSize

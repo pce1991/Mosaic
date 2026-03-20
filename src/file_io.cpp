@@ -254,20 +254,23 @@ inline void WriteInt32(FileHandle *file, int32 value) {
   }
 }
 
-inline void WriteReal32(FileHandle *file, real32 value) {
+inline void WriteFloat32(FileHandle *file, float32 value) {
   ASSERT(file->data != NULL);
 
   uint64 newOffset = file->offset + 4;
   ASSERT(newOffset < file->size);
 
   uint8 bytes[4];
-  memcpy(bytes, &value, sizeof(real32));
+  memcpy(bytes, &value, sizeof(float32));
 
   for (int i = 0; i < 4; i++) {
     *((uint8 *)file->data + file->offset++) = bytes[i];
   }
 }
 
+inline void WriteString(FileHandle *handle, char *str, uint32 len) {
+  WriteBytes(handle, (u8 *)str, len);
+}
 
 inline bool ConsumeIntLiteral(FileHandle *file, char **start, int32 *len) {
   char c = ((uint8 *)file->data)[file->offset];
