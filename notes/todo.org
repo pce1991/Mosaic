@@ -1,5 +1,9 @@
 
-Maybe bring back DynamicArrays because they're easier to see in the debugger?
+- @TODO: showcase metaprogramming by generating a struct for global variables.
+  will need to make directory and file
+  Will need to do that step _before_ compiling yikes! 
+
+- @TODO: software renderer! 
 
 - What are the major pain-points
   No UI system

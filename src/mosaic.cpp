@@ -1,7 +1,6 @@
 
 #include "game/my_mosaic.cpp"
 
-
 // @NOTE: Some of this stuff is internal and you don't ever want it to change.
 // Things like allocating the RectBuffer or calculating the levelAspect.
 // Other things like setting the gridWidth can be customized.
@@ -26,8 +25,8 @@ void MyGameInit() {
 
 // @BUG: this doesnt guarantee that it fits inside the camera if the height is bigger than the width! 
 void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
-  Mosaic->gridWidth = Clamp(newWidth, 1, 255);
-  Mosaic->gridHeight = Clamp(newHeight, 1, 255);
+  Mosaic->gridWidth = Clamp(newWidth, 1, 512);
+  Mosaic->gridHeight = Clamp(newHeight, 1, 512);
 
   if (Mosaic->tiles != NULL) {
     free(Mosaic->tiles);
