@@ -27,6 +27,8 @@ struct UIManager {
     WidgetRect lastWidget;
     bool hasPlacedWidget;
 
+    vec2 mousePos;
+
     uint32 hoveredID;
     uint32 pressedID;
 };

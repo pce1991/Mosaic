@@ -12,10 +12,6 @@ UIStyle UICopyStyle() {
     return UI->styleStack[UI->styleTop];
 }
 
-UIStyle *UICurrentStyle() {
-  return &UI->styleStack[UI->styleTop];
-}
-
 void UIPushStyle(UIStyle style) {
     if (UI->styleTop < UI_STYLE_STACK_MAX - 1) {
         UI->styleTop++;
@@ -48,7 +44,7 @@ static real32 MeasureTextWidth(FontTable *font, const char *str, real32 size) {
 }
 
 static vec2 UIScreenPos(vec2 pos, vec2 size) {
-    return V2(pos.x, (real32)Game->screenHeight - pos.y - size.y);
+    return V2(pos.x, (real32)Game->screenHeight - pos.y);
 }
 
 void UIBegin(vec2 origin) {
@@ -59,6 +55,7 @@ void UIBegin(vec2 origin) {
     UI->hasPlacedWidget = false;
     UI->hoveredID = 0;
     UI->pressedID = 0;
+    UI->mousePos = V2(Input->mousePos.x, (real32)Game->screenHeight - Input->mousePos.y);
 
     UI->styleTop = 0;
     UIStyle *style = &UI->styleStack[0];
@@ -89,7 +86,7 @@ bool UIButton(vec2 size, const char *label) {
     rect.min = pos;
     rect.max = pos + size;
 
-    bool hovered = PointRectTest(rect, V2(Input->mousePos));
+    bool hovered = PointRectTest(rect, UI->mousePos);
     bool clicked = false;
 
     if (hovered) {
@@ -157,9 +154,9 @@ void UIPushImage(vec2 size, Sprite *texture) {
 }
 
 void UINextColumn(real32 width) {
-    UIStyle *style = UICurrentStyle();
+    UIStyle style = UICopyStyle();
     UI->currentColumn++;
-    UI->cursor.x = UI->columnOrigin.x + UI->currentColumn * (width + style->columnGap);
+    UI->cursor.x = UI->columnOrigin.x + UI->currentColumn * (width + style.columnGap);
     UI->cursor.y = UI->columnOrigin.y;
     UI->lastWidget = {};
     UI->hasPlacedWidget = false;
