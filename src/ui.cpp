@@ -1,55 +1,166 @@
 
-
-
-// @TODO: do these both in screenspace! it'll be way easier to do calculations
-
-bool InputString(vec2 position, vec2 dimensions, real32 textSize, bool *active, bool *pressedEnter, char *str) {
-    bool modified = false;
-    vec2 rectPos = position;
-    DrawRectScreen(rectPos, dimensions, V4(0.5f));
-    //DrawTextScreen(position, textSize, V4(1, 0, 0, 1), str);
-
-    if (InputPressed(Game->keyboard, Input_MouseLeft)) {
-        *active = true;
+uint32 WidgetID(const char *name) {
+    uint32 hash = 2166136261;
+    while (*name) {
+        hash ^= (uint8)*name++;
+        hash *= 16777619;
     }
-
-    int32 len = strlen(str);
-    if (*active) {
-        if (Input->charCount > 0) {
-            str[len] = Input->inputChars[0];
-            modified = true;
-        }
-    }
-
-    if (InputPressed(Game->keyboard, Input_Return)) {
-        *pressedEnter = true;
-    }
-
-    return modified;
+    return hash;
 }
 
+UIStyle UICopyStyle() {
+    return UI->styleStack[UI->styleTop];
+}
 
-bool Button(vec2 position, vec2 dimensions, vec4 color, real32 textSize, vec4 textColor, char *name) {
-    bool modified = false;
-    vec2 rectPos = position;
+UIStyle *UICurrentStyle() {
+  return &UI->styleStack[UI->styleTop];
+}
+
+void UIPushStyle(UIStyle style) {
+    if (UI->styleTop < UI_STYLE_STACK_MAX - 1) {
+        UI->styleTop++;
+        UI->styleStack[UI->styleTop] = style;
+    }
+}
+
+void UIPopStyle() {
+    if (UI->styleTop > 0) {
+        UI->styleTop--;
+    }
+}
+
+WidgetRect GetNextWidgetBounds() {
+    WidgetRect r = {};
+    r.origin = UI->cursor;
+    return r;
+}
+
+static real32 MeasureTextWidth(FontTable *font, const char *str, real32 size) {
+    real32 width = 0;
+    while (*str) {
+        int32 codepoint = *str - 32;
+        if (codepoint >= 0 && codepoint < font->glyphCount) {
+            width += font->glyphs[codepoint].xAdvance * size;
+        }
+        str++;
+    }
+    return width;
+}
+
+static vec2 UIScreenPos(vec2 pos, vec2 size) {
+    return V2(pos.x, (real32)Game->screenHeight - pos.y - size.y);
+}
+
+void UIBegin(vec2 origin) {
+    UI->cursor = origin;
+    UI->columnOrigin = origin;
+    UI->currentColumn = 0;
+    UI->lastWidget = {};
+    UI->hasPlacedWidget = false;
+    UI->hoveredID = 0;
+    UI->pressedID = 0;
+
+    UI->styleTop = 0;
+    UIStyle *style = &UI->styleStack[0];
+    style->buttonColor = V4(0.3f, 0.3f, 0.3f, 1.0f);
+    style->buttonHoverColor = V4(0.4f, 0.4f, 0.4f, 1.0f);
+    style->buttonActiveColor = V4(0.5f, 0.5f, 0.5f, 1.0f);
+    style->font = &Game->monoFont;
+    style->textSize = 16.0f;
+    style->widgetSpacing = 8.0f;
+    style->columnGap = 16.0f;
+}
+
+void UIWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture) {
+    vec2 sp = UIScreenPos(pos, size);
+    DrawRectScreen(sp, size, color);
+    if (texture) {
+        DrawSpriteScreen(sp, size, texture);
+    }
+}
+
+bool UIButton(vec2 size, const char *label) {
+    UIStyle style = UICopyStyle();
+    vec2 pos = UI->cursor;
+
+    uint32 id = WidgetID(label);
 
     Rect rect = {};
-    rect.min = position;
-    rect.max = position + V2(dimensions.x, dimensions.y);
+    rect.min = pos;
+    rect.max = pos + size;
 
-    if (PointRectTest(rect, V2(Input->mousePos))) {
+    bool hovered = PointRectTest(rect, V2(Input->mousePos));
+    bool clicked = false;
+
+    if (hovered) {
+        UI->hoveredID = id;
         if (InputPressed(Game->mouse, Input_MouseLeft)) {
-            return true;
+            UI->pressedID = id;
+            clicked = true;
         }
-
-        color = V4(1, 0, 0, 1);
     }
 
-    //DrawRectScreen(rectPos, dimensions, color);
-    //DrawText(V2(0), 8, textColor, name);
-    //DrawTextScreen(V2(450) * sinf(Game->time), 1000 * sinf(Game->time), textColor, name);
-    //DrawTextScreen(position, textSize, textColor, name);
+    vec4 color = style.buttonColor;
+    if (hovered) {
+        color = style.buttonHoverColor;
+    }
+    if (clicked || (hovered && InputHeld(Game->mouse, Input_MouseLeft))) {
+        color = style.buttonActiveColor;
+    }
 
-    return false;
+    DrawRectScreen(UIScreenPos(pos, size), size, color);
+
+    real32 textWidth = MeasureTextWidth(style.font, label, style.textSize);
+    real32 textHeight = style.font->lineHeight * style.textSize;
+    vec2 textPos = V2(
+        pos.x + (size.x - textWidth) * 0.5f,
+        pos.y + (size.y - textHeight) * 0.5f
+    );
+    DrawTextScreenPixel(style.font, textPos, style.textSize, V4(1), label);
+
+    UI->lastWidget = { pos, size };
+    UI->cursor.y = pos.y + size.y + style.widgetSpacing;
+    UI->hasPlacedWidget = true;
+
+    return clicked;
 }
 
+void UILabel(vec4 color, real32 textSize, const char *fmt, ...) {
+    UIStyle style = UICopyStyle();
+    vec2 pos = UI->cursor;
+
+    char label[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(label, sizeof(label), fmt, args);
+    va_end(args);
+
+    real32 textWidth = MeasureTextWidth(style.font, label, textSize);
+    real32 textHeight = style.font->lineHeight * textSize;
+    vec2 widgetSize = V2(textWidth, textHeight);
+
+    DrawTextScreenPixel(style.font, pos, textSize, color, label);
+
+    UI->lastWidget = { pos, widgetSize };
+    UI->cursor.y = pos.y + widgetSize.y + style.widgetSpacing;
+    UI->hasPlacedWidget = true;
+}
+
+void UIPushImage(vec2 size, Sprite *texture) {
+    vec2 pos = UI->cursor;
+
+    DrawSpriteScreen(UIScreenPos(pos, size), size, texture);
+
+    UI->lastWidget = { pos, size };
+    UI->cursor.y = pos.y + size.y + UICopyStyle().widgetSpacing;
+    UI->hasPlacedWidget = true;
+}
+
+void UINextColumn(real32 width) {
+    UIStyle *style = UICurrentStyle();
+    UI->currentColumn++;
+    UI->cursor.x = UI->columnOrigin.x + UI->currentColumn * (width + style->columnGap);
+    UI->cursor.y = UI->columnOrigin.y;
+    UI->lastWidget = {};
+    UI->hasPlacedWidget = false;
+}

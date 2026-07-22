@@ -28,6 +28,7 @@
 
 #include "camera.h"
 #include "mesh.h"
+#include "ui.h"
 
 #include "mosaic.h"
 
@@ -119,6 +120,8 @@ struct GameMemory {
 
     RectBuffer rectBuffer;
 
+    UIManager uiManager;
+
     void *myData;
 };
 
@@ -130,6 +133,8 @@ InputManager *Input = NULL;
 
 InputDevice *Keyboard = NULL;
 InputDevice *Mouse = NULL;
+
+UIManager *UI = NULL;
 
 #define ArrayLength(array, type) sizeof(array)/sizeof(type)
 

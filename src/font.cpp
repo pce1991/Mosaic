@@ -20,17 +20,16 @@ void InitFont(FontTable *font, char *path) {
 
     float fontPixelHeight = fontBitmapWidth / 8.0f;
     
-    float unitsPerEM = stbtt_ScaleForMappingEmToPixels(&info, fontPixelHeight);
-    font->emSize = unitsPerEM;
+    float scale = stbtt_ScaleForMappingEmToPixels(&info, fontPixelHeight);
+    font->emSize = fontPixelHeight / scale;
     
     int32 ascent, descent;
     stbtt_GetFontVMetrics(&info, &ascent, &descent, 0);
 
-    font->ascent = (ascent / (fontBitmapWidth * 1.0f)) / unitsPerEM;
-    font->descent = (descent / (fontBitmapWidth * 1.0f)) / unitsPerEM;
+    font->ascent = ascent / font->emSize;
+    font->descent = descent / font->emSize;
 
-    // this doesnt seem like a robust calculation
-    font->lineHeight = (font->ascent - font->descent) * unitsPerEM;
+    font->lineHeight = font->ascent - font->descent;
 
     stbtt_bakedchar *bakedChars = (stbtt_bakedchar *)malloc(sizeof(stbtt_bakedchar) * charCount);
     
@@ -44,9 +43,9 @@ void InitFont(FontTable *font, char *path) {
     font->glyphCount = charCount;
 
     for (int i = 0; i < charCount; i++) {
-        glyphs[i].xOffset = (bakedChars[i].xoff / (fontBitmapWidth * 1.0f)) / unitsPerEM;
-        glyphs[i].yOffset = (bakedChars[i].yoff / (fontBitmapWidth * 1.0f)) / unitsPerEM;
-        glyphs[i].xAdvance = (bakedChars[i].xadvance / (fontBitmapWidth * 1.0f)) / unitsPerEM;
+        glyphs[i].xOffset = bakedChars[i].xoff / fontPixelHeight;
+        glyphs[i].yOffset = bakedChars[i].yoff / fontPixelHeight;
+        glyphs[i].xAdvance = bakedChars[i].xadvance / fontPixelHeight;
 
         stbtt_aligned_quad quad;
 
@@ -56,9 +55,7 @@ void InitFont(FontTable *font, char *path) {
 
         //Print("%c (%f %f) (%f %f) adv %f", i + startAscii, quad.x0, quad.y0, quad.x1, quad.y1, bakedChars[i].xadvance);
 
-        // This calculation depends on our quad being 1 wide and 1 tall, 2x2 breaks things
-        // Not exactly sure why... 
-        glyphs[i].lowerLeft = V2(quad.x0 / (fontBitmapWidth * 1.0f), -quad.y1 / (fontBitmapHeight * 1.0f)) / unitsPerEM;
+        glyphs[i].lowerLeft = V2(quad.x0 / fontPixelHeight, -quad.y1 / fontPixelHeight);
 
 #if 1
         font->texcoordsMapData[i] = V4((bakedChars[i].x0 / (fontBitmapWidth * 1.0f)),
@@ -66,8 +63,8 @@ void InitFont(FontTable *font, char *path) {
                                        (bakedChars[i].x1 / (fontBitmapWidth * 1.0f)),
                                        (bakedChars[i].y1 / (fontBitmapWidth * 1.0f)));
 
-        glyphs[i].size = V2(font->texcoordsMapData[i].z - font->texcoordsMapData[i].x,
-                            font->texcoordsMapData[i].w - font->texcoordsMapData[i].y) / unitsPerEM;
+        glyphs[i].size = V2(bakedChars[i].x1 - bakedChars[i].x0,
+                            bakedChars[i].y1 - bakedChars[i].y0) / fontPixelHeight;
 #endif
     }
     

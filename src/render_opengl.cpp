@@ -345,6 +345,43 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
     DrawSprite(position, scale, 0.0f, texture);
 }
 
+void DrawSpriteScreen(vec2 pos, vec2 size, Sprite *texture) {
+    Shader *shader = &Game->texturedQuadShader;
+    SetShader(shader);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    Mesh *mesh = &Game->quadTopLeft;
+
+    mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(size.x, size.y, 1.0f));
+
+    mat4 projMat = Orthographic(0, Game->screenWidth, 0, Game->screenHeight, -1, 1);
+
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture->textureID);
+    glUniform1i(shader->uniforms[2].id, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
+    glEnableVertexAttribArray(texcoord);
+    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
+
+    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
+
+    glDisableVertexAttribArray(vert);
+    glDisableVertexAttribArray(texcoord);
+}
+
 
 void DrawRect(vec2 pos, vec2 scale, real32 angle, vec4 color) {
     // @PERF: don't do this every draw call

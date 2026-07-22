@@ -153,7 +153,7 @@ void MyGameUpdate() {
         for (int i = 0; i < inputStr->length; i++) {
             char c = inputStr->string[i];
             int32 codepoint = c - 32;
-            cursorPos.x += Game->monoFont.glyphs[codepoint].xAdvance * 24.0f * Game->monoFont.emSize;
+            cursorPos.x += Game->monoFont.glyphs[codepoint].xAdvance * 24.0f;
         }
 
         DrawRectScreen(cursorPos, V2(24.0f, 48.0f), V4(0.5f, 0.5f, 0.5f, 0.5f));        

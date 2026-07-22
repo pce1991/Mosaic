@@ -198,6 +198,7 @@ bool ReadConfigFile(char *path) {
 void GameInit(GameMemory *gameMem) {
     Game = gameMem;
     Input = &Game->inputManager;
+    UI = &Game->uiManager;
 
     AllocateMemoryArena(&Game->permanentArena, Megabytes(256));
     AllocateMemoryArena(&Game->frameMem, Megabytes(32));
