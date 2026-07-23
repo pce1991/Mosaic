@@ -57,23 +57,52 @@ void UIBegin(vec2 origin) {
     UI->pressedID = 0;
     UI->mousePos = V2(Input->mousePos.x, (real32)Game->screenHeight - Input->mousePos.y);
 
+    UI->windowTop = 0;
+
     UI->styleTop = 0;
     UIStyle *style = &UI->styleStack[0];
     style->buttonColor = V4(0.3f, 0.3f, 0.3f, 1.0f);
     style->buttonHoverColor = V4(0.4f, 0.4f, 0.4f, 1.0f);
     style->buttonActiveColor = V4(0.5f, 0.5f, 0.5f, 1.0f);
     style->font = &Game->monoFont;
-    style->textSize = 16.0f;
+    style->textSize = 32.0f;
     style->widgetSpacing = 8.0f;
     style->columnGap = 16.0f;
 }
 
-void UIWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture) {
+void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture) {
+    if (UI->windowTop >= UI_WINDOW_STACK_MAX) return;
+
+    UIWindowFrame *frame = &UI->windowStack[UI->windowTop++];
+    frame->cursor = UI->cursor;
+    frame->columnOrigin = UI->columnOrigin;
+    frame->currentColumn = UI->currentColumn;
+    frame->pos = pos;
+    frame->size = size;
+
     vec2 sp = UIScreenPos(pos, size);
     DrawRectScreen(sp, size, color);
     if (texture) {
         DrawSpriteScreen(sp, size, texture);
     }
+
+    PushClipRect(pos, size);
+
+    UI->cursor = pos;
+    UI->columnOrigin = pos;
+    UI->currentColumn = 0;
+}
+
+void UIPopWindow() {
+    if (UI->windowTop <= 0) return;
+
+    UIWindowFrame *frame = &UI->windowStack[--UI->windowTop];
+
+    UI->cursor = frame->cursor;
+    UI->columnOrigin = frame->columnOrigin;
+    UI->currentColumn = frame->currentColumn;
+
+    PopClipRect();
 }
 
 bool UIButton(vec2 size, const char *label) {
@@ -113,7 +142,7 @@ bool UIButton(vec2 size, const char *label) {
         pos.x + (size.x - textWidth) * 0.5f,
         pos.y + (size.y - textHeight) * 0.5f
     );
-    DrawTextScreenPixel(style.font, textPos, style.textSize, V4(1), label);
+    DrawUIText(style.font, textPos, style.textSize, V4(1), false, label);
 
     UI->lastWidget = { pos, size };
     UI->cursor.y = pos.y + size.y + style.widgetSpacing;
@@ -136,7 +165,7 @@ void UILabel(vec4 color, real32 textSize, const char *fmt, ...) {
     real32 textHeight = style.font->lineHeight * textSize;
     vec2 widgetSize = V2(textWidth, textHeight);
 
-    DrawTextScreenPixel(style.font, pos, textSize, color, label);
+    DrawUIText(style.font, pos, textSize, color, false, label);
 
     UI->lastWidget = { pos, widgetSize };
     UI->cursor.y = pos.y + widgetSize.y + style.widgetSpacing;

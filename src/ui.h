@@ -16,6 +16,16 @@ struct UIStyle {
 
 #define UI_STYLE_STACK_MAX 32
 
+struct UIWindowFrame {
+    vec2 cursor;
+    vec2 columnOrigin;
+    int32 currentColumn;
+    vec2 pos;
+    vec2 size;
+};
+
+#define UI_WINDOW_STACK_MAX 32
+
 struct UIManager {
     UIStyle styleStack[UI_STYLE_STACK_MAX];
     int32 styleTop;
@@ -31,12 +41,16 @@ struct UIManager {
 
     uint32 hoveredID;
     uint32 pressedID;
+
+    UIWindowFrame windowStack[UI_WINDOW_STACK_MAX];
+    int32 windowTop;
 };
 
 uint32 WidgetID(const char *name);
 
 void UIBegin(vec2 origin);
-void UIWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture);
+void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture);
+void UIPopWindow();
 bool UIButton(vec2 size, const char *label);
 void UILabel(vec4 color, real32 textSize, const char *fmt, ...);
 void UIPushImage(vec2 size, Sprite *texture);

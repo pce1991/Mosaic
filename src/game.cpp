@@ -22,186 +22,125 @@
 
 
 bool ReadConfigFile(char *path) {
-    FILE *file = fopen(path, "r");
+    enum ConfigTokenType {
+        ConfigTokenType_Identifier,
+        ConfigTokenType_Colon,
+        ConfigTokenType_Int,
+        ConfigTokenType_Float,
+        ConfigTokenType_String,
+    };
 
-    if (file != NULL) {
-        int c = fgetc(file);
+    struct ConfigToken : Token {
+        ConfigTokenType configType;
+    };
 
-        enum ConfigState {
-            ConfigState_Invalid,
-            ConfigState_ScreenWidth,
-            ConfigState_ScreenHeight,
-            ConfigState_Volume,
-            ConfigState_ServerIP,
-            ConfigState_Port,
-        };
-
-        ConfigState state = ConfigState_ScreenWidth;
-
-        char currentToken[64];
-        memset(currentToken, 0, 64);
-        
-        int32 tokenLength = 0;
-        bool parsedToken = false;
-
-        // @NOTE: this is not an elegant way to do this
-        // It would be much nicer if we broke it into tokens first.
-        // It would also be nice if we had more file reading features
-        while (c != EOF) {
-            if (c == '\n' || c == ' ') {
-                goto nextChar;
-            }
-                
-            if (state == ConfigState_ScreenWidth) {
-
-                if (c != ';') {
-                    currentToken[tokenLength++] = c;
-                }
-
-                if (!parsedToken) {
-                    if (strcmp(currentToken, "screenWidth:") == 0) {
-                        tokenLength = 0;
-                        parsedToken = true;
-
-                        memset(currentToken, 0, 64);
-                    }
-                }
-                else {
-                    if (c == ';') {
-                        Game->screenWidth = atoi(currentToken);
-                        state = ConfigState_ScreenHeight;
-                        tokenLength = 0;
-                        memset(currentToken, 0, 64);
-                        parsedToken = false;
-                    }
-                }
-            }
-
-            if (state == ConfigState_ScreenHeight) {
-
-                if (c != ';') {
-                    currentToken[tokenLength++] = c;
-                }
-                
-                if (!parsedToken) {
-                    if (strcmp(currentToken, "screenHeight:") == 0) {
-                        tokenLength = 0;
-                        parsedToken = true;
-
-                        memset(currentToken, 0, 64);
-                    }
-                }
-                else {
-                    if (c == ';') {
-                        Game->screenHeight = atoi(currentToken);
-                        state = ConfigState_Volume;
-
-                        state = ConfigState_Volume;
-                        tokenLength = 0;
-                        memset(currentToken, 0, 64);
-                        parsedToken = false;
-                    }
-                }
-                
-            }
-
-            if (state == ConfigState_Volume) {
-
-                if (c != ';') {
-                currentToken[tokenLength++] = c;
-                }
-                
-                if (!parsedToken) {
-                    if (strcmp(currentToken, "volume:") == 0) {
-                        tokenLength = 0;
-                        parsedToken = true;
-
-                        memset(currentToken, 0, 64);
-                    }
-                }
-                else {
-                    if (c == ';') {
-                    Game->audioPlayer.volume = atof(currentToken);
-
-                    state = ConfigState_ServerIP;
-                    tokenLength = 0;
-                    memset(currentToken, 0, 64);
-                    parsedToken = false;
-                    }
-                }
-            }
-
-            if (state == ConfigState_ServerIP) {
-
-                if (c != ';') {
-                    currentToken[tokenLength++] = c;
-                }
-                
-                if (!parsedToken) {
-                    if (strcmp(currentToken, "server_ip:") == 0) {
-                        tokenLength = 0;
-                        parsedToken = true;
-
-                        memset(currentToken, 0, 64);
-                    }
-                }
-                else {
-                    if (c == ';') {
-                        Game->networkInfo.serverIPString = (char *)malloc(tokenLength + 1);
-                        memcpy(Game->networkInfo.serverIPString, currentToken, tokenLength + 1);
-
-                        state = ConfigState_Port;
-                        tokenLength = 0;
-                        memset(currentToken, 0, 64);
-                        parsedToken = false;
-                    }
-                }
-            }
-
-            if (state == ConfigState_Port) {
-
-                if (c != ';') {
-                    currentToken[tokenLength++] = c;
-                }
-                
-                if (!parsedToken) {
-                    if (strcmp(currentToken, "socket_port:") == 0) {
-                        tokenLength = 0;
-                        parsedToken = true;
-
-                        memset(currentToken, 0, 64);
-                    }
-                }
-                else {
-                    if (c == ';') {
-                        Game->networkInfo.configPort = atoi(currentToken);
-
-                        state = ConfigState_Invalid;
-                        tokenLength = 0;
-                        memset(currentToken, 0, 64);
-                        parsedToken = false;
-                    }
-                }
-            }
-
-        nextChar:
-            c = fgetc(file);
-        }
-
-        return true;
-    }
-    else {
+    FileHandle file = {};
+    if (!OpenFileForRead(path, &file)) {
         return false;
     }
+
+    DynamicArray<ConfigToken> tokens = MakeDynamicArray<ConfigToken>(&Game->frameMem, 32);
+
+    while (file.offset < file.size) {
+        ConsumeBytesPassing(&file, IsWhitespace);
+
+        if (file.offset >= file.size) break;
+
+        ConfigToken t = {};
+        t.start = (char *)(&file.data[file.offset]);
+
+        if (ConsumeIdentifierToken(&file, &t.start, &t.length)) {
+            t.configType = ConfigTokenType_Identifier;
+        }
+        else if (ConsumeByteMatching(&file, ':')) {
+            t.length = 1;
+            t.configType = ConfigTokenType_Colon;
+        }
+        else if (ConsumeFloatLiteral(&file, &t.start, &t.length)) {
+            t.configType = ConfigTokenType_Float;
+        }
+        else if (ConsumeIntLiteral(&file, &t.start, &t.length)) {
+            t.configType = ConfigTokenType_Int;
+        }
+        else if (ConsumeStringLiteral(&file, &t.start, &t.length)) {
+            t.configType = ConfigTokenType_String;
+        }
+        else {
+            Print("Config tokenizer error: unexpected character '%c'", file.data[file.offset]);
+            ASSERT(false);
+        }
+
+        PushBack(&tokens, t);
+    }
+
+    int32 tokenIndex = 0;
+    while (tokenIndex < tokens.count) {
+        ConfigToken t = tokens[tokenIndex];
+
+        if (t.configType != ConfigTokenType_Identifier) {
+            tokenIndex++;
+            continue;
+        }
+
+        if (StringEquals(t.start, "screenWidth", t.length)) {
+            tokenIndex++;
+            if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
+                tokenIndex++;
+                if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
+                    Game->screenWidth = atoi(tokens[tokenIndex].start);
+                }
+            }
+        }
+        else if (StringEquals(t.start, "screenHeight", t.length)) {
+            tokenIndex++;
+            if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
+                tokenIndex++;
+                if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
+                    Game->screenHeight = atoi(tokens[tokenIndex].start);
+                }
+            }
+        }
+        else if (StringEquals(t.start, "volume", t.length)) {
+            tokenIndex++;
+            if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
+                tokenIndex++;
+                if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Float) {
+                    Game->audioPlayer.volume = atof(tokens[tokenIndex].start);
+                }
+            }
+        }
+        else if (StringEquals(t.start, "server_ip", t.length)) {
+            tokenIndex++;
+            if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
+                tokenIndex++;
+                if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_String) {
+                    Game->networkInfo.serverIPString = (char *)malloc(tokens[tokenIndex].length + 1);
+                    memcpy(Game->networkInfo.serverIPString, tokens[tokenIndex].start, tokens[tokenIndex].length);
+                    Game->networkInfo.serverIPString[tokens[tokenIndex].length] = '\0';
+                }
+            }
+        }
+        else if (StringEquals(t.start, "socket_port", t.length)) {
+            tokenIndex++;
+            if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
+                tokenIndex++;
+                if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
+                    Game->networkInfo.configPort = atoi(tokens[tokenIndex].start);
+                }
+            }
+        }
+
+        tokenIndex++;
+    }
+
+    CloseFile(&file);
+    return true;
 }
 
 void GameInit(GameMemory *gameMem) {
     Game = gameMem;
     Input = &Game->inputManager;
     UI = &Game->uiManager;
-
-    AllocateMemoryArena(&Game->permanentArena, Megabytes(256));
-    AllocateMemoryArena(&Game->frameMem, Megabytes(32));
 
     Game->log.head = (DebugLogNode *)malloc(sizeof(DebugLogNode));
     AllocateDebugLogNode(Game->log.head, LOG_BUFFER_CAPACITY);
@@ -362,6 +301,7 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     RenderRectBuffer(&Game->rectBuffer);
     Game->rectBuffer.count = 0;
     
+    DrawUIGlyphs();
     DrawGlyphs(gameMem->glyphBuffers);
     
     //DeleteEntities(&Game->entityDB);

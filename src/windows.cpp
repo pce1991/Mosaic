@@ -382,6 +382,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
     Game = gameMem;
 
+    AllocateMemoryArena(&Game->permanentArena, Megabytes(256));
+    AllocateMemoryArena(&Game->frameMem, Megabytes(32));
+
     plat.screenWidth = gameMem->screenWidth;
     plat.screenHeight = gameMem->screenHeight;
 

@@ -362,7 +362,7 @@ inline bool ConsumeFloatLiteral(FileHandle *file, char **start, int32 *len) {
   return isFloat;
 }
 
-inline bool ConsumeStringLiteral(FileHandle *file, char **start, uint32 *len) {
+inline bool ConsumeStringLiteral(FileHandle *file, char **start, int32 *len) {
   char c = ((uint8 *)file->data)[file->offset];
 
   bool isString = false;

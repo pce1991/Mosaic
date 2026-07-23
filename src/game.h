@@ -51,6 +51,8 @@
 //        more memory.
 #define GlyphBufferCount 256
 #define GlyphBufferCapacity 256
+#define UIClipStackMax 32
+#define UIGlyphCmdCapacity 512
 
 struct GameMemory {
     bool running;
@@ -119,6 +121,13 @@ struct GameMemory {
     char inputString[255];
 
     RectBuffer rectBuffer;
+
+    UIClipRegion clipStack[UIClipStackMax];
+    int32 clipTop;
+    bool hasClip;
+
+    UIGlyphCommand uiGlyphCmds[UIGlyphCmdCapacity];
+    int32 uiGlyphCmdCount;
 
     UIManager uiManager;
 

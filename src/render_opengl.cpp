@@ -1066,6 +1066,171 @@ void DrawGlyphs(GlyphBuffer *buffers) {
     }
 }
 
+void PushClipRect(vec2 pos, vec2 size) {
+    vec2 newMin = pos;
+    vec2 newMax = pos + size;
 
+    if (Game->hasClip && Game->clipTop > 0) {
+        UIClipRegion *parent = &Game->clipStack[Game->clipTop - 1];
+        newMin.x = max(newMin.x, parent->min.x);
+        newMin.y = max(newMin.y, parent->min.y);
+        newMax.x = min(newMax.x, parent->max.x);
+        newMax.y = min(newMax.y, parent->max.y);
+    }
+
+    UIClipRegion *region = &Game->clipStack[Game->clipTop++];
+    region->min = newMin;
+    region->max = newMax;
+    Game->hasClip = true;
+
+    GLint x = (GLint)newMin.x;
+    GLint y = (GLint)((real32)Game->screenHeight - newMax.y);
+    GLsizei w = (GLsizei)(newMax.x - newMin.x);
+    GLsizei h = (GLsizei)(newMax.y - newMin.y);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(x, y, w, h);
+}
+
+void PopClipRect() {
+    if (Game->clipTop > 0) Game->clipTop--;
+    Game->hasClip = (Game->clipTop > 0);
+
+    if (Game->hasClip) {
+        UIClipRegion *region = &Game->clipStack[Game->clipTop - 1];
+        GLint x = (GLint)region->min.x;
+        GLint y = (GLint)((real32)Game->screenHeight - region->max.y);
+        GLsizei w = (GLsizei)(region->max.x - region->min.x);
+        GLsizei h = (GLsizei)(region->max.y - region->min.y);
+        glScissor(x, y, w, h);
+    } else {
+        glDisable(GL_SCISSOR_TEST);
+    }
+}
+
+void DrawUIText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *str) {
+    if (Game->uiGlyphCmdCount >= UIGlyphCmdCapacity) return;
+
+    int32 len = strlen(str);
+    if (len == 0) return;
+
+    GlyphData *data = PushArray(&Game->frameMem, GlyphData, len);
+    vec2 *positions = PushArray(&Game->frameMem, vec2, len);
+    LayoutGlyphs(font, str, len, size, positions, INFINITY, center);
+
+    for (int i = 0; i < len; i++) {
+        int32 codepoint = str[i] - 32;
+        data[i].position = positions[i];
+        data[i].color = color;
+        data[i].codepoint = codepoint;
+        data[i].dimensions = font->glyphs[codepoint].size * size;
+    }
+
+    UIGlyphCommand *cmd = &Game->uiGlyphCmds[Game->uiGlyphCmdCount++];
+    cmd->data = data;
+    cmd->count = len;
+    cmd->font = font;
+    cmd->size = size;
+    cmd->origin = pos;
+    cmd->hasClip = Game->hasClip;
+    if (Game->hasClip) {
+        cmd->clip = Game->clipStack[Game->clipTop - 1];
+    }
+}
+
+void DrawUIGlyphs() {
+    if (Game->uiGlyphCmdCount == 0) return;
+
+    Shader *shader = &Game->textShader;
+    SetShader(shader);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    Mesh *mesh = &Game->glyphQuad;
+
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glUniform1i(shader->uniforms[2].id, 1);
+    glUniform1f(shader->uniforms[4].id, Game->time);
+
+    for (int i = 0; i < Game->uiGlyphCmdCount; i++) {
+        UIGlyphCommand *cmd = &Game->uiGlyphCmds[i];
+        if (cmd->count == 0) continue;
+
+        if (cmd->hasClip) {
+            glEnable(GL_SCISSOR_TEST);
+            GLint x = (GLint)cmd->clip.min.x;
+            GLint y = (GLint)((real32)Game->screenHeight - cmd->clip.max.y);
+            GLsizei w = (GLsizei)(cmd->clip.max.x - cmd->clip.min.x);
+            GLsizei h = (GLsizei)(cmd->clip.max.y - cmd->clip.min.y);
+            glScissor(x, y, w, h);
+        } else {
+            glDisable(GL_SCISSOR_TEST);
+        }
+
+        // origin is in UI coords (top-left), convert to GL coords (bottom-left)
+        vec2 glOrigin = V2(cmd->origin.x, (real32)Game->screenHeight - cmd->origin.y);
+        mat4 model = TRS(V3(glOrigin.x, glOrigin.y, 0), IdentityQuaternion(), V3(1));
+        glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
+
+        mat4 projMat = Orthographic(0, Game->screenWidth, 0, Game->screenHeight, -1, 1);
+        glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, cmd->font->texture.textureID);
+        glUniform1i(shader->uniforms[3].id, 0);
+
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_1D, cmd->font->texcoordsMapID);
+
+        glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)((sizeof(vec3) * mesh->vertCount)));
+
+        // Upload glyph data
+        GlyphBuffer temp = {};
+        temp.capacity = cmd->count;
+        temp.size = cmd->count * sizeof(GlyphData);
+        temp.data = cmd->data;
+        temp.count = cmd->count;
+        glGenBuffers(1, (GLuint *)&temp.bufferID);
+        glBindBuffer(GL_ARRAY_BUFFER, temp.bufferID);
+        glBufferData(GL_ARRAY_BUFFER, temp.size, temp.data, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(2);
+        glVertexAttribIPointer(2, 1, GL_INT, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, codepoint));
+        glVertexAttribDivisor(2, 1);
+
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, false, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, color));
+        glVertexAttribDivisor(3, 1);
+
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 2, GL_FLOAT, false, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, dimensions));
+        glVertexAttribDivisor(4, 1);
+
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 2, GL_FLOAT, false, sizeof(GlyphData), (void *)FIELD_OFFSET(GlyphData, position));
+        glVertexAttribDivisor(5, 1);
+
+        glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0, cmd->count);
+
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(3);
+        glDisableVertexAttribArray(4);
+        glDisableVertexAttribArray(5);
+
+        glDeleteBuffers(1, (GLuint *)&temp.bufferID);
+    }
+
+    glDisable(GL_SCISSOR_TEST);
+    Game->uiGlyphCmdCount = 0;
+}
 
 // API interface

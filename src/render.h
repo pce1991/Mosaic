@@ -150,6 +150,21 @@ struct GlyphBuffer {
     GlyphBuffer *next;
 };
 
+struct UIClipRegion {
+    vec2 min;
+    vec2 max;
+};
+
+struct UIGlyphCommand {
+    GlyphData *data;
+    int32 count;
+    FontTable *font;
+    real32 size;
+    vec2 origin;
+    UIClipRegion clip;
+    bool hasClip;
+};
+
 Glyph GetGlyph(char c, Glyph *glyphs) {
     return glyphs[c - 32];
 }

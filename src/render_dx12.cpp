@@ -44,3 +44,23 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
 void DrawRectScreen(vec2 pos, vec2 scale, vec4 color) {
 
 }
+
+void DrawSpriteScreen(vec2 pos, vec2 size, Sprite *texture) {
+
+}
+
+void PushClipRect(vec2 pos, vec2 size) {
+
+}
+
+void PopClipRect() {
+
+}
+
+void DrawUIText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *str) {
+
+}
+
+void DrawUIGlyphs() {
+
+}
