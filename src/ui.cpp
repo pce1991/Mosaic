@@ -81,6 +81,7 @@ void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture) {
     frame->size = size;
 
     vec2 sp = UIScreenPos(pos, size);
+    Log("UIPushWindow: uiPos=(%.1f, %.1f) size=(%.1f, %.1f) screenPos=(%.1f, %.1f) screenHeight=%.0f", pos.x, pos.y, size.x, size.y, sp.x, sp.y, (real32)Core->graphics.screenHeight);
     DrawRectScreen(sp, size, color);
     if (texture) {
         DrawSpriteScreen(sp, size, texture);
@@ -91,6 +92,7 @@ void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture) {
     UI->cursor = pos;
     UI->columnOrigin = pos;
     UI->currentColumn = 0;
+    Log("  -> cursor set to (%.1f, %.1f)", UI->cursor.x, UI->cursor.y);
 }
 
 void UIPopWindow() {
@@ -142,6 +144,7 @@ bool UIButton(vec2 size, const char *label) {
         pos.x + (size.x - textWidth) * 0.5f,
         pos.y + (size.y - textHeight) * 0.5f
     );
+    Log("UIButton '%s': uiPos=(%.1f, %.1f) size=(%.1f, %.1f) textPos=(%.1f, %.1f) textW=%.1f textH=%.1f cursorBefore=(%.1f, %.1f)", label, pos.x, pos.y, size.x, size.y, textPos.x, textPos.y, textWidth, textHeight, UI->cursor.x, UI->cursor.y);
     DrawUIText(style.font, textPos, style.textSize, V4(1), false, label);
 
     UI->lastWidget = { pos, size };
@@ -166,6 +169,7 @@ void UILabel(vec4 color, real32 textSize, const char *fmt, ...) {
     vec2 widgetSize = V2(textWidth, textHeight);
 
     DrawUIText(style.font, pos, textSize, color, false, label);
+    Log("UILabel '%s': uiPos=(%.1f, %.1f) textSize=%.1f widgetSize=(%.1f, %.1f) cursorBefore=(%.1f, %.1f)", label, pos.x, pos.y, textSize, widgetSize.x, widgetSize.y, UI->cursor.x, UI->cursor.y);
 
     UI->lastWidget = { pos, widgetSize };
     UI->cursor.y = pos.y + widgetSize.y + style.widgetSpacing;
@@ -174,6 +178,7 @@ void UILabel(vec4 color, real32 textSize, const char *fmt, ...) {
 
 void UIPushImage(vec2 size, Sprite *texture) {
     vec2 pos = UI->cursor;
+    Log("UIPushImage: uiPos=(%.1f, %.1f) size=(%.1f, %.1f) cursorBefore=(%.1f, %.1f)", pos.x, pos.y, size.x, size.y, UI->cursor.x, UI->cursor.y);
 
     DrawSpriteScreen(UIScreenPos(pos, size), size, texture);
 

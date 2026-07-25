@@ -1,6 +1,7 @@
 
 Sprite testSprite;
 int32 clickCount = 0;
+int32 logFrame = 0;
 
 void MyGameInit() {
     LoadSprite("data/textures/galaga_ship.png", &testSprite);
@@ -89,5 +90,10 @@ void MyGameUpdate() {
     // hover indicator outside any window
     if (UI->hoveredID != 0) {
         DrawTextScreenPixel(&Core->graphics.monoFont, V2(20.0f, 20.0f), 28.0f, V4(0.5f), "hovered: 0x%08x", UI->hoveredID);
+    }
+
+    logFrame++;
+    if (logFrame == 2) {
+        WriteLogToFile("ui_log.txt");
     }
 }

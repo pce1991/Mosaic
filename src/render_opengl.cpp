@@ -1120,6 +1120,7 @@ void DrawUIText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center,
     for (int i = 0; i < len; i++) {
         int32 codepoint = str[i] - 32;
         data[i].position = positions[i];
+        data[i].position.y -= font->lineHeight * size;
         data[i].color = color;
         data[i].codepoint = codepoint;
         data[i].dimensions = font->glyphs[codepoint].size * size;

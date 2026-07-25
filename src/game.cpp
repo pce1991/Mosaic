@@ -146,6 +146,7 @@ void GameInit(CoreMemory *coreMem) {
     AllocateDebugLogNode(Core->log.head, LOG_BUFFER_CAPACITY);
     Core->log.current = Core->log.head;
     Core->log.head->next = NULL;
+    Core->log.logs = MakeDynamicArray<LogData>(&Core->permanentArena, 1024);
 
     Camera *cam = &coreMem->camera;
     cam->size = 1;
