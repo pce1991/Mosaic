@@ -1,4 +1,4 @@
-
+﻿
 #define GAME_SERVER 0
 
 #include "game.h"
@@ -39,7 +39,7 @@ bool ReadConfigFile(char *path) {
         return false;
     }
 
-    DynamicArray<ConfigToken> tokens = MakeDynamicArray<ConfigToken>(&Game->frameMem, 32);
+    DynamicArray<ConfigToken> tokens = MakeDynamicArray<ConfigToken>(&Core->frameMem, 32);
 
     while (file.offset < file.size) {
         ConsumeBytesPassing(&file, IsWhitespace);
@@ -87,7 +87,7 @@ bool ReadConfigFile(char *path) {
             if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
                 tokenIndex++;
                 if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
-                    Game->screenWidth = atoi(tokens[tokenIndex].start);
+                    Core->graphics.screenWidth = atoi(tokens[tokenIndex].start);
                 }
             }
         }
@@ -96,7 +96,7 @@ bool ReadConfigFile(char *path) {
             if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
                 tokenIndex++;
                 if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
-                    Game->screenHeight = atoi(tokens[tokenIndex].start);
+                    Core->graphics.screenHeight = atoi(tokens[tokenIndex].start);
                 }
             }
         }
@@ -105,7 +105,7 @@ bool ReadConfigFile(char *path) {
             if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
                 tokenIndex++;
                 if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Float) {
-                    Game->audioPlayer.volume = atof(tokens[tokenIndex].start);
+                    Core->audioPlayer.volume = atof(tokens[tokenIndex].start);
                 }
             }
         }
@@ -114,9 +114,9 @@ bool ReadConfigFile(char *path) {
             if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
                 tokenIndex++;
                 if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_String) {
-                    Game->networkInfo.serverIPString = (char *)malloc(tokens[tokenIndex].length + 1);
-                    memcpy(Game->networkInfo.serverIPString, tokens[tokenIndex].start, tokens[tokenIndex].length);
-                    Game->networkInfo.serverIPString[tokens[tokenIndex].length] = '\0';
+                    Core->networkInfo.serverIPString = (char *)malloc(tokens[tokenIndex].length + 1);
+                    memcpy(Core->networkInfo.serverIPString, tokens[tokenIndex].start, tokens[tokenIndex].length);
+                    Core->networkInfo.serverIPString[tokens[tokenIndex].length] = '\0';
                 }
             }
         }
@@ -125,7 +125,7 @@ bool ReadConfigFile(char *path) {
             if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
                 tokenIndex++;
                 if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
-                    Game->networkInfo.configPort = atoi(tokens[tokenIndex].start);
+                    Core->networkInfo.configPort = atoi(tokens[tokenIndex].start);
                 }
             }
         }
@@ -137,17 +137,17 @@ bool ReadConfigFile(char *path) {
     return true;
 }
 
-void GameInit(GameMemory *gameMem) {
-    Game = gameMem;
-    Input = &Game->inputManager;
-    UI = &Game->uiManager;
+void GameInit(CoreMemory *coreMem) {
+    Core = coreMem;
+    Input = &Core->inputManager;
+    UI = &Core->graphics.uiManager;
 
-    Game->log.head = (DebugLogNode *)malloc(sizeof(DebugLogNode));
-    AllocateDebugLogNode(Game->log.head, LOG_BUFFER_CAPACITY);
-    Game->log.current = Game->log.head;
-    Game->log.head->next = NULL;
+    Core->log.head = (DebugLogNode *)malloc(sizeof(DebugLogNode));
+    AllocateDebugLogNode(Core->log.head, LOG_BUFFER_CAPACITY);
+    Core->log.current = Core->log.head;
+    Core->log.head->next = NULL;
 
-    Camera *cam = &gameMem->camera;
+    Camera *cam = &coreMem->camera;
     cam->size = 1;
     cam->type = CameraType_Orthographic;
     cam->width = 16;
@@ -162,83 +162,83 @@ void GameInit(GameMemory *gameMem) {
     UpdateCamera(cam);
     
     // INIT GRAPHICS
-    AllocateTriangle(&gameMem->tri);
-    InitMesh(&gameMem->tri);
+    AllocateTriangle(&coreMem->graphics.tri);
+    InitMesh(&coreMem->graphics.tri);
 
-    AllocateQuad(&gameMem->quad);
-    InitMesh(&gameMem->quad);
+    AllocateQuad(&coreMem->graphics.quad);
+    InitMesh(&coreMem->graphics.quad);
 
-    AllocateGlyphQuad(&gameMem->glyphQuad);
-    InitMesh(&gameMem->glyphQuad);
+    AllocateGlyphQuad(&coreMem->graphics.glyphQuad);
+    InitMesh(&coreMem->graphics.glyphQuad);
 
-    AllocateQuadTopLeft(&gameMem->quadTopLeft);
-    InitMesh(&gameMem->quadTopLeft);
+    AllocateQuadTopLeft(&coreMem->graphics.quadTopLeft);
+    InitMesh(&coreMem->graphics.quadTopLeft);
 
-    AllocateCube(&gameMem->cube);
-    InitMesh(&gameMem->cube);
+    AllocateCube(&coreMem->graphics.cube);
+    InitMesh(&coreMem->graphics.cube);
 
-    InitFont(&gameMem->monoFont, "data/DejaVuSansMono.ttf");
-    InitFont(&gameMem->serifFont, "data/LiberationSerif-Regular.ttf");
+    InitFont(&coreMem->graphics.monoFont, "data/DejaVuSansMono.ttf");
+    InitFont(&coreMem->graphics.serifFont, "data/LiberationSerif-Regular.ttf");
 
     InitGlyphBuffers(GlyphBufferCount);
 
 #if WINDOWS
     {
-        LoadShader("shaders/mesh.vert", "shaders/mesh.frag", &gameMem->shader);
+        LoadShader("shaders/mesh.vert", "shaders/mesh.frag", &coreMem->graphics.shader);
         const char *uniforms[] = {
             "model",
             "viewProjection",
             "color",
         };
-        CompileShader(&gameMem->shader, 3, uniforms);
+        CompileShader(&coreMem->graphics.shader, 3, uniforms);
     }
 
 #if 0
     {
-        LoadShader("shaders/cool_mesh.vert", "shaders/cool_mesh.frag", &gameMem->coolShader);
+        LoadShader("shaders/cool_mesh.vert", "shaders/cool_mesh.frag", &coreMem->graphics.coolShader);
         const char *uniforms[] = {
             "model",
             "viewProjection",
             "color",
             "time",
         };
-        CompileShader(&gameMem->coolShader, 4, uniforms);
+        CompileShader(&coreMem->graphics.coolShader, 4, uniforms);
     }
 #endif
 
     {
-        LoadShader("shaders/instanced_quad_shader.vert", "shaders/instanced_quad_shader.frag", &gameMem->instancedQuadShader);
+        LoadShader("shaders/instanced_quad_shader.vert", "shaders/instanced_quad_shader.frag", &coreMem->graphics.instancedQuadShader);
         const char *uniforms[] = {
             "viewProjection",
         };
-        CompileShader(&gameMem->instancedQuadShader, 1, uniforms);
+        CompileShader(&coreMem->graphics.instancedQuadShader, 1, uniforms);
     }
 
     {
-        LoadShader("shaders/textured_quad.vert", "shaders/textured_quad.frag", &gameMem->texturedQuadShader);
+        LoadShader("shaders/textured_quad.vert", "shaders/textured_quad.frag", &coreMem->graphics.texturedQuadShader);
         const char *uniforms[] = {
             "model",
             "viewProjection",
             "texture0",
         };
-        CompileShader(&gameMem->texturedQuadShader, ARRAY_LENGTH(char *, uniforms), uniforms);
+        CompileShader(&coreMem->graphics.texturedQuadShader, ARRAY_LENGTH(char *, uniforms), uniforms);
     }
 
     {
-        LoadShader("shaders/text.vert", "shaders/text.frag", &gameMem->textShader);
+        LoadShader("shaders/text.vert", "shaders/text.frag", &coreMem->graphics.textShader);
         const char *uniforms[] = {
-                                  "model",
-                                  "viewProjection",
-                                  "texcoordsMap",
-                                  "fontTable",
+                                   "model",
+                                   "viewProjection",
+                                   "texcoordsMap",
+                                   "fontTable",
         };
-        CompileShader(&gameMem->textShader, ARRAY_LENGTH(char *, uniforms), uniforms);
+        CompileShader(&coreMem->graphics.textShader, ARRAY_LENGTH(char *, uniforms), uniforms);
     }
 #endif
 
-    AudioPlayerInit(&Game->audioPlayer, &Game->permanentArena);
+    AudioPlayerInit(&Core->audioPlayer, &Core->permanentArena);
 
-    AllocateRectBuffer(256 * 256, &Game->rectBuffer);
+    AllocateRectBuffer(256 * 256, &Core->graphics.rectBuffer);
 
     MyGameInit();
 }
@@ -253,31 +253,31 @@ void GameDeinit() {
 }
 
 
-void WriteSoundSamples(GameMemory *game, int32 sampleCount, real32 *buffer) {
-    PlayAudio(&game->audioPlayer, sampleCount, buffer);
+void WriteSoundSamples(CoreMemory *core, int32 sampleCount, real32 *buffer) {
+    PlayAudio(&Core->audioPlayer, sampleCount, buffer);
 }
 
-void GameUpdateAndRender(GameMemory *gameMem) {
+void GameUpdateAndRender(CoreMemory *core) {
     
-    UpdateInput(&Game->inputManager);
+    UpdateInput(&Core->inputManager);
 
-    InputManager *input = &gameMem->inputManager;
+    InputManager *input = &Core->inputManager;
 
-    if (InputPressed(Game->keyboard, Input_Escape)) {
-        gameMem->running = false;
+    if (InputPressed(Core->keyboard, Input_Escape)) {
+        Core->running = false;
     }
 
-    Game->currentGlyphBufferIndex = 0;
+    Core->graphics.currentGlyphBufferIndex = 0;
 
     // @TODO: pick a key to step frame and then check if that's pressed
     // We want to do this before the update obviously
 
-    if (!Game->paused || Game->steppingFrame) {
+    if (!Core->paused || Core->steppingFrame) {
         MyGameUpdate();
     }
 
-    Camera *cam = &gameMem->camera;
-    UpdateCamera(&gameMem->camera);
+    Camera *cam = &Core->camera;
+    UpdateCamera(&Core->camera);
 
     {
       // this is assuming 2D
@@ -296,20 +296,20 @@ void GameUpdateAndRender(GameMemory *gameMem) {
     }
 
 
-    Game->steppingFrame = false;
+    Core->steppingFrame = false;
 
-    RenderRectBuffer(&Game->rectBuffer);
-    Game->rectBuffer.count = 0;
+    RenderRectBuffer(&Core->graphics.rectBuffer);
+    Core->graphics.rectBuffer.count = 0;
     
     DrawUIGlyphs();
-    DrawGlyphs(gameMem->glyphBuffers);
+    DrawGlyphs(Core->graphics.glyphBuffers);
     
-    //DeleteEntities(&Game->entityDB);
+    //DeleteEntities(&Core->graphics.entityDB);
     
-    Game->fps = (real32)Game->frame / (Game->time - Game->startTime);
+    Core->fps = (real32)Core->frame / (Core->time - Core->startTime);
 
-    gameMem->frame++;
-    ClearMemoryArena(&Game->frameMem);
+    Core->frame++;
+    ClearMemoryArena(&Core->frameMem);
 
     ClearInputManager(input);
 }

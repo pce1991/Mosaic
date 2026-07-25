@@ -99,7 +99,7 @@ void MyMosaicInit() {
 
     AllocateMemoryArena(&arena, Megabytes(64));
 
-    Canvas &canvas = game.canvas;
+    Canvas &canvas = Core.canvas;
     canvas.width = Mosaic->gridWidth;
     canvas.height = Mosaic->gridHeight;
     canvas.cells = MakeDynamicArray<CanvasCell>(&arena, canvas.height * canvas.width);
@@ -167,15 +167,15 @@ void MyMosaicInit() {
         PushBack(&canvas.cells, {});
     }
 
-    Crawler &crawler = game.crawler;
+    Crawler &crawler = Core.crawler;
     crawler.positionStack = MakeDynamicArray<vec2i>(&arena, canvas.cells.count);
 
     crawler.position =
         V2i(RandfRange(0, Mosaic->gridWidth), RandfRange(0, Mosaic->gridHeight));
 
-    game.crawler.colorPosition.x = RandfRange(0, canvas.colorCube.size);
-    game.crawler.colorPosition.y = RandfRange(0, canvas.colorCube.size);
-    game.crawler.colorPosition.z = RandfRange(0, canvas.colorCube.size);
+    Core.crawler.colorPosition.x = RandfRange(0, canvas.colorCube.size);
+    Core.crawler.colorPosition.y = RandfRange(0, canvas.colorCube.size);
+    Core.crawler.colorPosition.z = RandfRange(0, canvas.colorCube.size);
 }
 
 // @TODO:
@@ -317,14 +317,14 @@ void UpdateCrawler(Crawler &crawler, Canvas &canvas) {
 
 void MyMosaicUpdate() {
     // if (InputPressed(Keyboard, Input_Space)) {
-    //     UpdateCrawler(game.crawler, game.canvas);
+    //     UpdateCrawler(game.crawler, Core.canvas);
     // }
 
     For (i, 100) {
-        UpdateCrawler(game.crawler, game.canvas);
+        UpdateCrawler(game.crawler, Core.canvas);
     }
 
-    Canvas &canvas = game.canvas;
+    Canvas &canvas = Core.canvas;
 
     For (i, canvas.cells.count) {
         vec2i pos = GetCellPosition(i, canvas);
@@ -332,7 +332,7 @@ void MyMosaicUpdate() {
     }
 
     {
-        Crawler &crawler = game.crawler;
+        Crawler &crawler = Core.crawler;
 
         {
             DynamicArray<int32> neighbors = MakeDynamicArray<int32>(&Game->frameMem, 4);

@@ -19,6 +19,8 @@ struct MAllocator;
 
 typedef void *AllocateFunc(MAllocator *allocator, uint64 size);
 typedef void DeallocateFunc(MAllocator *allocator, void *data);
+#ifndef MY_MEMORY_H
+#define MY_MEMORY_H
 
 struct MAllocator {
     AllocateFunc *allocate;
@@ -157,3 +159,5 @@ inline T Last(MArray<T> *array) {
 
 // @TODO: Maybe support the rest of the DynamicArray API
 // @TODO: chunked array
+
+#endif // MY_MEMORY_H

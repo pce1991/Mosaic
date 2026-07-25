@@ -1,4 +1,4 @@
-
+﻿
 #define LOG_BUFFER_CAPACITY Megabytes(8)
 
 void AllocateDebugLogNode(DebugLogNode *node, int32 capacity) {
@@ -10,7 +10,7 @@ void AllocateDebugLogNode(DebugLogNode *node, int32 capacity) {
 }
 
 void Log(char *fmt, ...) {
-    DebugLog *log = &Game->log;
+    DebugLog *log = &Core->log;
     DebugLogNode *buffer = log->current;
     
     va_list args;
@@ -40,7 +40,7 @@ void Log(char *fmt, ...) {
 
     data.string = start;
     data.length = len;
-    data.frame = Game->frame;
+    data.frame = Core->frame;
 
     PushBack(&log->logs, data);
 
@@ -51,7 +51,7 @@ void Log(char *fmt, ...) {
 void WriteLogToFile(char *path) {
     FILE *file = fopen(path, "w");
 
-    DebugLog *log = &Game->log;
+    DebugLog *log = &Core->log;
 
     int32 frame = -1;
 

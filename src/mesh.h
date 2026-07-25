@@ -1,3 +1,5 @@
+#ifndef MESH_H
+#define MESH_H
 
 struct Mesh {
     uint32 size;
@@ -18,3 +20,5 @@ struct Mesh {
 };
 
 // @TODO: material, submesh which knows the start and end indices
+
+#endif // MESH_H

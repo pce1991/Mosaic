@@ -21,7 +21,6 @@
 #include "math/math.h"
 
 
-#include "render.h"
 #include "audio.h"
 #include "input.h"
 #include "collections.h"
@@ -30,8 +29,11 @@
 #include "mesh.h"
 #include "ui.h"
 
-#include "mosaic.h"
+#include "render.h"
 
+
+// Forward declaration to avoid circular dependency
+struct CoreGraphics;
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
@@ -54,7 +56,7 @@
 #define UIClipStackMax 32
 #define UIGlyphCmdCapacity 512
 
-struct GameMemory {
+struct CoreMemory {
     bool running;
     bool paused;
     bool steppingFrame;
@@ -66,13 +68,10 @@ struct GameMemory {
 
     uint32 frame;
     real32 fps;
-    
-    uint32 screenWidth;
-    uint32 screenHeight;
-    uint32 pitch;
 
-    // This is memory that we allocate up front and will last for the duration of the
-    // game.
+    int32 screenWidth;
+    int32 screenHeight;
+
     MemoryArena permanentArena;
 
     DebugLog log;
@@ -80,36 +79,9 @@ struct GameMemory {
 
     NetworkInfo networkInfo;
 
-    int32 currentGlyphBufferIndex;
-    GlyphBuffer glyphBuffers[GlyphBufferCount];
-
-    FontTable monoFont;
-    FontTable serifFont;
-
     Camera camera;
-    // vec3 cameraPosition;
-    // quaternion cameraRotation;
-    //real32 camAngle;
 
     AudioPlayer audioPlayer;
-
-    Shader texturedQuadShader;
-
-    Shader instancedQuadShader;
-    
-    Shader shader;
-
-    Shader singleLight;
-
-    Shader coolShader;
-
-    Shader textShader;
-
-    Mesh tri;
-    Mesh quad;
-    Mesh glyphQuad;
-    Mesh quadTopLeft;
-    Mesh cube;
 
     InputManager inputManager;
     InputDevice *keyboard;
@@ -120,24 +92,24 @@ struct GameMemory {
     bool inputStringActive;
     char inputString[255];
 
-    RectBuffer rectBuffer;
-
-    UIClipRegion clipStack[UIClipStackMax];
-    int32 clipTop;
-    bool hasClip;
-
-    UIGlyphCommand uiGlyphCmds[UIGlyphCmdCapacity];
-    int32 uiGlyphCmdCount;
-
-    UIManager uiManager;
-
     void *myData;
+
+    CoreGraphics graphics;
+
+    // @TODO: shaders, meshes, etc.
+    GlyphBuffer *glyphBuffers;
+    Shader *texturedQuadShader;
+    Mesh *quad;
+    vec3 quadTopLeft;
+    Shader *shader;
+    Shader *coolShader;
+    Shader *instancedQuadShader;
 };
 
 real32 Time = 0;
 real32 DeltaTime = 0;
 
-GameMemory *Game = NULL;
+CoreMemory *Core = NULL;
 InputManager *Input = NULL;
 
 InputDevice *Keyboard = NULL;

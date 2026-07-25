@@ -165,18 +165,18 @@ void MyMosaicInit() {
 
     AllocateMemoryArena(&game.arena, Megabytes(64));
 
-    game.levels = PushArray(&game.arena, Level, 2);
+    Core.levels = PushArray(&game.arena, Level, 2);
 
-    game.levelCurr = &game.levels[0];
+    Core.levelCurr = &game.levels[0];
 
     *game.levelCurr = {};
-    game.levelCurr->wallCapacity = 256;
-    game.levelCurr->walls = PushArray(&game.arena, Wall, game.levelCurr->wallCapacity);
+    Core.levelCurr->wallCapacity = 256;
+    Core.levelCurr->walls = PushArray(&game.arena, Wall, Core.levelCurr->wallCapacity);
 
-    game.levelCurr->boxCapacity = 16;
-    game.levelCurr->boxs = PushArray(&game.arena, Box, game.levelCurr->boxCapacity);
+    Core.levelCurr->boxCapacity = 16;
+    Core.levelCurr->boxs = PushArray(&game.arena, Box, Core.levelCurr->boxCapacity);
 
-    Level *levelCurr = game.levelCurr;
+    Level *levelCurr = Core.levelCurr;
 
 
     vec2i cursor = V2i(0, 0);
@@ -225,7 +225,7 @@ void MyMosaicUpdate() {
     ClearTiles(0, 0, 0);
 
 
-    Level *levelCurr = game.levelCurr;
+    Level *levelCurr = Core.levelCurr;
 
     for (int i = 0; i < levelCurr->wallCount; i++) {
         Wall *wall = &levelCurr->walls[i];

@@ -1,16 +1,17 @@
 
+#include "mosaic.h"
 #include "game/my_mosaic.cpp"
 
 // @NOTE: Some of this stuff is internal and you don't ever want it to change.
 // Things like allocating the RectBuffer or calculating the levelAspect.
 // Other things like setting the gridWidth can be customized.
 void MyGameInit() {
-  Game->myData = malloc(sizeof(MosaicMem));
-  memset(Game->myData, 0, sizeof(MosaicMem));
+  Core->graphics.myData = malloc(sizeof(MosaicMem));
+  memset(Core->graphics.myData, 0, sizeof(MosaicMem));
     
-  Mosaic = (MosaicMem *)Game->myData;
+  Mosaic = (MosaicMem *)Core->graphics.myData;
 
-  MoveMouse(Game->screenWidth / 2.0f, Game->screenHeight / 2.0f);
+  MoveMouse(Core->graphics.screenWidth / 2.0f, Core->graphics.screenHeight / 2.0f);
 
   Mosaic->padding = 1.0f;
 
@@ -45,7 +46,7 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
 
   // @TODO: keep a dedicated place at the top for text?
   {
-    Camera *cam = &Game->camera;
+    Camera *cam = &Core->graphics.camera;
 
     if (levelAspect > screenAspect) {
       float32 size = Mosaic->gridWidth / (16.0f - Mosaic->padding);
@@ -67,7 +68,7 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
                                    cam->height * -0.5f, cam->height * 0.5f,
                                    0.0, 100.0f);
 
-    mat4 camWorld = TRS(Game->camera.position, Game->camera.rotation, V3(1));
+    mat4 camWorld = TRS(Core->graphics.camera.position, Core->graphics.camera.rotation, V3(1));
     cam->view = OrthogonalInverse(camWorld);
     
     cam->viewProjection = cam->projection * cam->view;
@@ -142,7 +143,7 @@ void DrawTile(vec2i position, vec4 color) {
   vec2 worldPos = GridPositionToWorldPosition(position);
   //DrawRect(worldPos, V2(Mosaic->tileSize * 0.5f), color);
   // Instancing
-  DrawRect(&Game->rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
+  DrawRect(&Core->graphics.rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
 }
 
 void DrawBorder() {
@@ -190,7 +191,7 @@ void DrawGrid() {
 }
 
 MTile* GetHoveredTile() {
-  Camera *cam = &Game->camera;
+  Camera *cam = &Core->graphics.camera;
     
   vec2 mousePos = Input->mousePosNormSigned;
   mousePos.x *= cam->width * 0.5f;
@@ -426,7 +427,7 @@ void DrawTextTop(vec4 color, const char *fmt, ...) {
   vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
   vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.1f);
-  DrawText(&Game->monoFont, position, 0.35f, color, true, str);
+  DrawText(&Core->graphics.monoFont, position, 0.35f, color, true, str);
 
   va_end(args);
 }
@@ -439,7 +440,7 @@ void DrawTextTop(vec4 color, float32 scale, const char *fmt, ...) {
   vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
   vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.1f);
-  DrawText(&Game->monoFont, position, 0.35f * scale, color, true, str);
+  DrawText(&Core->graphics.monoFont, position, 0.35f * scale, color, true, str);
 
   va_end(args);
 }
@@ -454,7 +455,7 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, const char *fmt, ...) {
   vec2 floorPos = V2(floorf(pos.x), -floorf(pos.y));
     
   vec2 position = Mosaic->gridOrigin + floorPos + V2(0.0f, -1.0f);
-  DrawText(&Game->monoFont, position, size, color, false, str);
+  DrawText(&Core->graphics.monoFont, position, size, color, false, str);
 
   va_end(args);
 }
@@ -469,7 +470,7 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, bool center, const char *f
   vec2 floorPos = V2(floorf(pos.x), -floorf(pos.y));
     
   vec2 position = Mosaic->gridOrigin + floorPos + V2(0.0f, -1.0f);
-  DrawText(&Game->monoFont, position, size, color, center, str);
+  DrawText(&Core->graphics.monoFont, position, size, color, center, str);
 
   va_end(args);
 }
@@ -483,9 +484,9 @@ void PushText(const char *fmt, ...) {
 
   MosaicText *text = &Mosaic->text;
 
-  DrawTextScreen(&Game->monoFont, text->cursor, text->size, text->color, false, str);
+  DrawTextScreen(&Core->graphics.monoFont, text->cursor, text->size, text->color, false, str);
 
-  FontTable *font = &Game->monoFont;
+  FontTable *font = &Core->graphics.monoFont;
 
   text->cursor.y += font->lineHeight * text->size;
 }
@@ -539,4 +540,5 @@ void MyGameUpdate() {
   MyMosaicUpdate();
   MosaicRender();
 }
+
 

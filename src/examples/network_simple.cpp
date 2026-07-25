@@ -82,7 +82,7 @@ void ClientUpdate() {
     }
   }
 
-  // TODO: We should probably check to make sure the packet id is from our game.
+  // TODO: We should probably check to make sure the packet id is from our Core.
   if (network->packetsReceived.count > 0) {
     client->lastPingTimeFromServer = Game->time;
     client->connected = true;
@@ -123,7 +123,7 @@ void ServerUpdate() {
     // Remember, the first 4 bytes of our packet tell have the id,
     // so if our packet doesnt have those same bytes set then this
     // is a message someone sent to our server, but it wasnt sent
-    // from our game.
+    // from our Core.
     if (p->hash != PacketHash) {
       continue;
     }

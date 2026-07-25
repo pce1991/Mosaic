@@ -1,4 +1,11 @@
+﻿#ifndef RENDER_H
+#define RENDER_H
 
+// @NOTE: Constants for render.h that are defined in game.h to avoid circular dependencies
+#define GlyphBufferCount 256
+#define GlyphBufferCapacity 256
+#define UIClipStackMax 32
+#define UIGlyphCmdCapacity 512
 
 enum ShaderType {
                  ShaderType_Vertex,
@@ -178,4 +185,45 @@ void AllocateSprite(Sprite *sprite, uint32 w, uint32 h) {
 
     sprite->data = (uint8 *)malloc(sprite->size);
 }
+
+struct CoreGraphics {
+    // Screen dimensions
+    uint32 screenWidth;
+    uint32 screenHeight;
+    uint32 pitch;
+
+    // Shaders
+    Shader texturedQuadShader;
+    Shader instancedQuadShader;
+    Shader shader;
+    Shader singleLight;
+    Shader coolShader;
+    Shader textShader;
+
+    // Meshes
+    Mesh tri;
+    Mesh quad;
+    Mesh glyphQuad;
+    Mesh quadTopLeft;
+    Mesh cube;
+
+    // Fonts
+    FontTable monoFont;
+    FontTable serifFont;
+
+    // Glyph buffers
+    int32 currentGlyphBufferIndex;
+    GlyphBuffer glyphBuffers[GlyphBufferCount];
+
+    // UI/Rendering
+    RectBuffer rectBuffer;
+    UIClipRegion clipStack[UIClipStackMax];
+    int32 clipTop;
+    bool hasClip;
+    UIGlyphCommand uiGlyphCmds[UIGlyphCmdCapacity];
+    int32 uiGlyphCmdCount;
+    UIManager uiManager;
+};
+
+#endif // RENDER_H
 

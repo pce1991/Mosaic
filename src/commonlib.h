@@ -11,6 +11,8 @@
 #define STRIDED_READ(type, buffer, stride, index) (*(type *)((uint8 *)(buffer) + (stride) * (index)))
 
 #define ARRAY_LENGTH(type, array) (sizeof(array) / sizeof(type))
+#ifndef COMMONLIB_H
+#define COMMONLIB_H
 
 struct Str {
     int32 length;
@@ -64,3 +66,5 @@ inline void ReleaseLock(SpinLock *lock) {
   // I think on Linux we want to use __sync_lock_release instead
   AtomicExchange(&lock->value, 0);
 }
+
+#endif // COMMONLIB_H

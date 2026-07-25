@@ -99,14 +99,14 @@ uint32 GetMyAddress() {
 // This way the server can send out the chunky information and clients know what to receieve.
 
 void InitNetwork(MemoryArena *arena) {
-    NetworkInfo *network = &Game->networkInfo;
+    NetworkInfo *network = &Core->networkInfo;
 
     network->packetsToSend = MakeDynamicArray<GamePacket>(arena, 256);
     network->packetsReceived = MakeDynamicArray<ReceivedPacket>(arena, 256);
 }
 
 void ReceivePackets(Socket *socket) {
-    NetworkInfo *network = &Game->networkInfo;
+    NetworkInfo *network = &Core->networkInfo;
     
     DynamicArrayClear(&network->packetsReceived);
 
@@ -143,14 +143,14 @@ void ReceivePackets(Socket *socket) {
 // need to copy the element over instead of going thru SubmitPacket, otherwise the packets will
 // have different IDs.
 void SubmitPacket(DynamicArray<GamePacket> *packetsToSend, GamePacket *packet) {
-  NetworkInfo *network = &Game->networkInfo;
+  NetworkInfo *network = &Core->networkInfo;
   packet->id = ++network->nextID;
 
   PushBack(packetsToSend, *packet);
 }
 
 void SubmitPackets(DynamicArray<GamePacket> *packetsToSend, DynamicArray<GamePacket> *packets) {
-  NetworkInfo *network = &Game->networkInfo;
+  NetworkInfo *network = &Core->networkInfo;
 
   int32 id = ++network->nextID;
   int32 partID = ++network->partID;
@@ -167,7 +167,7 @@ void SubmitPackets(DynamicArray<GamePacket> *packetsToSend, DynamicArray<GamePac
 }
 
 void SubmitPackets(DynamicArray<GamePacket> *packetsToSend, GamePacket *packets, int32 packetCount) {
-  NetworkInfo *network = &Game->networkInfo;
+  NetworkInfo *network = &Core->networkInfo;
 
   int32 id = ++network->nextID;
   int32 partID = ++network->partID;
@@ -182,3 +182,4 @@ void SubmitPackets(DynamicArray<GamePacket> *packetsToSend, GamePacket *packets,
     PushBack(packetsToSend, *packet);
   }
 }
+

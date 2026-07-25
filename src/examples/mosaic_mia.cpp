@@ -31,7 +31,7 @@ void MyMosaicInit() {
 
 // This is where you put the code you want to run every update.
 // This function is called every frame, and its what tells us what colors to draw
-// all the tiles at, along with all the other state changes in our game.
+// all the tiles at, along with all the other state changes in our Core.
 
 void MyMosaicUpdate() {
     Tile *tiles = Mosaic->tiles;

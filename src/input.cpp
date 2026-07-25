@@ -59,7 +59,7 @@ bool InputHeld(InputDevice *device, int32 inputID) {
 bool InputHeldSeconds(InputDevice *device, int32 inputID, real32 time) {
   bool held = device->framesHeld[inputID] > 0;
 
-  return held && (Game->time - device->timePressed[inputID] > time);
+  return held && (Core->time - device->timePressed[inputID] > time);
 }
 
 // @NOTE: to be cleared at the end of the frame so we have access to inputChars thruout update. 
@@ -71,8 +71,8 @@ void ClearInputManager(InputManager *input) {
 }
 
 void UpdateInput(InputManager *input) {
-  input->mousePosNorm.x = input->mousePos.x / (Game->screenWidth * 1.0f);
-  input->mousePosNorm.y = input->mousePos.y / (Game->screenHeight * 1.0f);
+input->mousePosNorm.x = input->mousePos.x / (Core->graphics.screenWidth * 1.0f);
+input->mousePosNorm.y = input->mousePos.y / (Core->graphics.screenHeight * 1.0f);
 
   // @DESIGN: this is exactly the type of equation its very useful to know!
   input->mousePosNormSigned.x = (input->mousePosNorm.x - 0.5f) * 2;
@@ -116,7 +116,7 @@ void UpdateInput(InputManager *input) {
       if (device->framesHeld[index] < 0) {
         //printf("pressed\n");
 
-        device->timePressed[index] = Game->time;
+        device->timePressed[index] = Core->time;
         device->framesHeld[index] = 0;
         device->pressed[index] = true;
         device->released[index] = false;

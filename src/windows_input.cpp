@@ -247,7 +247,7 @@ void WindowsGetInput(InputManager *input) {
                 int keycode = msg.wParam;
 
                 InputEvent event = {};
-                event.device = Game->keyboard;
+                event.device = Core->keyboard;
                 event.index = WinVirtualKeyMap[MapLeftRightKeys(msg.wParam, msg.lParam)];
                 event.discreteValue = true;
 
@@ -258,7 +258,7 @@ void WindowsGetInput(InputManager *input) {
                 int keycode = msg.wParam;
 
                 InputEvent event = {};
-                event.device = Game->keyboard;
+                event.device = Core->keyboard;
                 event.index = WinVirtualKeyMap[MapLeftRightKeys(msg.wParam, msg.lParam)];
                 event.discreteValue = false;
 
@@ -275,13 +275,13 @@ void WindowsGetInput(InputManager *input) {
                 int posY = GET_Y_LPARAM(msg.lParam);
 
                 input->mousePos.x = posX;
-                input->mousePos.y = Game->screenHeight - posY;
+                input->mousePos.y = Core->graphics.screenHeight - posY;
             } break;
 
                     
             case WM_LBUTTONDOWN : {
                 InputEvent event = {};
-                event.device = Game->mouse;
+                event.device = Core->mouse;
                 event.index = Input_MouseLeft;
                 event.discreteValue = true;
 
@@ -290,7 +290,7 @@ void WindowsGetInput(InputManager *input) {
 
             case WM_LBUTTONUP : {
                 InputEvent event = {};
-                event.device = Game->mouse;
+                event.device = Core->mouse;
                 event.index = Input_MouseLeft;
                 event.discreteValue = false;
 
@@ -299,7 +299,7 @@ void WindowsGetInput(InputManager *input) {
                     
             case WM_RBUTTONDOWN : {
                 InputEvent event = {};
-                event.device = Game->mouse;
+                event.device = Core->mouse;
                 event.index = Input_MouseRight;
                 event.discreteValue = true;
 
@@ -308,7 +308,7 @@ void WindowsGetInput(InputManager *input) {
 
             case WM_RBUTTONUP : {
                 InputEvent event = {};
-                event.device = Game->mouse;
+                event.device = Core->mouse;
                 event.index = Input_MouseRight;
                 event.discreteValue = false;
 
@@ -322,3 +322,4 @@ void WindowsGetInput(InputManager *input) {
         }
     }
 }
+

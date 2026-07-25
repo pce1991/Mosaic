@@ -1,4 +1,4 @@
-inline bool glCheckError_(char *file, uint32 line) {
+﻿inline bool glCheckError_(char *file, uint32 line) {
     GLenum _glError = glGetError();
     if (_glError != GL_NO_ERROR) {
         Print("OpenGL error (%s:%d): 0x%x (%d)\n", file, line, _glError, _glError);
@@ -184,15 +184,15 @@ void SetShader(Shader *shader) {
 }
 
 vec2 PixelToNorm(int32 x, int32 y) {
-    return V2(x / (Game->screenWidth * 1.0f), y / (Game->screenHeight * 1.0f));
+    return V2(x / (Core->graphics.screenWidth * 1.0f), y / (Core->graphics.screenHeight * 1.0f));
 }
 
 vec2 PixelToNorm(vec2i pixel) {
-    return V2(pixel.x / (Game->screenWidth * 1.0f), pixel.y / (Game->screenHeight * 1.0f));
+    return V2(pixel.x / (Core->graphics.screenWidth * 1.0f), pixel.y / (Core->graphics.screenHeight * 1.0f));
 }
 
 vec2 NormToPixel(vec2 norm) {
-    return V2(norm.x * Game->screenWidth, norm.y * Game->screenHeight);
+    return V2(norm.x * Core->graphics.screenWidth, norm.y * Core->graphics.screenHeight);
 }
 
 
@@ -285,7 +285,7 @@ void InitFontTable(FontTable *font) {
 
 void InitGlyphBuffers(int32 count) {
     for (int i = 0; i < count; i++) {
-        GlyphBuffer *buffer = &Game->glyphBuffers[i];
+        GlyphBuffer *buffer = &Core->graphics.glyphBuffers[i];
             
         buffer->capacity = GlyphBufferCapacity;
         buffer->size = buffer->capacity * sizeof(GlyphData);
@@ -299,13 +299,13 @@ void InitGlyphBuffers(int32 count) {
 }
 
 void DrawSprite(vec2 position, vec2 scale, real32 angle, Sprite *texture) {
-    Shader *shader = &Game->texturedQuadShader;
+    Shader *shader = &Core->graphics.texturedQuadShader;
     SetShader(shader);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Mesh *mesh = &Game->quad;
+    Mesh *mesh = &Core->graphics.quad;
 
     //mat4 model = TRS(V3(position.x - radius * 0.5f, position.y + radius * 0.5f, 0), IdentityQuaternion(), V3(radius));
     mat4 model = TRS(V3(position.x, position.y, 0), AxisAngle(V3(0, 0, 1), angle), V3(scale.x, scale.y, 1.0f));
@@ -314,13 +314,13 @@ void DrawSprite(vec2 position, vec2 scale, real32 angle, Sprite *texture) {
 
     //vec4 topLeft = mvp * V4(gameMem->quad.verts[0], 1.0f);
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
-    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Core->camera.viewProjection.data);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture->textureID);
     glUniform1i(shader->uniforms[2].id, 0);
 
-    glUniform1fv(shader->uniforms[3].id, 1, &Game->time);
+    glUniform1fv(shader->uniforms[3].id, 1, &Core->time);
 
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
@@ -346,17 +346,17 @@ void DrawSprite(vec2 position, vec2 scale, Sprite *texture) {
 }
 
 void DrawSpriteScreen(vec2 pos, vec2 size, Sprite *texture) {
-    Shader *shader = &Game->texturedQuadShader;
+    Shader *shader = &Core->graphics.texturedQuadShader;
     SetShader(shader);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Mesh *mesh = &Game->quadTopLeft;
+    Mesh *mesh = &Core->graphics.quadTopLeft;
 
     mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(size.x, size.y, 1.0f));
 
-    mat4 projMat = Orthographic(0, Game->screenWidth, 0, Game->screenHeight, -1, 1);
+    mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
 
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
@@ -385,18 +385,18 @@ void DrawSpriteScreen(vec2 pos, vec2 size, Sprite *texture) {
 
 void DrawRect(vec2 pos, vec2 scale, real32 angle, vec4 color) {
     // @PERF: don't do this every draw call
-    Shader *shader = &Game->shader;
+    Shader *shader = &Core->graphics.shader;
     SetShader(shader);
     
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Mesh *mesh = &Game->quad;
+    Mesh *mesh = &Core->graphics.quad;
     
     mat4 model = TRS(V3(pos.x, pos.y, 0), AxisAngle(V3(0, 0, 1), angle), V3(scale.x, scale.y, 0.0f));
 
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
-    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Core->camera.viewProjection.data);
 
     glUniform4fv(shader->uniforms[2].id, 1, color.data);
 
@@ -421,20 +421,20 @@ void DrawRect(vec2 pos, vec2 scale, vec4 color) {
 
 void DrawCoolRect(vec2 pos, vec2 scale, real32 angle, vec4 color) {
     // @PERF: don't do this every draw call
-    Shader *shader = &Game->coolShader;
+    Shader *shader = &Core->graphics.coolShader;
     SetShader(shader);
     
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Mesh *mesh = &Game->quad;
+    Mesh *mesh = &Core->graphics.quad;
     
     mat4 model = TRS(V3(pos.x, pos.y, 0), AxisAngle(V3(0, 0, 1), angle), V3(scale.x, scale.y, 0.0f));
 
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
-    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Core->camera.viewProjection.data);
     glUniform4fv(shader->uniforms[2].id, 1, color.data);
-    glUniform1fv(shader->uniforms[3].id, 1, &Game->time);
+    glUniform1fv(shader->uniforms[3].id, 1, &Core->time);
 
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
@@ -456,17 +456,17 @@ void DrawCoolRect(vec2 pos, vec2 scale, real32 angle, vec4 color) {
 // @NOTE: origin of rect and screen are both top left
 // @GACK: this is pretty weird cause it's not how DrawRect or DrawSprite work!
 void DrawRectScreen(vec2 pos, vec2 scale, vec4 color) {
-    Shader *shader = &Game->shader;
+    Shader *shader = &Core->graphics.shader;
     SetShader(shader);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Mesh *mesh = &Game->quadTopLeft;
+    Mesh *mesh = &Core->graphics.quadTopLeft;
     
     mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 0.0f));
 
-    mat4 projMat = Orthographic(0, Game->screenWidth, 0, Game->screenHeight, -1, 1);
+    mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
     
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
@@ -487,9 +487,9 @@ void DrawRectScreen(vec2 pos, vec2 scale, vec4 color) {
 }
 
 void DrawRectScreenNorm(vec2 pos, vec2 scale, vec4 color) {
-    vec2 pos_ = V2(pos.x * Game->screenWidth, pos.y * Game->screenHeight);
-    vec2 scale_ = V2(scale.x * Game->screenWidth, scale.y * Game->screenWidth);
+vec2 pos_ = V2(pos.x * Core->graphics.screenWidth, pos.y * Core->graphics.screenHeight);
 
+vec2 scale_ = V2(scale.x * Core->graphics.screenWidth, scale.y * Core->graphics.screenWidth);
     DrawRectScreen(pos_, scale_, color);
 }
 
@@ -572,12 +572,12 @@ void DrawRect(RectBuffer *buffer, vec2 pos, vec2 scale, float32 rotation, vec4 c
 }
 
 void RenderRectBuffer(RectBuffer *buffer) {
-    Mesh *mesh = &Game->quad;
+    Mesh *mesh = &Core->graphics.quad;
     
-    Shader *shader = &Game->instancedQuadShader;
+    Shader *shader = &Core->graphics.instancedQuadShader;
     SetShader(shader);
     
-    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, Core->camera.viewProjection.data);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -643,7 +643,7 @@ void RenderRectBuffer(RectBuffer *buffer) {
 
 
 void DrawMesh(Mesh *mesh, vec3 pos, quaternion rotation, vec3 scale, vec4 color) {
-    Shader *shader = &Game->shader;
+    Shader *shader = &Core->graphics.shader;
     SetShader(shader);
 
     glEnable(GL_BLEND);
@@ -652,7 +652,7 @@ void DrawMesh(Mesh *mesh, vec3 pos, quaternion rotation, vec3 scale, vec4 color)
     mat4 model = TRS(pos, rotation, scale);
 
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
-    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Core->camera.viewProjection.data);
 
     glUniform4fv(shader->uniforms[2].id, 1, color.data);
 
@@ -744,7 +744,7 @@ void LayoutGlyphs(FontTable *font, const char *string, int32 count, real32 size,
 // issue comes from the fact that we want to be able to call DrawText(format, arguments)
 // which means that the caller doesnt know how long the string is.
 void DrawText_(FontTable *font, vec2 pos, real32 size, vec4 color, bool screen, const char *str, real32 width, bool center, vec2 **positionsBuffer) {
-    GlyphBuffer *buffer = &Game->glyphBuffers[Game->currentGlyphBufferIndex];
+    GlyphBuffer *buffer = &Core->graphics.glyphBuffers[Core->graphics.currentGlyphBufferIndex];
     buffer->screen = screen;
 
     buffer->font = font;
@@ -753,7 +753,7 @@ void DrawText_(FontTable *font, vec2 pos, real32 size, vec4 color, bool screen, 
 
     buffer->model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(1));
 
-    vec2 *positions = PushArray(&Game->frameMem, vec2, len);
+    vec2 *positions = PushArray(&Core->frameMem, vec2, len);
     LayoutGlyphs(buffer->font, str, len, size, positions, width, center);
 
     buffer->count += len;
@@ -774,7 +774,7 @@ void DrawText_(FontTable *font, vec2 pos, real32 size, vec4 color, bool screen, 
         *positionsBuffer = positions;
     }
 
-    Game->currentGlyphBufferIndex++;
+    Core->graphics.currentGlyphBufferIndex++;
 }
 
 
@@ -811,7 +811,7 @@ void DrawText(vec2 pos, real32 size, vec4 color, bool center, const char *fmt, .
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
     
-    DrawText_(&Game->monoFont, pos, size, color, false, str, INFINITY, center, NULL);
+    DrawText_(&Core->graphics.monoFont, pos, size, color, false, str, INFINITY, center, NULL);
 
     va_end(args);
 }
@@ -835,7 +835,7 @@ void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
     
-    DrawText_(&Game->monoFont, pos, size, color, false, str, INFINITY, false, NULL);
+    DrawText_(&Core->graphics.monoFont, pos, size, color, false, str, INFINITY, false, NULL);
 
     va_end(args);
 }
@@ -847,9 +847,9 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    size *= Game->screenWidth;
+    size *= Core->graphics.screenWidth;
 
-    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
 
     DrawText_(font, V2(pos.x, pos.y), size, color, true, str, width, center, NULL);
     
@@ -863,9 +863,9 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    size *= Game->screenWidth;
+    size *= Core->graphics.screenWidth;
 
-    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
 
     DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, center, NULL);
     
@@ -879,11 +879,11 @@ void DrawTextScreen(vec2 pos, real32 size, vec4 color, bool center, const char *
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    size *= Game->screenWidth;
+    size *= Core->graphics.screenWidth;
 
-    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
 
-    DrawText_(&Game->monoFont, V2(pos.x, pos.y), size, color, true, str, INFINITY, center, NULL);
+    DrawText_(&Core->graphics.monoFont, V2(pos.x, pos.y), size, color, true, str, INFINITY, center, NULL);
     
     va_end(args);
 }
@@ -895,9 +895,9 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const ch
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    size *= Game->screenWidth;
+    size *= Core->graphics.screenWidth;
 
-    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
 
     DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, false, NULL);
     
@@ -911,11 +911,11 @@ void DrawTextScreen(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     char str[GlyphBufferCapacity];
     vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
 
-    size *= Game->screenWidth;
+    size *= Core->graphics.screenWidth;
 
-    pos = V2(pos.x * Game->screenWidth, (1 - pos.y) * Game->screenHeight);
+    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
 
-    DrawText_(&Game->monoFont, V2(pos.x, pos.y), size, color, true, str, INFINITY, false, NULL);
+    DrawText_(&Core->graphics.monoFont, V2(pos.x, pos.y), size, color, true, str, INFINITY, false, NULL);
     
     va_end(args);
 }
@@ -931,7 +931,7 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, boo
     // @BUG @GACK: this height - pos.y is because we want zero vector to be top left, but
     // our projection matrix is set up so that 0 is the bottom of the screen, and changing
     // that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, width, center, NULL);
+    DrawText_(font, V2(pos.x, Core->graphics.screenHeight - pos.y), size, color, true, str, width, center, NULL);
     
     va_end(args);
 }
@@ -946,7 +946,7 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, boo
     // @BUG @GACK: this height - pos.y is because we want zero vector to be top left, but
     // our projection matrix is set up so that 0 is the bottom of the screen, and changing
     // that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, center, NULL);
+    DrawText_(font, V2(pos.x, Core->graphics.screenHeight - pos.y), size, color, true, str, INFINITY, center, NULL);
     
     va_end(args);
 }
@@ -961,7 +961,7 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, con
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
     // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, false, NULL);
+    DrawText_(font, V2(pos.x, Core->graphics.screenHeight - pos.y), size, color, true, str, INFINITY, false, NULL);
     
     va_end(args);
 }
@@ -977,7 +977,7 @@ int32 DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bo
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
     // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Game->screenHeight - pos.y), size, color, true, str, INFINITY, center, positionsBuffer);
+    DrawText_(font, V2(pos.x, Core->graphics.screenHeight - pos.y), size, color, true, str, INFINITY, center, positionsBuffer);
     
     va_end(args);
 
@@ -986,7 +986,7 @@ int32 DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bo
 
 
 void DrawGlyphs(GlyphBuffer *buffers) {
-    Shader *shader = &Game->textShader;
+    Shader *shader = &Core->graphics.textShader;
     SetShader(shader);
 
     glEnable(GL_BLEND);
@@ -1001,16 +1001,16 @@ void DrawGlyphs(GlyphBuffer *buffers) {
         
         mat4 model = buffer->model;
 
-        Mesh *mesh = &Game->glyphQuad;
-     
+        Mesh *mesh = &Core->graphics.glyphQuad;
+      
         glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
 
         if (buffer->screen) {
-            mat4 projMat = Orthographic(0, Game->screenWidth, 0, Game->screenHeight, -1, 1);
+    mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
             glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
         }
         else {
-            glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Game->camera.viewProjection.data);
+            glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, Core->camera.viewProjection.data);
         }
 
         glActiveTexture(GL_TEXTURE0);
@@ -1021,7 +1021,7 @@ void DrawGlyphs(GlyphBuffer *buffers) {
         glBindTexture(GL_TEXTURE_1D, buffer->font->texcoordsMapID);
         glUniform1i(shader->uniforms[2].id, 1);
 
-        glUniform1f(shader->uniforms[4].id, Game->time);
+        glUniform1f(shader->uniforms[4].id, Core->time);
 
         glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
@@ -1070,21 +1070,21 @@ void PushClipRect(vec2 pos, vec2 size) {
     vec2 newMin = pos;
     vec2 newMax = pos + size;
 
-    if (Game->hasClip && Game->clipTop > 0) {
-        UIClipRegion *parent = &Game->clipStack[Game->clipTop - 1];
+    if (Core->graphics.hasClip && Core->graphics.clipTop > 0) {
+        UIClipRegion *parent = &Core->graphics.clipStack[Core->graphics.clipTop - 1];
         newMin.x = max(newMin.x, parent->min.x);
         newMin.y = max(newMin.y, parent->min.y);
         newMax.x = min(newMax.x, parent->max.x);
         newMax.y = min(newMax.y, parent->max.y);
     }
 
-    UIClipRegion *region = &Game->clipStack[Game->clipTop++];
+    UIClipRegion *region = &Core->graphics.clipStack[Core->graphics.clipTop++];
     region->min = newMin;
     region->max = newMax;
-    Game->hasClip = true;
+    Core->graphics.hasClip = true;
 
     GLint x = (GLint)newMin.x;
-    GLint y = (GLint)((real32)Game->screenHeight - newMax.y);
+    GLint y = (GLint)((real32)Core->graphics.screenHeight - newMax.y);
     GLsizei w = (GLsizei)(newMax.x - newMin.x);
     GLsizei h = (GLsizei)(newMax.y - newMin.y);
     glEnable(GL_SCISSOR_TEST);
@@ -1092,13 +1092,13 @@ void PushClipRect(vec2 pos, vec2 size) {
 }
 
 void PopClipRect() {
-    if (Game->clipTop > 0) Game->clipTop--;
-    Game->hasClip = (Game->clipTop > 0);
+    if (Core->graphics.clipTop > 0) Core->graphics.clipTop--;
+    Core->graphics.hasClip = (Core->graphics.clipTop > 0);
 
-    if (Game->hasClip) {
-        UIClipRegion *region = &Game->clipStack[Game->clipTop - 1];
+    if (Core->graphics.hasClip) {
+        UIClipRegion *region = &Core->graphics.clipStack[Core->graphics.clipTop - 1];
         GLint x = (GLint)region->min.x;
-        GLint y = (GLint)((real32)Game->screenHeight - region->max.y);
+        GLint y = (GLint)((real32)Core->graphics.screenHeight - region->max.y);
         GLsizei w = (GLsizei)(region->max.x - region->min.x);
         GLsizei h = (GLsizei)(region->max.y - region->min.y);
         glScissor(x, y, w, h);
@@ -1108,13 +1108,13 @@ void PopClipRect() {
 }
 
 void DrawUIText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *str) {
-    if (Game->uiGlyphCmdCount >= UIGlyphCmdCapacity) return;
+    if (Core->graphics.uiGlyphCmdCount >= UIGlyphCmdCapacity) return;
 
     int32 len = strlen(str);
     if (len == 0) return;
 
-    GlyphData *data = PushArray(&Game->frameMem, GlyphData, len);
-    vec2 *positions = PushArray(&Game->frameMem, vec2, len);
+    GlyphData *data = PushArray(&Core->frameMem, GlyphData, len);
+    vec2 *positions = PushArray(&Core->frameMem, vec2, len);
     LayoutGlyphs(font, str, len, size, positions, INFINITY, center);
 
     for (int i = 0; i < len; i++) {
@@ -1125,41 +1125,41 @@ void DrawUIText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center,
         data[i].dimensions = font->glyphs[codepoint].size * size;
     }
 
-    UIGlyphCommand *cmd = &Game->uiGlyphCmds[Game->uiGlyphCmdCount++];
+    UIGlyphCommand *cmd = &Core->graphics.uiGlyphCmds[Core->graphics.uiGlyphCmdCount++];
     cmd->data = data;
     cmd->count = len;
     cmd->font = font;
     cmd->size = size;
     cmd->origin = pos;
-    cmd->hasClip = Game->hasClip;
-    if (Game->hasClip) {
-        cmd->clip = Game->clipStack[Game->clipTop - 1];
+    cmd->hasClip = Core->graphics.hasClip;
+    if (Core->graphics.hasClip) {
+        cmd->clip = Core->graphics.clipStack[Core->graphics.clipTop - 1];
     }
 }
 
 void DrawUIGlyphs() {
-    if (Game->uiGlyphCmdCount == 0) return;
+    if (Core->graphics.uiGlyphCmdCount == 0) return;
 
-    Shader *shader = &Game->textShader;
+    Shader *shader = &Core->graphics.textShader;
     SetShader(shader);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Mesh *mesh = &Game->glyphQuad;
+    Mesh *mesh = &Core->graphics.glyphQuad;
 
     glActiveTexture(GL_TEXTURE0 + 1);
     glUniform1i(shader->uniforms[2].id, 1);
-    glUniform1f(shader->uniforms[4].id, Game->time);
+    glUniform1f(shader->uniforms[4].id, Core->time);
 
-    for (int i = 0; i < Game->uiGlyphCmdCount; i++) {
-        UIGlyphCommand *cmd = &Game->uiGlyphCmds[i];
+    for (int i = 0; i < Core->graphics.uiGlyphCmdCount; i++) {
+        UIGlyphCommand *cmd = &Core->graphics.uiGlyphCmds[i];
         if (cmd->count == 0) continue;
 
         if (cmd->hasClip) {
             glEnable(GL_SCISSOR_TEST);
             GLint x = (GLint)cmd->clip.min.x;
-            GLint y = (GLint)((real32)Game->screenHeight - cmd->clip.max.y);
+            GLint y = (GLint)((real32)Core->graphics.screenHeight - cmd->clip.max.y);
             GLsizei w = (GLsizei)(cmd->clip.max.x - cmd->clip.min.x);
             GLsizei h = (GLsizei)(cmd->clip.max.y - cmd->clip.min.y);
             glScissor(x, y, w, h);
@@ -1168,11 +1168,11 @@ void DrawUIGlyphs() {
         }
 
         // origin is in UI coords (top-left), convert to GL coords (bottom-left)
-        vec2 glOrigin = V2(cmd->origin.x, (real32)Game->screenHeight - cmd->origin.y);
+        vec2 glOrigin = V2(cmd->origin.x, (real32)Core->graphics.screenHeight - cmd->origin.y);
         mat4 model = TRS(V3(glOrigin.x, glOrigin.y, 0), IdentityQuaternion(), V3(1));
         glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
 
-        mat4 projMat = Orthographic(0, Game->screenWidth, 0, Game->screenHeight, -1, 1);
+mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
         glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
 
         glActiveTexture(GL_TEXTURE0);
@@ -1230,7 +1230,8 @@ void DrawUIGlyphs() {
     }
 
     glDisable(GL_SCISSOR_TEST);
-    Game->uiGlyphCmdCount = 0;
+    Core->graphics.uiGlyphCmdCount = 0;
 }
 
 // API interface
+

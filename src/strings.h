@@ -1,3 +1,7 @@
+#ifndef STRINGS_H
+#define STRINGS_H
+
+#include "types.h"
 
 inline bool IsSpace(uint32 codepoint) {
     return (codepoint == 32);
@@ -132,3 +136,5 @@ inline bool StringEquals(const char *a, const char *b, uint32 length) {
 
     return memcmp(a, b, length) == 0;
 }
+
+#endif // STRINGS_H

@@ -9,15 +9,15 @@ void MyGameInit() {
 void MyGameUpdate() {
     ClearColor(RGB(0.1f, 0.1f, 0.12f));
 
-    UIBegin(V2(50, 50));
+    UIBegin(V2(100, 100));
 
     // -- Window 1: basic controls --
-    UIPushWindow(V2(50, 50), V2(350, 420), V4(0.15f, 0.15f, 0.18f, 0.95f), NULL);
+    UIPushWindow(V2(100, 100), V2(700, 840), V4(0.15f, 0.15f, 0.18f, 0.95f), NULL);
 
-    UILabel(V4(1.0f), 28.0f, "UI Test");
-    UILabel(V4(0.6f, 0.6f, 0.6f, 1.0f), 14.0f, "Click counters and styles");
+    UILabel(V4(1.0f), 56.0f, "UI Test");
+    UILabel(V4(0.6f, 0.6f, 0.6f, 1.0f), 28.0f, "Click counters and styles");
 
-    if (UIButton(V2(200, 40), "Default Button")) {
+    if (UIButton(V2(400, 80), "Default Button")) {
         clickCount++;
     }
 
@@ -27,7 +27,7 @@ void MyGameUpdate() {
     greenStyle.buttonHoverColor  = V4(0.2f, 0.55f, 0.2f, 1.0f);
     greenStyle.buttonActiveColor = V4(0.25f, 0.65f, 0.25f, 1.0f);
     UIPushStyle(greenStyle);
-    if (UIButton(V2(200, 40), "Green Button")) {
+    if (UIButton(V2(400, 80), "Green Button")) {
         clickCount++;
     }
     UIPopStyle();
@@ -38,49 +38,49 @@ void MyGameUpdate() {
     blueStyle.buttonHoverColor  = V4(0.2f, 0.3f, 0.65f, 1.0f);
     blueStyle.buttonActiveColor = V4(0.25f, 0.35f, 0.75f, 1.0f);
     UIPushStyle(blueStyle);
-    if (UIButton(V2(200, 40), "Blue Button")) {
+    if (UIButton(V2(400, 80), "Blue Button")) {
         clickCount++;
     }
     UIPopStyle();
 
-    UILabel(V4(1.0f, 0.8f, 0.2f, 1.0f), 20.0f, "Clicked: %d", clickCount);
+    UILabel(V4(1.0f, 0.8f, 0.2f, 1.0f), 40.0f, "Clicked: %d", clickCount);
 
     UIPopWindow();
 
     // -- Window 2: images and column demo --
-    UIPushWindow(V2(430, 50), V2(300, 420), V4(0.12f, 0.15f, 0.18f, 0.95f), NULL);
+    UIPushWindow(V2(860, 100), V2(600, 840), V4(0.12f, 0.15f, 0.18f, 0.95f), NULL);
 
-    UILabel(V4(1.0f), 22.0f, "Images");
+    UILabel(V4(1.0f), 44.0f, "Images");
 
-    UIPushImage(V2(64, 64), &testSprite);
     UIPushImage(V2(128, 128), &testSprite);
+    UIPushImage(V2(256, 256), &testSprite);
 
-    UILabel(V4(0.7f, 0.7f, 0.7f, 1.0f), 14.0f, "Column layout");
+    UILabel(V4(0.7f, 0.7f, 0.7f, 1.0f), 28.0f, "Column layout");
 
     // two columns within this window
-    if (UIButton(V2(120, 30), "Left")) {
+    if (UIButton(V2(240, 60), "Left")) {
         clickCount++;
     }
-    UINextColumn(120);
-    if (UIButton(V2(120, 30), "Right")) {
+    UINextColumn(240);
+    if (UIButton(V2(240, 60), "Right")) {
         clickCount++;
     }
 
     UIPopWindow();
 
     // -- Window 3: stacked buttons --
-    UIPushWindow(V2(760, 50), V2(280, 420), V4(0.18f, 0.12f, 0.15f, 0.95f), NULL);
+    UIPushWindow(V2(1520, 100), V2(560, 840), V4(0.18f, 0.12f, 0.15f, 0.95f), NULL);
 
-    UILabel(V4(1.0f), 22.0f, "Column 3");
+    UILabel(V4(1.0f), 44.0f, "Column 3");
 
-    UIPushImage(V2(32, 32), &testSprite);
-    UIPushImage(V2(32, 32), &testSprite);
-    UIPushImage(V2(32, 32), &testSprite);
+    UIPushImage(V2(64, 64), &testSprite);
+    UIPushImage(V2(64, 64), &testSprite);
+    UIPushImage(V2(64, 64), &testSprite);
 
-    if (UIButton(V2(200, 30), "Another Button")) {
+    if (UIButton(V2(400, 60), "Another Button")) {
         clickCount++;
     }
-    if (UIButton(V2(200, 30), "One More")) {
+    if (UIButton(V2(400, 60), "One More")) {
         clickCount++;
     }
 
@@ -88,6 +88,6 @@ void MyGameUpdate() {
 
     // hover indicator outside any window
     if (UI->hoveredID != 0) {
-        DrawTextScreenPixel(&Game->monoFont, V2(10.0f, 10.0f), 14.0f, V4(0.5f), "hovered: 0x%08x", UI->hoveredID);
+        DrawTextScreenPixel(&Core->graphics.monoFont, V2(20.0f, 20.0f), 28.0f, V4(0.5f), "hovered: 0x%08x", UI->hoveredID);
     }
 }

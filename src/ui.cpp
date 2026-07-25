@@ -44,7 +44,7 @@ static real32 MeasureTextWidth(FontTable *font, const char *str, real32 size) {
 }
 
 static vec2 UIScreenPos(vec2 pos, vec2 size) {
-    return V2(pos.x, (real32)Game->screenHeight - pos.y);
+    return V2(pos.x, (real32)Core->graphics.screenHeight - pos.y);
 }
 
 void UIBegin(vec2 origin) {
@@ -55,7 +55,7 @@ void UIBegin(vec2 origin) {
     UI->hasPlacedWidget = false;
     UI->hoveredID = 0;
     UI->pressedID = 0;
-    UI->mousePos = V2(Input->mousePos.x, (real32)Game->screenHeight - Input->mousePos.y);
+    UI->mousePos = V2(Input->mousePos.x, (real32)Core->graphics.screenHeight - Input->mousePos.y);
 
     UI->windowTop = 0;
 
@@ -64,7 +64,7 @@ void UIBegin(vec2 origin) {
     style->buttonColor = V4(0.3f, 0.3f, 0.3f, 1.0f);
     style->buttonHoverColor = V4(0.4f, 0.4f, 0.4f, 1.0f);
     style->buttonActiveColor = V4(0.5f, 0.5f, 0.5f, 1.0f);
-    style->font = &Game->monoFont;
+    style->font = &Core->graphics.monoFont;
     style->textSize = 32.0f;
     style->widgetSpacing = 8.0f;
     style->columnGap = 16.0f;
@@ -120,7 +120,7 @@ bool UIButton(vec2 size, const char *label) {
 
     if (hovered) {
         UI->hoveredID = id;
-        if (InputPressed(Game->mouse, Input_MouseLeft)) {
+        if (InputPressed(Core->mouse, Input_MouseLeft)) {
             UI->pressedID = id;
             clicked = true;
         }
@@ -130,7 +130,7 @@ bool UIButton(vec2 size, const char *label) {
     if (hovered) {
         color = style.buttonHoverColor;
     }
-    if (clicked || (hovered && InputHeld(Game->mouse, Input_MouseLeft))) {
+    if (clicked || (hovered && InputHeld(Core->mouse, Input_MouseLeft))) {
         color = style.buttonActiveColor;
     }
 
@@ -190,3 +190,4 @@ void UINextColumn(real32 width) {
     UI->lastWidget = {};
     UI->hasPlacedWidget = false;
 }
+

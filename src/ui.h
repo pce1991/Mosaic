@@ -1,3 +1,8 @@
+#ifndef UI_H
+#define UI_H
+
+struct Sprite;
+struct FontTable;
 
 struct WidgetRect {
     vec2 origin;
@@ -60,3 +65,5 @@ WidgetRect GetNextWidgetBounds();
 void UIPushStyle(UIStyle style);
 void UIPopStyle();
 UIStyle UICopyStyle();
+
+#endif // UI_H

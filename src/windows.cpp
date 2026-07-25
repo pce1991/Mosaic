@@ -1,4 +1,4 @@
-#define WINDOWS 1
+﻿#define WINDOWS 1
 
 #define OPENGL 1
 #define DX12 0
@@ -85,7 +85,7 @@ struct GamePlatform {
     bool running;
     WinAudioOutput audio;
 
-    GameMemory gameMem;
+    CoreMemory gameMem;
 };
 
 
@@ -376,14 +376,14 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
     Platform = &plat;
     
-    // Init Game Memomry
-    GameMemory *gameMem = &platform.gameMem;
-    memset(gameMem, 0, sizeof(GameMemory));
+    // Init Game Memory
+    CoreMemory *gameMem = &platform.gameMem;
+    memset(gameMem, 0, sizeof(CoreMemory));
 
-    Game = gameMem;
+    Core = gameMem;
 
-    AllocateMemoryArena(&Game->permanentArena, Megabytes(256));
-    AllocateMemoryArena(&Game->frameMem, Megabytes(32));
+    AllocateMemoryArena(&Core->permanentArena, Megabytes(256));
+    AllocateMemoryArena(&Core->frameMem, Megabytes(32));
 
     plat.screenWidth = gameMem->screenWidth;
     plat.screenHeight = gameMem->screenHeight;
@@ -391,11 +391,11 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     bool gotConfigFile = ReadConfigFile("config.m_txt");
 
     if (!gotConfigFile) {
-        Game->screenWidth = 1600;
-        Game->screenHeight = 900;
+        Core->graphics.screenWidth = 1600;
+        Core->graphics.screenHeight = 900;
 
-        Game->audioPlayer.volume = 1.0f;
-        Game->networkInfo.serverIPString = "192.0.0.1"; // @NOTE: this is just the IP address referring to yourself
+        Core->audioPlayer.volume = 1.0f;
+        Core->networkInfo.serverIPString = "192.0.0.1"; // @NOTE: this is just the IP address referring to yourself
 
         // @TODO: write out a config file if there isnt one already
     }
@@ -422,9 +422,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
     RECT windowRect;
     windowRect.left = 0;
-    windowRect.right = Game->screenWidth;
+    windowRect.right = Core->graphics.screenWidth;
     windowRect.top = 0;
-    windowRect.bottom = Game->screenHeight; 
+    windowRect.bottom = Core->graphics.screenHeight; 
     
     HWND window = CreateWindowEx(dwExStyle, windowClass.lpszClassName, "GAME",
                                  WS_CLIPSIBLINGS | WS_CLIPCHILDREN | dwStyle,
@@ -499,15 +499,15 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183376(v=vs.85).aspx
     BITMAPINFO bitmapInfo;
     bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
-    bitmapInfo.bmiHeader.biWidth = Game->screenWidth;
-    bitmapInfo.bmiHeader.biHeight = -Game->screenHeight;
+    bitmapInfo.bmiHeader.biWidth = Core->graphics.screenWidth;
+    bitmapInfo.bmiHeader.biHeight = -Core->graphics.screenHeight;
     bitmapInfo.bmiHeader.biPlanes = 1;
     bitmapInfo.bmiHeader.biBitCount = 32;
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
     // ALLOCATION/POINTERS
-    int bitmapWidth = Game->screenWidth;
-    int bitmapHeight = Game->screenHeight;
+    int bitmapWidth = Core->graphics.screenWidth;
+    int bitmapHeight = Core->graphics.screenHeight;
     int pixelCount = (bitmapWidth * bitmapHeight);
     int bytesPerPixel = 4; // one byte for each color
     int bitmapMemorySize = bytesPerPixel * pixelCount;
@@ -520,7 +520,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     HCURSOR cursor = LoadCursor(NULL, IDC_ARROW);
     SetCursor(cursor);
     //ShowCursor(false);
-    WinMoveMouse(window, Game->screenWidth / 2.0f, Game->screenHeight / 2.0f, Game->screenHeight);
+    WinMoveMouse(window, Core->graphics.screenWidth / 2.0f, Core->graphics.screenHeight / 2.0f, Core->graphics.screenHeight);
 
     
     gameMem->systemTime = (real32)systemTime.QuadPart;
@@ -567,3 +567,4 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     FreeConsole();    
     return 0;
 }
+

@@ -1,3 +1,5 @@
+#ifndef CAMERA_H
+#define CAMERA_H
 
 enum CameraType : uint8 {
     CameraType_Perspective,
@@ -42,3 +44,5 @@ void UpdateCamera(Camera *camera) {
     camera->view = OrthogonalInverse(camWorld);
     camera->viewProjection = camera->projection * camera->view;
 }
+
+#endif // CAMERA_H
