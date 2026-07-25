@@ -71,9 +71,43 @@ static vec2 UIScreenPos(vec2 pos, vec2 size) {
     return V2(pos.x, (real32)Core->graphics.screenHeight - pos.y);
 }
 
-void UIBegin(vec2 origin) {
-    UI->cursor = origin;
-    UI->columnOrigin = origin;
+void UIRectScreen(vec2 pos, vec2 size, vec4 color) {
+    UICommand cmd = {};
+    cmd.type = UICommand_Rect;
+    cmd.pos = pos;
+    cmd.size = size;
+    cmd.color = color;
+    PushBack(&Core->graphics.uiCommands, cmd);
+}
+
+void UISpriteScreen(vec2 pos, vec2 size, Sprite *texture) {
+    UICommand cmd = {};
+    cmd.type = UICommand_Sprite;
+    cmd.pos = pos;
+    cmd.size = size;
+    cmd.texture = texture;
+    PushBack(&Core->graphics.uiCommands, cmd);
+}
+
+void UIPushClipRect(vec2 pos, vec2 size) {
+    UICommand cmd = {};
+    cmd.type = UICommand_PushClip;
+    cmd.pos = pos;
+    cmd.size = size;
+    PushBack(&Core->graphics.uiCommands, cmd);
+}
+
+void UIPopClipRect() {
+    UICommand cmd = {};
+    cmd.type = UICommand_PopClip;
+    PushBack(&Core->graphics.uiCommands, cmd);
+}
+
+void UIBegin() {
+    DynamicArrayClear(&Core->graphics.uiCommands);
+
+    UI->cursor = V2(0, 0);
+    UI->columnOrigin = V2(0, 0);
     UI->currentColumn = 0;
     UI->lastWidget = {};
     UI->hasPlacedWidget = false;
@@ -108,12 +142,12 @@ void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture) {
     frame->size = size;
 
     vec2 sp = UIScreenPos(pos, size);
-    DrawRectScreen(sp, size, color);
+    UIRectScreen(sp, size, color);
     if (texture) {
-        DrawSpriteScreen(sp, size, texture);
+        UISpriteScreen(sp, size, texture);
     }
 
-    PushClipRect(pos, size);
+    UIPushClipRect(pos, size);
 
     UI->cursor = pos;
     UI->columnOrigin = pos;
@@ -129,7 +163,7 @@ void UIPopWindow() {
     UI->columnOrigin = frame->columnOrigin;
     UI->currentColumn = frame->currentColumn;
 
-    PopClipRect();
+    UIPopClipRect();
 }
 
 bool UIButton(real32 width, const char *label) {
@@ -162,7 +196,7 @@ bool UIButton(real32 width, const char *label) {
         color = style.buttonActiveColor;
     }
 
-    DrawRectScreen(UIScreenPos(pos, size), size, color);
+    UIRectScreen(UIScreenPos(pos, size), size, color);
 
     real32 textWidth = MeasureTextWidth(style.font, label, style.textSize);
     vec2 textBounds = MeasureTextBounds(style.font, label, style.textSize);
@@ -216,7 +250,7 @@ void UILabel(const char *fmt, ...) {
 void UIPushImage(vec2 size, Sprite *texture) {
     vec2 pos = UI->cursor;
 
-    DrawSpriteScreen(UIScreenPos(pos, size), size, texture);
+    UISpriteScreen(UIScreenPos(pos, size), size, texture);
 
     UI->lastWidget = { pos, size };
     UI->cursor.y = pos.y + size.y + UICopyStyle().widgetSpacing;

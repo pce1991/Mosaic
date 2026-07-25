@@ -6,10 +6,10 @@
 // Things like allocating the RectBuffer or calculating the levelAspect.
 // Other things like setting the gridWidth can be customized.
 void MyGameInit() {
-  Core->graphics.myData = malloc(sizeof(MosaicMem));
-  memset(Core->graphics.myData, 0, sizeof(MosaicMem));
+  Core->myData = malloc(sizeof(MosaicMem));
+  memset(Core->myData, 0, sizeof(MosaicMem));
     
-  Mosaic = (MosaicMem *)Core->graphics.myData;
+  Mosaic = (MosaicMem *)Core->myData;
 
   MoveMouse(Core->graphics.screenWidth / 2.0f, Core->graphics.screenHeight / 2.0f);
 
@@ -17,7 +17,7 @@ void MyGameInit() {
 
   SetMosaicGridSize(16, 16);
 
-  Mosaic->screenColor = RGB(0.2f, 0.2f, 0.2f);
+  Mosaic->screenColor = RGB(0.1f, 0.1f, 0.1f);
   Mosaic->gridColor = RGB(0.8f, 0.8f, 0.8f);
 
   MyMosaicInit();
@@ -46,7 +46,7 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
 
   // @TODO: keep a dedicated place at the top for text?
   {
-    Camera *cam = &Core->graphics.camera;
+    Camera *cam = &Core->camera;
 
     if (levelAspect > screenAspect) {
       float32 size = Mosaic->gridWidth / (16.0f - Mosaic->padding);
@@ -68,7 +68,7 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
                                    cam->height * -0.5f, cam->height * 0.5f,
                                    0.0, 100.0f);
 
-    mat4 camWorld = TRS(Core->graphics.camera.position, Core->graphics.camera.rotation, V3(1));
+    mat4 camWorld = TRS(Core->camera.position, Core->camera.rotation, V3(1));
     cam->view = OrthogonalInverse(camWorld);
     
     cam->viewProjection = cam->projection * cam->view;
@@ -147,20 +147,16 @@ void DrawTile(vec2i position, vec4 color) {
 }
 
 void DrawBorder() {
-  for (int y = 0; y < Mosaic->gridHeight + 1; y++) {
+  vec2 leftCenter = Mosaic->gridOrigin + V2(-Mosaic->lineThickness, (-Mosaic->gridSize.y * 0.5f));
+  vec2 rightCenter = Mosaic->gridOrigin + V2(Mosaic->lineThickness, (-Mosaic->gridSize.y * 0.5f)) + V2(Mosaic->gridWidth * Mosaic->tileSize, 0);
 
-    if (y > 0 && y < Mosaic->gridHeight) { continue; }
-    vec2 rowLineCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), 0) + V2(0, -y * Mosaic->tileSize);
-    DrawRect(rowLineCenter, V2(Mosaic->gridSize.x * 0.5f + (Mosaic->lineThickness), Mosaic->lineThickness), Mosaic->gridColor);
-        
-  }
+  vec2 topCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), Mosaic->lineThickness);
+  vec2 bottomCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), -Mosaic->lineThickness) + V2(0, -Mosaic->gridHeight * Mosaic->tileSize);
 
-  for (int x = 0; x < Mosaic->gridWidth + 1; x++) {
-    if (x > 0 && x < Mosaic->gridWidth) { continue; }
-        
-    vec2 colLineCenter = Mosaic->gridOrigin + V2(0, (-Mosaic->gridSize.y * 0.5f)) + V2(x * Mosaic->tileSize, 0);
-    DrawRect(colLineCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f + (Mosaic->lineThickness)), Mosaic->gridColor);
-  }
+  DrawRect(leftCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f + (Mosaic->lineThickness * 2)), Mosaic->gridColor);
+  DrawRect(rightCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f + (Mosaic->lineThickness * 2)), Mosaic->gridColor);
+  DrawRect(bottomCenter, V2(Mosaic->gridSize.x * 0.5f + (Mosaic->lineThickness * 2), Mosaic->lineThickness), Mosaic->gridColor);
+  DrawRect(topCenter, V2(Mosaic->gridSize.y * 0.5f + (Mosaic->lineThickness * 2), Mosaic->lineThickness), Mosaic->gridColor);
 }
 
 void DrawGrid() {
@@ -191,7 +187,7 @@ void DrawGrid() {
 }
 
 MTile* GetHoveredTile() {
-  Camera *cam = &Core->graphics.camera;
+  Camera *cam = &Core->camera;
     
   vec2 mousePos = Input->mousePosNormSigned;
   mousePos.x *= cam->width * 0.5f;

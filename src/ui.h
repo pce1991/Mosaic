@@ -62,7 +62,7 @@ struct UIManager {
 
 uint32 WidgetID(const char *name);
 
-void UIBegin(vec2 origin);
+void UIBegin();
 void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture);
 void UIPopWindow();
 bool UIButton(real32 width, const char *label);

@@ -172,6 +172,28 @@ struct UIGlyphCommand {
     bool hasClip;
 };
 
+struct RenderTarget {
+    uint32 fbo;
+    uint32 texture;
+    int32 width;
+    int32 height;
+};
+
+enum UICommandType {
+    UICommand_Rect,
+    UICommand_Sprite,
+    UICommand_PushClip,
+    UICommand_PopClip,
+};
+
+struct UICommand {
+    UICommandType type;
+    vec2 pos;
+    vec2 size;
+    vec4 color;
+    Sprite *texture;
+};
+
 Glyph GetGlyph(char c, Glyph *glyphs) {
     return glyphs[c - 32];
 }
@@ -222,6 +244,9 @@ struct CoreGraphics {
     bool hasClip;
     UIGlyphCommand uiGlyphCmds[UIGlyphCmdCapacity];
     int32 uiGlyphCmdCount;
+    DynamicArray<UICommand> uiCommands;
+    RenderTarget uiTarget;
+    Shader blitShader;
     UIManager uiManager;
 };
 

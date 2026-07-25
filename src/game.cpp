@@ -241,6 +241,17 @@ void GameInit(CoreMemory *coreMem) {
 
     AllocateRectBuffer(256 * 256, &Core->graphics.rectBuffer);
 
+    Core->graphics.uiCommands = MakeDynamicArray<UICommand>(&Core->permanentArena, 64);
+    SetupUIRenderTarget(&Core->graphics.uiTarget, coreMem->graphics.screenWidth, coreMem->graphics.screenHeight);
+
+#if WINDOWS
+    {
+        LoadShader("shaders/blit.vert", "shaders/blit.frag", &coreMem->graphics.blitShader);
+        const char *blitUniforms[] = { "model", "viewProjection", "uiTexture" };
+        CompileShader(&coreMem->graphics.blitShader, 3, blitUniforms);
+    }
+#endif
+
     MyGameInit();
 }
 
@@ -302,8 +313,8 @@ void GameUpdateAndRender(CoreMemory *core) {
     RenderRectBuffer(&Core->graphics.rectBuffer);
     Core->graphics.rectBuffer.count = 0;
     
-    DrawUIGlyphs();
     DrawGlyphs(Core->graphics.glyphBuffers);
+    FlushUICommands();
     
     //DeleteEntities(&Core->graphics.entityDB);
     

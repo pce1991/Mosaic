@@ -69,9 +69,6 @@ struct CoreMemory {
     uint32 frame;
     real32 fps;
 
-    int32 screenWidth;
-    int32 screenHeight;
-
     MemoryArena permanentArena;
 
     DebugLog log;

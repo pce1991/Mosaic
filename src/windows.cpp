@@ -385,9 +385,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     AllocateMemoryArena(&Core->permanentArena, Megabytes(256));
     AllocateMemoryArena(&Core->frameMem, Megabytes(32));
 
-    plat.screenWidth = gameMem->screenWidth;
-    plat.screenHeight = gameMem->screenHeight;
-
     bool gotConfigFile = ReadConfigFile("config.m_txt");
 
     if (!gotConfigFile) {
@@ -399,6 +396,10 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
 
         // @TODO: write out a config file if there isnt one already
     }
+
+    plat.screenWidth = gameMem->graphics.screenWidth;
+    plat.screenHeight = gameMem->graphics.screenHeight;
+
 
     WNDCLASS windowClass;
     memset(&windowClass, 0, sizeof(WNDCLASS));

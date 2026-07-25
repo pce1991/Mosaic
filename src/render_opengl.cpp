@@ -298,6 +298,25 @@ void InitGlyphBuffers(int32 count) {
     }
 }
 
+void SetupUIRenderTarget(RenderTarget *target, int32 w, int32 h) {
+    target->width = w;
+    target->height = h;
+
+    glGenFramebuffers(1, &target->fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+
+    glGenTextures(1, &target->texture);
+    glBindTexture(GL_TEXTURE_2D, target->texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target->texture, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void DrawSprite(vec2 position, vec2 scale, real32 angle, Sprite *texture) {
     Shader *shader = &Core->graphics.texturedQuadShader;
     SetShader(shader);
@@ -1232,6 +1251,77 @@ mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.scr
 
     glDisable(GL_SCISSOR_TEST);
     Core->graphics.uiGlyphCmdCount = 0;
+}
+
+void FlushUICommands() {
+    if (Core->graphics.uiCommands.count == 0 && Core->graphics.uiGlyphCmdCount == 0) return;
+
+    RenderTarget *target = &Core->graphics.uiTarget;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+    glViewport(0, 0, target->width, target->height);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    for (uint32 i = 0; i < Core->graphics.uiCommands.count; i++) {
+        UICommand *cmd = &Core->graphics.uiCommands[i];
+        switch (cmd->type) {
+            case UICommand_PushClip:
+                PushClipRect(cmd->pos, cmd->size);
+                break;
+            case UICommand_PopClip:
+                PopClipRect();
+                break;
+            case UICommand_Rect:
+                DrawRectScreen(cmd->pos, cmd->size, cmd->color);
+                break;
+            case UICommand_Sprite:
+                DrawSpriteScreen(cmd->pos, cmd->size, cmd->texture);
+                break;
+        }
+    }
+
+    DrawUIGlyphs();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, Core->graphics.screenWidth, Core->graphics.screenHeight);
+
+    Shader *shader = &Core->graphics.blitShader;
+    SetShader(shader);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    Mesh *mesh = &Core->graphics.quadTopLeft;
+    mat4 model = TRS(V3(0, 0, 0), IdentityQuaternion(), V3((real32)Core->graphics.screenWidth, (real32)-(real32)Core->graphics.screenHeight, 1.0f));
+    mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
+
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, target->texture);
+    glUniform1i(shader->uniforms[2].id, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
+    glEnableVertexAttribArray(texcoord);
+    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
+
+    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
+
+    glDisableVertexAttribArray(vert);
+    glDisableVertexAttribArray(texcoord);
+
+    glDisable(GL_BLEND);
+
+    DynamicArrayClear(&Core->graphics.uiCommands);
 }
 
 // API interface

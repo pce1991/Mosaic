@@ -1,5 +1,5 @@
 
-#define MOSAIC 0
+#define MOSAIC 1
 #define MY_GAME 0
 #define UI_TEST 1
 #define UI_TEST2 0
