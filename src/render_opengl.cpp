@@ -1260,8 +1260,8 @@ void FlushUICommands() {
 
     glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
     glViewport(0, 0, target->width, target->height);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    GLfloat clearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    glClearBufferfv(GL_COLOR, 0, clearColor);
 
     for (uint32 i = 0; i < Core->graphics.uiCommands.count; i++) {
         UICommand *cmd = &Core->graphics.uiCommands[i];
