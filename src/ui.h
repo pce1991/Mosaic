@@ -9,14 +9,23 @@ struct WidgetRect {
     vec2 size;
 };
 
+enum UITextAlignment {
+    UITextAlign_Left,
+    UITextAlign_Center,
+    UITextAlign_Right,
+};
+
 struct UIStyle {
     vec4 buttonColor;
     vec4 buttonHoverColor;
     vec4 buttonActiveColor;
+    vec4 textColor;
     FontTable *font;
     real32 textSize;
+    real32 lineHeight;
     real32 widgetSpacing;
     real32 columnGap;
+    UITextAlignment textAlign;
 };
 
 #define UI_STYLE_STACK_MAX 32
@@ -56,8 +65,8 @@ uint32 WidgetID(const char *name);
 void UIBegin(vec2 origin);
 void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture);
 void UIPopWindow();
-bool UIButton(vec2 size, const char *label);
-void UILabel(vec4 color, real32 textSize, const char *fmt, ...);
+bool UIButton(real32 width, const char *label);
+void UILabel(const char *fmt, ...);
 void UIPushImage(vec2 size, Sprite *texture);
 void UINextColumn(real32 width);
 WidgetRect GetNextWidgetBounds();

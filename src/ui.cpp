@@ -90,6 +90,9 @@ void UIBegin(vec2 origin) {
     style->buttonActiveColor = V4(0.5f, 0.5f, 0.5f, 1.0f);
     style->font = &Core->graphics.monoFont;
     style->textSize = 32.0f;
+    style->lineHeight = style->textSize * 1.5f;
+    style->textColor = V4(1.0f);
+    style->textAlign = UITextAlign_Center;
     style->widgetSpacing = 8.0f;
     style->columnGap = 16.0f;
 }
@@ -105,7 +108,6 @@ void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture) {
     frame->size = size;
 
     vec2 sp = UIScreenPos(pos, size);
-    Log("UIPushWindow: uiPos=(%.1f, %.1f) size=(%.1f, %.1f) screenPos=(%.1f, %.1f) screenHeight=%.0f", pos.x, pos.y, size.x, size.y, sp.x, sp.y, (real32)Core->graphics.screenHeight);
     DrawRectScreen(sp, size, color);
     if (texture) {
         DrawSpriteScreen(sp, size, texture);
@@ -116,7 +118,6 @@ void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture) {
     UI->cursor = pos;
     UI->columnOrigin = pos;
     UI->currentColumn = 0;
-    Log("  -> cursor set to (%.1f, %.1f)", UI->cursor.x, UI->cursor.y);
 }
 
 void UIPopWindow() {
@@ -131,9 +132,10 @@ void UIPopWindow() {
     PopClipRect();
 }
 
-bool UIButton(vec2 size, const char *label) {
+bool UIButton(real32 width, const char *label) {
     UIStyle style = UICopyStyle();
     vec2 pos = UI->cursor;
+    vec2 size = V2(width, style.lineHeight);
 
     uint32 id = WidgetID(label);
 
@@ -165,14 +167,24 @@ bool UIButton(vec2 size, const char *label) {
     real32 textWidth = MeasureTextWidth(style.font, label, style.textSize);
     vec2 textBounds = MeasureTextBounds(style.font, label, style.textSize);
     real32 textCenterY = (textBounds.x + textBounds.y) * 0.5f;
-    real32 textHeight = textBounds.y - textBounds.x;
+    real32 textPosX;
+    bool centerText = false;
+
+    if (style.textAlign == UITextAlign_Left) {
+        textPosX = pos.x;
+    } else if (style.textAlign == UITextAlign_Right) {
+        textPosX = pos.x + size.x - textWidth;
+    } else {
+        textPosX = pos.x + size.x * 0.5f;
+        centerText = true;
+    }
+
     vec2 textPos = V2(
-        pos.x + (size.x - textWidth) * 0.5f,
+        textPosX,
         pos.y + size.y * 0.5f + textCenterY - style.font->lineHeight * style.textSize
     );
 
-    Log("UIButton '%s': uiPos=(%.1f, %.1f) size=(%.1f, %.1f) textPos=(%.1f, %.1f) textW=%.1f textH=%.1f cursorBefore=(%.1f, %.1f)", label, pos.x, pos.y, size.x, size.y, textPos.x, textPos.y, textWidth, textHeight, UI->cursor.x, UI->cursor.y);
-    DrawUIText(style.font, textPos, style.textSize, V4(1), false, label);
+    DrawUIText(style.font, textPos, style.textSize, style.textColor, centerText, label);
 
     UI->lastWidget = { pos, size };
     UI->cursor.y = pos.y + size.y + style.widgetSpacing;
@@ -181,7 +193,7 @@ bool UIButton(vec2 size, const char *label) {
     return clicked;
 }
 
-void UILabel(vec4 color, real32 textSize, const char *fmt, ...) {
+void UILabel(const char *fmt, ...) {
     UIStyle style = UICopyStyle();
     vec2 pos = UI->cursor;
 
@@ -191,12 +203,10 @@ void UILabel(vec4 color, real32 textSize, const char *fmt, ...) {
     vsnprintf(label, sizeof(label), fmt, args);
     va_end(args);
 
-    real32 textWidth = MeasureTextWidth(style.font, label, textSize);
-    real32 textHeight = style.font->lineHeight * textSize;
-    vec2 widgetSize = V2(textWidth, textHeight);
+    real32 textWidth = MeasureTextWidth(style.font, label, style.textSize);
+    vec2 widgetSize = V2(textWidth, style.lineHeight);
 
-    DrawUIText(style.font, pos, textSize, color, false, label);
-    Log("UILabel '%s': uiPos=(%.1f, %.1f) textSize=%.1f widgetSize=(%.1f, %.1f) cursorBefore=(%.1f, %.1f)", label, pos.x, pos.y, textSize, widgetSize.x, widgetSize.y, UI->cursor.x, UI->cursor.y);
+    DrawUIText(style.font, pos, style.textSize, style.textColor, false, label);
 
     UI->lastWidget = { pos, widgetSize };
     UI->cursor.y = pos.y + widgetSize.y + style.widgetSpacing;
@@ -205,7 +215,6 @@ void UILabel(vec4 color, real32 textSize, const char *fmt, ...) {
 
 void UIPushImage(vec2 size, Sprite *texture) {
     vec2 pos = UI->cursor;
-    Log("UIPushImage: uiPos=(%.1f, %.1f) size=(%.1f, %.1f) cursorBefore=(%.1f, %.1f)", pos.x, pos.y, size.x, size.y, UI->cursor.x, UI->cursor.y);
 
     DrawSpriteScreen(UIScreenPos(pos, size), size, texture);
 
