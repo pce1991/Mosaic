@@ -43,6 +43,30 @@ static real32 MeasureTextWidth(FontTable *font, const char *str, real32 size) {
     return width;
 }
 
+static vec2 MeasureTextBounds(FontTable *font, const char *str, real32 size) {
+    real32 minY = 0;
+    real32 maxY = 0;
+    real32 x = 0;
+    real32 y = 0;
+    while (*str) {
+        int32 codepoint = *str - 32;
+        if (codepoint >= 0 && codepoint < font->glyphCount) {
+            if (*str == '\n') {
+                x = 0;
+                y -= size * 1.5f;
+            } else {
+                real32 glyphMinY = y + font->glyphs[codepoint].lowerLeft.y * size;
+                real32 glyphMaxY = glyphMinY + font->glyphs[codepoint].size.y * size;
+                if (glyphMinY < minY) minY = glyphMinY;
+                if (glyphMaxY > maxY) maxY = glyphMaxY;
+                x += font->glyphs[codepoint].xAdvance * size;
+            }
+        }
+        str++;
+    }
+    return V2(minY, maxY);
+}
+
 static vec2 UIScreenPos(vec2 pos, vec2 size) {
     return V2(pos.x, (real32)Core->graphics.screenHeight - pos.y);
 }
@@ -139,11 +163,14 @@ bool UIButton(vec2 size, const char *label) {
     DrawRectScreen(UIScreenPos(pos, size), size, color);
 
     real32 textWidth = MeasureTextWidth(style.font, label, style.textSize);
-    real32 textHeight = style.font->lineHeight * style.textSize;
+    vec2 textBounds = MeasureTextBounds(style.font, label, style.textSize);
+    real32 textCenterY = (textBounds.x + textBounds.y) * 0.5f;
+    real32 textHeight = textBounds.y - textBounds.x;
     vec2 textPos = V2(
         pos.x + (size.x - textWidth) * 0.5f,
-        pos.y + (size.y - textHeight) * 0.5f
+        pos.y + size.y * 0.5f + textCenterY - style.font->lineHeight * style.textSize
     );
+
     Log("UIButton '%s': uiPos=(%.1f, %.1f) size=(%.1f, %.1f) textPos=(%.1f, %.1f) textW=%.1f textH=%.1f cursorBefore=(%.1f, %.1f)", label, pos.x, pos.y, size.x, size.y, textPos.x, textPos.y, textWidth, textHeight, UI->cursor.x, UI->cursor.y);
     DrawUIText(style.font, textPos, style.textSize, V4(1), false, label);
 
