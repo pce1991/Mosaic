@@ -117,6 +117,8 @@ void UIBegin() {
 
     UI->windowTop = 0;
 
+    UI->groupTop = 0;
+
     UI->styleTop = 0;
     UIStyle *style = &UI->styleStack[0];
     style->buttonColor = V4(0.3f, 0.3f, 0.3f, 1.0f);
@@ -129,6 +131,7 @@ void UIBegin() {
     style->textAlign = UITextAlign_Center;
     style->widgetSpacing = 8.0f;
     style->columnGap = 16.0f;
+    style->padding = 10.0f;
 }
 
 void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture) {
@@ -164,6 +167,61 @@ void UIPopWindow() {
     UI->currentColumn = frame->currentColumn;
 
     UIPopClipRect();
+}
+
+void UIPushGroup(const char *name, vec2 pos, vec2 size) {
+    if (UI->windowTop <= 0) {
+        Log("UIPushGroup: no active window for group '%s'", name);
+        return;
+    }
+    if (UI->groupTop >= UI_GROUP_STACK_MAX) {
+        Log("UIPushGroup: group stack full, cannot push group '%s'", name);
+        return;
+    }
+
+    UIStyle style = UICopyStyle();
+
+    UIGroupFrame *frame = &UI->groupStack[UI->groupTop++];
+    frame->id = WidgetID(name);
+    frame->pos = UI->cursor + pos;
+    frame->size = size;
+
+    frame->cursor = UI->cursor;
+    frame->columnOrigin = UI->columnOrigin;
+    frame->currentColumn = UI->currentColumn;
+
+    UIPushClipRect(frame->pos, size);
+
+    vec2 origin = frame->pos + V2(style.padding, style.padding);
+    UI->cursor = origin;
+    UI->columnOrigin = origin;
+    UI->currentColumn = 0;
+}
+
+void UIPopGroup() {
+    if (UI->groupTop <= 0) return;
+
+    UIGroupFrame *frame = &UI->groupStack[--UI->groupTop];
+
+    UIPopClipRect();
+
+    UI->cursor = frame->cursor;
+    UI->columnOrigin = frame->columnOrigin;
+    UI->currentColumn = frame->currentColumn;
+
+    UI->cursor.y = frame->pos.y + frame->size.y + UICopyStyle().widgetSpacing;
+}
+
+WidgetRect UIGroupNextBounds() {
+    WidgetRect r = {};
+    r.origin = UI->cursor;
+    if (UI->groupTop > 0) {
+        UIGroupFrame *frame = &UI->groupStack[UI->groupTop - 1];
+        UIStyle style = UICopyStyle();
+        real32 paddedWidth = frame->size.x - 2.0f * style.padding;
+        r.size = V2(paddedWidth, style.lineHeight);
+    }
+    return r;
 }
 
 bool UIButton(real32 width, const char *label) {
@@ -225,6 +283,12 @@ bool UIButton(real32 width, const char *label) {
     UI->hasPlacedWidget = true;
 
     return clicked;
+}
+
+bool UIButton(const char *label) {
+    WidgetRect bounds = UIGroupNextBounds();
+    if (bounds.size.x <= 0) return false;
+    return UIButton(bounds.size.x, label);
 }
 
 void UILabel(const char *fmt, ...) {

@@ -496,8 +496,9 @@ void SetTextCursor(float32 x, float32 y) {
 void MosaicRender() {
   MTile*tiles = Mosaic->tiles;
 
-  glClearColor(Mosaic->screenColor.r, Mosaic->screenColor.g, Mosaic->screenColor.b, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  vec4 clearColor = Mosaic->screenColor;
+  clearColor.a = 1.0f;
+  ClearScreen(clearColor);
 
   Mosaic->rectBuffer.count = 0;
   {

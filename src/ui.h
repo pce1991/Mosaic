@@ -25,6 +25,7 @@ struct UIStyle {
     real32 lineHeight;
     real32 widgetSpacing;
     real32 columnGap;
+    real32 padding;
     UITextAlignment textAlign;
 };
 
@@ -39,6 +40,17 @@ struct UIWindowFrame {
 };
 
 #define UI_WINDOW_STACK_MAX 32
+
+#define UI_GROUP_STACK_MAX 32
+
+struct UIGroupFrame {
+    vec2 pos;
+    vec2 size;
+    uint32 id;
+    vec2 cursor;
+    vec2 columnOrigin;
+    int32 currentColumn;
+};
 
 struct UIManager {
     UIStyle styleStack[UI_STYLE_STACK_MAX];
@@ -58,6 +70,9 @@ struct UIManager {
 
     UIWindowFrame windowStack[UI_WINDOW_STACK_MAX];
     int32 windowTop;
+
+    UIGroupFrame groupStack[UI_GROUP_STACK_MAX];
+    int32 groupTop;
 };
 
 uint32 WidgetID(const char *name);
@@ -66,10 +81,15 @@ void UIBegin();
 void UIPushWindow(vec2 pos, vec2 size, vec4 color, Sprite *texture);
 void UIPopWindow();
 bool UIButton(real32 width, const char *label);
+bool UIButton(const char *label);
 void UILabel(const char *fmt, ...);
 void UIPushImage(vec2 size, Sprite *texture);
 void UINextColumn(real32 width);
 WidgetRect GetNextWidgetBounds();
+
+void UIPushGroup(const char *name, vec2 pos, vec2 size);
+void UIPopGroup();
+WidgetRect UIGroupNextBounds();
 
 void UIPushStyle(UIStyle style);
 void UIPopStyle();

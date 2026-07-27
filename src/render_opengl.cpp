@@ -298,6 +298,11 @@ void InitGlyphBuffers(int32 count) {
     }
 }
 
+void ClearScreen(vec4 color) {
+    GLfloat c[4] = {color.r, color.g, color.b, color.a};
+    glClearBufferfv(GL_COLOR, 0, c);
+}
+
 void SetupUIRenderTarget(RenderTarget *target, int32 w, int32 h) {
     target->width = w;
     target->height = h;

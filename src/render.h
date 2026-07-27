@@ -36,6 +36,7 @@ struct Shader {
 };
 
 void SetShader(Shader *shader);
+void ClearScreen(vec4 color);
 
 typedef enum {
     ColorChannel_Red,

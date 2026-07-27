@@ -29,7 +29,8 @@ void MyGameUpdate() {
     UILabel("Click counters and styles");
     UIPopStyle();
 
-    if (UIButton(400, "Default Button")) {
+    UIPushGroup("buttons", V2(0, 0), V2(680, 300));
+    if (UIButton("Default Button")) {
         clickCount++;
     }
 
@@ -39,7 +40,7 @@ void MyGameUpdate() {
     greenStyle.buttonHoverColor  = V4(0.2f, 0.55f, 0.2f, 1.0f);
     greenStyle.buttonActiveColor = V4(0.25f, 0.65f, 0.25f, 1.0f);
     UIPushStyle(greenStyle);
-    if (UIButton(400, "Green Button")) {
+    if (UIButton("Green Button")) {
         clickCount++;
     }
     UIPopStyle();
@@ -50,10 +51,11 @@ void MyGameUpdate() {
     blueStyle.buttonHoverColor  = V4(0.2f, 0.3f, 0.65f, 1.0f);
     blueStyle.buttonActiveColor = V4(0.25f, 0.35f, 0.75f, 1.0f);
     UIPushStyle(blueStyle);
-    if (UIButton(400, "Blue Button")) {
+    if (UIButton("Blue Button")) {
         clickCount++;
     }
     UIPopStyle();
+    UIPopGroup();
 
     UIStyle countStyle = UICopyStyle();
     countStyle.textColor = V4(1.0f, 0.8f, 0.2f, 1.0f);
