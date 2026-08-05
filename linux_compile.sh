@@ -1,11 +1,10 @@
 #!/bin/sh
 # Compiles the linux platform layer with clang.
 #
-# Required packages (Debian/Ubuntu):
-#   clang libx11-dev libegl1-mesa-dev libgl1-mesa-dev libglew-dev libasound2-dev
-#
-# @NOTE: on linux we use the system GLEW, not the bundled one in lib/ (that one
-# is windows-only). System headers are found automatically; no -I lib here.
+# @NOTE: this build links against the unversioned runtime libraries that ship
+# with desktop linux (libasound.so.2, libX11.so.6, libEGL.so.1, libGL.so.1,
+# libGLEW.so.2), so no -devel/-dev packages are required. GLEW headers come
+# from the bundled lib/ and the ALSA API is hand-declared in linux.cpp.
 #
 # Usage:
 #   sh linux_compile.sh          # just build
@@ -16,9 +15,12 @@ set -e
 mkdir -p build
 
 clang++ -O0 -g -D IS_SERVER=0 \
+    -DGLEW_NO_GLU \
+    -I lib \
     src/platform/linux.cpp \
     -o build/game \
-    -lEGL -lGL -lGLEW -lX11 -lasound -lpthread -ldl -lm
+    -l:libEGL.so.1 -l:libGL.so.1 -l:libGLEW.so.2 -l:libX11.so.6 -l:libasound.so.2 \
+    -lpthread -ldl -lm
 
 if [ "$1" = "run" ]; then
     ./build/game
