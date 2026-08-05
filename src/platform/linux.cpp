@@ -27,10 +27,15 @@
 
 #include <time.h>
 
+// @NOTE: X11 defines a typedef named Time (unsigned long), which collides with
+// the game's global `real32 Time`. Rename X11's typedef to XTime around the
+// includes so both can coexist. linux.cpp never uses X11's Time type itself.
+#define Time XTime
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
+#undef Time
 
 // @NOTE: EGL must be included before GLEW so that GLEW can load function
 // pointers through eglGetProcAddress instead of glXGetProcAddress.

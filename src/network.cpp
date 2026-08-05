@@ -81,7 +81,7 @@ int32 SendPacket(Socket *socket, uint32 address, uint16 port, void *packetData, 
 }
 
 int32 ReceivePacket(Socket *socket, void *buffer, uint32 bufferSize, Socket *fromSocket) {
-    int32 fromSize = sizeof(sockaddr_in);
+    socklen_t fromSize = sizeof(sockaddr_in);
     
     return recvfrom(socket->handle, (char *)buffer, bufferSize, 0, (sockaddr *)&fromSocket->socketAddress, &fromSize);
 }

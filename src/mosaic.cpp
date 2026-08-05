@@ -420,7 +420,7 @@ void DrawTextTop(vec4 color, const char *fmt, ...) {
   va_start (args, fmt);
 
   char str[GlyphBufferCapacity];
-  vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+  vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
   vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.1f);
   DrawText(&Core->graphics.monoFont, position, 0.35f, color, true, str);
@@ -433,7 +433,7 @@ void DrawTextTop(vec4 color, float32 scale, const char *fmt, ...) {
   va_start (args, fmt);
 
   char str[GlyphBufferCapacity];
-  vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+  vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
   vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.1f);
   DrawText(&Core->graphics.monoFont, position, 0.35f * scale, color, true, str);
@@ -446,7 +446,7 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, const char *fmt, ...) {
   va_start (args, fmt);
 
   char str[GlyphBufferCapacity];
-  vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+  vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
   vec2 floorPos = V2(floorf(pos.x), -floorf(pos.y));
     
@@ -461,7 +461,7 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, bool center, const char *f
   va_start (args, fmt);
 
   char str[GlyphBufferCapacity];
-  vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+  vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
   vec2 floorPos = V2(floorf(pos.x), -floorf(pos.y));
     
@@ -476,7 +476,7 @@ void PushText(const char *fmt, ...) {
   va_start (args, fmt);
 
   char str[GlyphBufferCapacity];
-  vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+  vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
   MosaicText *text = &Mosaic->text;
 

@@ -808,7 +808,7 @@ void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, r
 
     // @BUG: if our string has more characters this fails!!!!
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
     
     DrawText_(font, pos, size, color, false, str, width, center, NULL);
 
@@ -820,7 +820,7 @@ void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, c
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
     
     DrawText_(font, pos, size, color, false, str, INFINITY, center, NULL);
 
@@ -833,7 +833,7 @@ void DrawText(vec2 pos, real32 size, vec4 color, bool center, const char *fmt, .
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
     
     DrawText_(&Core->graphics.monoFont, pos, size, color, false, str, INFINITY, center, NULL);
 
@@ -845,7 +845,7 @@ void DrawText(FontTable *font, vec2 pos, real32 size, vec4 color, const char *fm
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
     
     DrawText_(font, pos, size, color, false, str, INFINITY, false, NULL);
 
@@ -857,7 +857,7 @@ void DrawText(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
     
     DrawText_(&Core->graphics.monoFont, pos, size, color, false, str, INFINITY, false, NULL);
 
@@ -869,7 +869,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
     size *= Core->graphics.screenWidth;
 
@@ -885,7 +885,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
     size *= Core->graphics.screenWidth;
 
@@ -901,7 +901,7 @@ void DrawTextScreen(vec2 pos, real32 size, vec4 color, bool center, const char *
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
     size *= Core->graphics.screenWidth;
 
@@ -917,7 +917,7 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const ch
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
     size *= Core->graphics.screenWidth;
 
@@ -933,7 +933,7 @@ void DrawTextScreen(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
     size *= Core->graphics.screenWidth;
 
@@ -950,7 +950,7 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, boo
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
     // @BUG @GACK: this height - pos.y is because we want zero vector to be top left, but
     // our projection matrix is set up so that 0 is the bottom of the screen, and changing
@@ -965,7 +965,7 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, boo
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
     // @BUG @GACK: this height - pos.y is because we want zero vector to be top left, but
     // our projection matrix is set up so that 0 is the bottom of the screen, and changing
@@ -980,7 +980,7 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, con
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
@@ -996,7 +996,7 @@ int32 DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bo
     va_start (args, fmt);
     
     char str[GlyphBufferCapacity];
-    vsnprintf(str, PRINT_MAX_BUFFER_LEN, fmt, args);
+    vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up

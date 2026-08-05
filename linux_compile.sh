@@ -16,11 +16,12 @@ mkdir -p build
 
 clang++ -O0 -g -D IS_SERVER=0 \
     -DGLEW_NO_GLU \
-    -I src \
+    -Wno-writable-strings \
+    -iquote src \
     -I lib \
     src/platform/linux.cpp \
     -o build/game \
-    -l:libEGL.so.1 -l:libGL.so.1 -l:libGLEW.so.2 -l:libX11.so.6 -l:libasound.so.2 \
+    -l:libEGL.so.1 -l:libGL.so.1 -l:libGLEW.so.2.2 -l:libX11.so.6 -l:libasound.so.2 \
     -lpthread -ldl -lm
 
 if [ "$1" = "run" ]; then
