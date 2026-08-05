@@ -1,6 +1,11 @@
 build/
 output/
 
+# ignore all hidden files/directories
+.*
+# do not ignore gitignore
+!.gitignore
+
 # Prerequisites
 *.d
 

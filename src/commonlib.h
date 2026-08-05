@@ -45,6 +45,15 @@ uint32 Hash(const char *str) {
 #define ThreadYield() SwitchToThread()
 
 #define CycleCount() __rdtsc()
+#else
+#define CompareAndSwap(dest, comparand, exchange) __sync_val_compare_and_swap(dest, comparand, exchange)
+#define CompareAndSwap64(dest, comparand, exchange) __sync_val_compare_and_swap(dest, comparand, exchange)
+#define AtomicAdd(value, addend) __sync_add_and_fetch(value, addend)
+#define AtomicExchange(ptr, value) __sync_lock_test_and_set(ptr, value)
+#define AtomicExchange64(ptr, value) __sync_lock_test_and_set(ptr, value)
+#define ThreadYield() sched_yield()
+
+#define CycleCount() __builtin_ia32_rdtsc()
 #endif
 
 

@@ -40,15 +40,24 @@ uint32 InitSocket(Socket *socketPtr, uint32 address, uint16 port, bool bindSocke
     
         int32 bindSuccess = bind(socketPtr->handle, (const sockaddr*)addr, sizeof(sockaddr_in));
         if (bindSuccess != 0) {
+#if _WIN32
             int32 error = WSAGetLastError();
+#else
+            int32 error = errno;
+#endif
             Print("failed to bind socket! %d", error);
 
             Log("Failed to bind socket for %u on port %d error: %d", address, port, error);
         }
     }
 
+#if _WIN32
     DWORD nonBlocking = 1;
     int32 nonBlockingSuccess = ioctlsocket(socketPtr->handle, FIONBIO, &nonBlocking);
+#else
+    int32 nonBlocking = 1;
+    int32 nonBlockingSuccess = ioctl(socketPtr->handle, FIONBIO, &nonBlocking);
+#endif
 
     if (nonBlockingSuccess != 0) {
         Log("Failed to set socket nonblocking for %u on port %d to non blocking", address, port);
@@ -89,7 +98,11 @@ uint32 GetMyAddress() {
 
     char *ipAddress = inet_ntoa((*((struct in_addr*) hostEntry->h_addr_list[0])));
     int32 address = -1;
+#if _WIN32
     int32 success = InetPton(AF_INET, ipAddress, &address);
+#else
+    int32 success = inet_pton(AF_INET, ipAddress, &address);
+#endif
     return ntohl(address);
 }
 
@@ -117,12 +130,21 @@ void ReceivePackets(Socket *socket) {
         int32 bytesReceived = ReceivePacket(socket, (u8 *)&packet.packet, sizeof(GamePacket), &fromSocket);
 
         if (bytesReceived <= 0) {
+#if _WIN32
             // @WINDOWS
             int32 error = WSAGetLastError();
             // 10035 is a non-fatal error you get on non-blocking when there isnt anything found.
             if (error != 10035) {
                 Print("recvfrom error: %d", error);
             }
+#else
+            // @LINUX
+            int32 error = errno;
+            // EAGAIN/EWOULDBLOCK is what you get on non-blocking when there isnt anything found.
+            if (error != EAGAIN && error != EWOULDBLOCK) {
+                Print("recvfrom error: %d", error);
+            }
+#endif
             
             break;
         }

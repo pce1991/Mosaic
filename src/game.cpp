@@ -183,7 +183,7 @@ void GameInit(CoreMemory *coreMem) {
 
     InitGlyphBuffers(GlyphBufferCount);
 
-#if WINDOWS
+#if WINDOWS || LINUX
     {
         LoadShader("shaders/mesh.vert", "shaders/mesh.frag", &coreMem->graphics.shader);
         const char *uniforms[] = {
@@ -244,7 +244,7 @@ void GameInit(CoreMemory *coreMem) {
     Core->graphics.uiCommands = MakeDynamicArray<UICommand>(&Core->permanentArena, 64);
     SetupUIRenderTarget(&Core->graphics.uiTarget, coreMem->graphics.screenWidth, coreMem->graphics.screenHeight);
 
-#if WINDOWS
+#if WINDOWS || LINUX
     {
         LoadShader("shaders/blit.vert", "shaders/blit.frag", &coreMem->graphics.blitShader);
         const char *blitUniforms[] = { "model", "viewProjection", "uiTexture" };

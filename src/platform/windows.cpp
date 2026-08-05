@@ -30,7 +30,7 @@
 #endif
 
 
-#include "types.h"
+#include "../types.h"
 
 struct WindowsPlatform {
     HWND *window;
@@ -47,7 +47,7 @@ WindowsPlatform *Platform = NULL;
 #include <assert.h>
 #define ASSERT(...) assert(__VA_ARGS__)
 
-#include "game.cpp"
+#include "../game.cpp"
 
 #include "windows_input.cpp"
 
