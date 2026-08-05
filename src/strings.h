@@ -137,4 +137,12 @@ inline bool StringEquals(const char *a, const char *b, uint32 length) {
     return memcmp(a, b, length) == 0;
 }
 
+inline bool StringEquals(char *a, const char *b, uint32 length) {
+    if (a == NULL || b == NULL) {
+        return a == b;
+    }
+
+    return memcmp(a, b, length) == 0;
+}
+
 #endif // STRINGS_H

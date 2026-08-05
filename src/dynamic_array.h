@@ -424,8 +424,8 @@ inline void CopyDynamicArrayIntoBuffer(DynamicArray<T> *array, void *buffer) {
 
   ArrayChunk *chunk = array->headChunk;
   while (chunk != NULL) {
-    if (chunk != chunk->tailChunk) {
-      memcpy(buffer, array->chunks[i]->data, sizeof(T) * array->elementsPerChunk);
+    if (chunk != array->tailChunk) {
+      memcpy(buffer, chunk->data, sizeof(T) * array->elementsPerChunk);
     }
     else {
       u32 remainingCount = array->count - ((array->chunkCount - 1) * array->elementsPerChunk);

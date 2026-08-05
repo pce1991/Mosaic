@@ -16,6 +16,7 @@ mkdir -p build
 
 clang++ -O0 -g -D IS_SERVER=0 \
     -DGLEW_NO_GLU \
+    -I src \
     -I lib \
     src/platform/linux.cpp \
     -o build/game \

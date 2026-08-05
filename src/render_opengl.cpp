@@ -1096,10 +1096,10 @@ void PushClipRect(vec2 pos, vec2 size) {
 
     if (Core->graphics.hasClip && Core->graphics.clipTop > 0) {
         UIClipRegion *parent = &Core->graphics.clipStack[Core->graphics.clipTop - 1];
-        newMin.x = max(newMin.x, parent->min.x);
-        newMin.y = max(newMin.y, parent->min.y);
-        newMax.x = min(newMax.x, parent->max.x);
-        newMax.y = min(newMax.y, parent->max.y);
+        newMin.x = Max(newMin.x, parent->min.x);
+        newMin.y = Max(newMin.y, parent->min.y);
+        newMax.x = Min(newMax.x, parent->max.x);
+        newMax.y = Min(newMax.y, parent->max.y);
     }
 
     UIClipRegion *region = &Core->graphics.clipStack[Core->graphics.clipTop++];
