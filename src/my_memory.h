@@ -36,6 +36,16 @@ inline void DeallocateMem(MAllocator *allocator, void *data) {
     allocator->deallocate(allocator, data);
 }
 
+inline void *DefaultAllocatorAllocate(MAllocator *allocator, uint64 size) {
+    return malloc(size);
+}
+
+inline void DefaultAllocatorDeallocate(MAllocator *allocator, void *data) {
+    free(data);
+}
+
+extern MAllocator Heap;
+
 
 struct MemoryArena : MAllocator {
     uint32 capacity;
@@ -85,6 +95,69 @@ inline void *AllocCleared(int32 size) {
     return d;
 }
 
+struct BlockAllocator {
+    int32 blockCapacity;
+    int32 blockSize;
+    int32 blockCount;
+    int32 freelistCount;
+
+    int32 *freelist;
+    uint8 *data;
+};
+
+inline void *PushBlock(BlockAllocator *allocator, uint64 size) {
+    if (size > (uint64)allocator->blockSize) {
+        return NULL;
+    }
+
+    void *result = NULL;
+    if (allocator->freelistCount > 0) {
+        int32 index = allocator->freelist[allocator->freelistCount - 1];
+        result = allocator->data + allocator->blockSize * index;
+        --allocator->freelistCount;
+    }
+    else if (allocator->blockCount < allocator->blockCapacity) {
+        result = allocator->data + allocator->blockSize * allocator->blockCount;
+        ++allocator->blockCount;
+    }
+
+    return result;
+}
+
+inline void *PushBlockClear(BlockAllocator *allocator, uint64 size) {
+    void *result = PushBlock(allocator, size);
+
+    if (result != NULL) {
+        memset(result, 0, size);
+    }
+
+    return result;
+}
+
+inline void FreeBlock(BlockAllocator *allocator, void *data) {
+    uint64 bytesFromStart = (uint64)((uint8 *)data - allocator->data);
+    int32 blockIndex = (int32)(bytesFromStart / allocator->blockSize);
+
+    allocator->freelist[allocator->freelistCount] = blockIndex;
+    ++allocator->freelistCount;
+}
+
+inline void AllocateBlockAllocator(BlockAllocator *allocator, int32 blockSize, int32 blockCapacity) {
+    allocator->blockCapacity = blockCapacity;
+    allocator->blockSize = blockSize;
+    allocator->blockCount = 0;
+    allocator->freelistCount = 0;
+
+    allocator->data = (uint8 *)malloc((size_t)blockSize * blockCapacity);
+    allocator->freelist = (int32 *)malloc(sizeof(int32) * blockCapacity);
+
+    memset(allocator->data, 0, (size_t)blockSize * blockCapacity);
+}
+
+inline void ClearBlockAllocator(BlockAllocator *allocator) {
+    allocator->freelistCount = 0;
+    allocator->blockCount = 0;
+}
 
 
 

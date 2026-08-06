@@ -106,6 +106,8 @@ struct CoreMemory {
 real32 Time = 0;
 real32 DeltaTime = 0;
 
+MAllocator Heap = { DefaultAllocatorAllocate, DefaultAllocatorDeallocate };
+
 CoreMemory *Core = NULL;
 InputManager *Input = NULL;
 

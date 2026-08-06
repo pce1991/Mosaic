@@ -52,6 +52,24 @@ struct UIGroupFrame {
     int32 currentColumn;
 };
 
+#define UI_WIDGET_DATA_MAX 8
+
+struct StringFieldData {
+    int32 textLength;
+    int32 maxLength;
+    int32 cursor;
+};
+
+union WidgetData {
+    StringFieldData stringField;
+};
+
+struct WidgetDataHeader {
+    uint32 id;
+    int32 lastFrameAccessed;
+    WidgetData *data;
+};
+
 struct UIManager {
     UIStyle styleStack[UI_STYLE_STACK_MAX];
     int32 styleTop;
@@ -73,6 +91,12 @@ struct UIManager {
 
     UIGroupFrame groupStack[UI_GROUP_STACK_MAX];
     int32 groupTop;
+
+    uint32 activeID;
+
+    bool widgetDataAllocated;
+    BlockAllocator widgetDataAllocator;
+    HashTable<uint32, WidgetDataHeader> widgetData;
 };
 
 uint32 WidgetID(const char *name);
@@ -94,5 +118,7 @@ WidgetRect UIGroupNextBounds();
 void UIPushStyle(UIStyle style);
 void UIPopStyle();
 UIStyle UICopyStyle();
+
+bool UIStringField(const char *name, char *buffer, int32 bufferSize);
 
 #endif // UI_H

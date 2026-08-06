@@ -25,6 +25,8 @@ struct HashTable {
     uint32 capacity;
     uint32 count;
 
+    MAllocator *allocator;
+
     bool *occupied;
     uint32 *hashes;
     K *keys;
@@ -34,56 +36,37 @@ struct HashTable {
 };
 
 template <typename K, typename V>
-void AllocateHashTable(HashTable<K, V> *table, uint32 capacity) {
-    table->capacity = capacity;
-    table->count = 0;
-
-    table->hashes = (uint32 *)malloc(sizeof(uint32) * capacity);
-    table->occupied = (bool *)malloc(sizeof(bool) * capacity);
-    table->keys = (K *)malloc(sizeof(K) * capacity);
-    table->keyLengths = (uint32 *)malloc(sizeof(uint32) * capacity);
-    table->values = (V *)malloc(sizeof(V) * capacity);
-
-
-    memset(table->hashes, sizeof(uint32) * capacity);
-    memset(table->occupied, sizeof(bool) * capacity);
-    memset(table->keys, sizeof(K) * capacity);
-    memset(table->keyLengths , sizeof(uint32) * capacity);
-    memset(table->values , sizeof(V) * capacity);
-}
-
-template <typename K, typename V>
 void AllocateHashTable(HashTable<K, V> *table, uint32 capacity, MAllocator *allocator) {
     table->capacity = capacity;
     table->count = 0;
+    table->allocator = allocator;
 
-    table->hashes = (uint32 *)allocator->allocate(allocator, sizeof(uint32) * capacity);
-    table->occupied = (bool *)allocator->allocate(allocator, sizeof(bool) * capacity);
-    table->keys = (K *)allocator->allocate(allocator, sizeof(K) * capacity);
-    table->keyLengths = (uint32 *)allocator->allocate(allocator, sizeof(uint32) * capacity);
-    table->values = (V *)allocator->allocate(allocator, sizeof(V) * capacity);
+    table->hashes = (uint32 *)AllocateMem(allocator, sizeof(uint32) * capacity);
+    table->occupied = (bool *)AllocateMem(allocator, sizeof(bool) * capacity);
+    table->keys = (K *)AllocateMem(allocator, sizeof(K) * capacity);
+    table->keyLengths = (uint32 *)AllocateMem(allocator, sizeof(uint32) * capacity);
+    table->values = (V *)AllocateMem(allocator, sizeof(V) * capacity);
 
-
-    memset(table->hashes, sizeof(uint32) * capacity);
-    memset(table->occupied, sizeof(bool) * capacity);
-    memset(table->keys, sizeof(K) * capacity);
-    memset(table->keyLengths , sizeof(uint32) * capacity);
-    memset(table->values , sizeof(V) * capacity);
+    memset(table->hashes, 0, sizeof(uint32) * capacity);
+    memset(table->occupied, 0, sizeof(bool) * capacity);
+    memset(table->keys, 0, sizeof(K) * capacity);
+    memset(table->keyLengths , 0, sizeof(uint32) * capacity);
+    memset(table->values , 0, sizeof(V) * capacity);
 }
 
 template <typename K, typename V>
 void DeallocateHashTable(HashTable<K, V> *table) {
-    free(table->hashes);
-    free(table->occupied);
-    free(table->keys);
-    free(table->keyLengths);
-    free(table->values);
+    DeallocateMem(table->allocator, table->hashes);
+    DeallocateMem(table->allocator, table->occupied);
+    DeallocateMem(table->allocator, table->keys);
+    DeallocateMem(table->allocator, table->keyLengths);
+    DeallocateMem(table->allocator, table->values);
 }
 
 template <typename K, typename V>
 HashTable<K, V>CopyHashTable(HashTable<K, V> *table) {
     HashTable<K, V> copy = {};
-    AllocateHashTable<K, V>(&copy, table->capacity);
+    AllocateHashTable<K, V>(&copy, table->capacity, table->allocator);
     copy.count = table->count;
 
     memcpy(copy.hashes, table->hashes, sizeof(uint32) * table->capacity);
@@ -112,17 +95,17 @@ void ResizeHashTable(HashTable<K *, V> *table, uint32 capacity) {
     uint32 *oldKeyLengths = table->keyLengths;
     V *oldValues = table->values;
 
-    table->hashes = (uint32 *)malloc(sizeof(uint32) * capacity);
-    table->occupied = (bool *)malloc(sizeof(bool) * capacity);
-    table->keys = (K **)malloc(sizeof(K *) * capacity);
-    table->keyLengths  = (uint32 *)malloc(sizeof(uint32) * capacity);
-    table->values  = (V *)malloc(sizeof(V) * capacity);
+    table->hashes = (uint32 *)AllocateMem(table->allocator, sizeof(uint32) * capacity);
+    table->occupied = (bool *)AllocateMem(table->allocator, sizeof(bool) * capacity);
+    table->keys = (K **)AllocateMem(table->allocator, sizeof(K *) * capacity);
+    table->keyLengths  = (uint32 *)AllocateMem(table->allocator, sizeof(uint32) * capacity);
+    table->values  = (V *)AllocateMem(table->allocator, sizeof(V) * capacity);
 
-    memset(table->hashes, sizeof(uint32) * capacity);
-    memset(table->occupied, sizeof(bool) * capacity);
-    memset(table->keys, sizeof(K) * capacity);
-    memset(table->keyLengths , sizeof(uint32) * capacity);
-    memset(table->values , sizeof(V) * capacity);
+    memset(table->hashes, 0, sizeof(uint32) * capacity);
+    memset(table->occupied, 0, sizeof(bool) * capacity);
+    memset(table->keys, 0, sizeof(K) * capacity);
+    memset(table->keyLengths , 0, sizeof(uint32) * capacity);
+    memset(table->values , 0, sizeof(V) * capacity);
 
     for (int i = 0; i < oldCapacity; i++) {
         bool occupied = oldOccupied[i];
@@ -135,11 +118,11 @@ void ResizeHashTable(HashTable<K *, V> *table, uint32 capacity) {
         }
     }
 
-    free(oldHashes);
-    free(oldOccupied);
-    free((void *)oldKeys);
-    free(oldKeyLengths);
-    free(oldValues);
+    DeallocateMem(table->allocator, oldHashes);
+    DeallocateMem(table->allocator, oldOccupied);
+    DeallocateMem(table->allocator, (void *)oldKeys);
+    DeallocateMem(table->allocator, oldKeyLengths);
+    DeallocateMem(table->allocator, oldValues);
 }
 
 template <typename K, typename V>
@@ -159,17 +142,17 @@ void ResizeHashTable(HashTable<K, V> *table, uint32 capacity) {
     uint32 *oldKeyLengths = table->keyLengths;
     V *oldValues = table->values;
 
-    table->hashes = (uint32 *)malloc(sizeof(uint32) * capacity);
-    table->occupied = (bool *)malloc(sizeof(bool) * capacity);
-    table->keys = (K *)malloc(sizeof(K) * capacity);
-    table->keyLengths  = (uint32 *)malloc(sizeof(uint32) * capacity);
-    table->values  = (V *)malloc(sizeof(V) * capacity);
+    table->hashes = (uint32 *)AllocateMem(table->allocator, sizeof(uint32) * capacity);
+    table->occupied = (bool *)AllocateMem(table->allocator, sizeof(bool) * capacity);
+    table->keys = (K *)AllocateMem(table->allocator, sizeof(K) * capacity);
+    table->keyLengths  = (uint32 *)AllocateMem(table->allocator, sizeof(uint32) * capacity);
+    table->values  = (V *)AllocateMem(table->allocator, sizeof(V) * capacity);
 
-    memset(table->hashes, sizeof(uint32) * capacity);
-    memset(table->occupied, sizeof(bool) * capacity);
-    memset(table->keys, sizeof(K) * capacity);
-    memset(table->keyLengths , sizeof(uint32) * capacity);
-    memset(table->values , sizeof(V) * capacity);
+    memset(table->hashes, 0, sizeof(uint32) * capacity);
+    memset(table->occupied, 0, sizeof(bool) * capacity);
+    memset(table->keys, 0, sizeof(K) * capacity);
+    memset(table->keyLengths , 0, sizeof(uint32) * capacity);
+    memset(table->values , 0, sizeof(V) * capacity);
 
     for (int i = 0; i < oldCapacity; i++) {
         bool occupied = oldOccupied[i];
@@ -182,20 +165,20 @@ void ResizeHashTable(HashTable<K, V> *table, uint32 capacity) {
         }
     }
 
-    free(oldHashes);
-    free(oldOccupied);
-    free(oldKeys);
-    free(oldKeyLengths);
-    free(oldValues);
+    DeallocateMem(table->allocator, oldHashes);
+    DeallocateMem(table->allocator, oldOccupied);
+    DeallocateMem(table->allocator, oldKeys);
+    DeallocateMem(table->allocator, oldKeyLengths);
+    DeallocateMem(table->allocator, oldValues);
 }
 
 template <typename K, typename V>
 void HashTableClear(HashTable<K, V> *table) {
-    memset(table->hashes, sizeof(uint32) * table->capacity);
-    memset(table->occupied, sizeof(bool) * table->capacity);
-    memset(table->keys, sizeof(K) * table->capacity);
-    memset(table->keyLengths , sizeof(uint32) * table->capacity);
-    memset(table->values , sizeof(V) * table->capacity);
+    memset(table->hashes, 0, sizeof(uint32) * table->capacity);
+    memset(table->occupied, 0, sizeof(bool) * table->capacity);
+    memset(table->keys, 0, sizeof(K) * table->capacity);
+    memset(table->keyLengths , 0, sizeof(uint32) * table->capacity);
+    memset(table->values , 0, sizeof(V) * table->capacity);
 
     table->count = 0;
 }

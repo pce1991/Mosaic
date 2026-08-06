@@ -275,7 +275,7 @@ void GameUpdateAndRender(CoreMemory *core) {
 
     InputManager *input = &Core->inputManager;
 
-    if (InputPressed(Core->keyboard, Input_Escape)) {
+    if (InputPressed(Core->keyboard, Input_Escape) && UI->activeID == 0) {
         Core->running = false;
     }
 

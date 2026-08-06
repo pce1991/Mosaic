@@ -1,6 +1,7 @@
 
 Sprite testSprite;
 int32 clickCount = 0;
+char nameInput[64] = "edit me";
 
 void MyGameInit() {
     LoadSprite("data/textures/galaga_ship.png", &testSprite);
@@ -55,7 +56,13 @@ void MyGameUpdate() {
         clickCount++;
     }
     UIPopStyle();
+
+    if (UIStringField("name_input", nameInput, sizeof(nameInput))) {
+        clickCount++;
+    }
     UIPopGroup();
+
+    UILabel("Name: %s", nameInput);
 
     UIStyle countStyle = UICopyStyle();
     countStyle.textColor = V4(1.0f, 0.8f, 0.2f, 1.0f);
