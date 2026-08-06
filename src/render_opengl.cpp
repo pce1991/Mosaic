@@ -1,4 +1,4 @@
-﻿inline bool glCheckError_(char *file, uint32 line) {
+inline bool glCheckError_(char *file, uint32 line) {
     GLenum _glError = glGetError();
     if (_glError != GL_NO_ERROR) {
         Print("OpenGL error (%s:%d): 0x%x (%d)\n", file, line, _glError, _glError);
@@ -184,15 +184,15 @@ void SetShader(Shader *shader) {
 }
 
 vec2 PixelToNorm(int32 x, int32 y) {
-    return V2(x / (Core->graphics.screenWidth * 1.0f), y / (Core->graphics.screenHeight * 1.0f));
+    return V2(x / (Core->graphics.resolutionWidth * 1.0f), y / (Core->graphics.resolutionHeight * 1.0f));
 }
 
 vec2 PixelToNorm(vec2i pixel) {
-    return V2(pixel.x / (Core->graphics.screenWidth * 1.0f), pixel.y / (Core->graphics.screenHeight * 1.0f));
+    return V2(pixel.x / (Core->graphics.resolutionWidth * 1.0f), pixel.y / (Core->graphics.resolutionHeight * 1.0f));
 }
 
 vec2 NormToPixel(vec2 norm) {
-    return V2(norm.x * Core->graphics.screenWidth, norm.y * Core->graphics.screenHeight);
+    return V2(norm.x * Core->graphics.resolutionWidth, norm.y * Core->graphics.resolutionHeight);
 }
 
 
@@ -303,6 +303,70 @@ void ClearScreen(vec4 color) {
     glClearBufferfv(GL_COLOR, 0, c);
 }
 
+void SetWindowSize(uint32 windowWidth, uint32 windowHeight) {
+    if (windowWidth < 1) windowWidth = 1;
+    if (windowHeight < 1) windowHeight = 1;
+
+    Core->graphics.windowWidth = windowWidth;
+    Core->graphics.windowHeight = windowHeight;
+
+    // @NOTE: letterbox fit of the internal frame inside the window
+    real32 scale = Min((real32)windowWidth / (real32)Core->graphics.resolutionWidth,
+                       (real32)windowHeight / (real32)Core->graphics.resolutionHeight);
+
+    Core->graphics.presentScale = V2(scale, scale);
+    Core->graphics.presentOffset =
+        V2(((real32)windowWidth - (real32)Core->graphics.resolutionWidth * scale) * 0.5f,
+           ((real32)windowHeight - (real32)Core->graphics.resolutionHeight * scale) * 0.5f);
+}
+
+void PresentFrame(uint32 windowWidth, uint32 windowHeight) {
+    RenderTarget *target = &Core->graphics.frameTarget;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, windowWidth, windowHeight);
+
+    glDisable(GL_BLEND);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    real32 scale = Core->graphics.presentScale.x;
+    vec2 offset = Core->graphics.presentOffset;
+
+    real32 drawWidth = (real32)Core->graphics.resolutionWidth * scale;
+    real32 drawHeight = (real32)Core->graphics.resolutionHeight * scale;
+
+    Shader *shader = &Core->graphics.blitShader;
+    SetShader(shader);
+
+    Mesh *mesh = &Core->graphics.quadTopLeft;
+    mat4 model = TRS(V3(offset.x, offset.y, 0), IdentityQuaternion(), V3(drawWidth, -drawHeight, 1.0f));
+    mat4 projMat = Orthographic(0, (real32)windowWidth, 0, (real32)windowHeight, -1, 1);
+
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, target->texture);
+    glUniform1i(shader->uniforms[2].id, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
+    glEnableVertexAttribArray(texcoord);
+    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
+
+    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
+
+    glDisableVertexAttribArray(vert);
+    glDisableVertexAttribArray(texcoord);
+}
+
 void SetupUIRenderTarget(RenderTarget *target, int32 w, int32 h) {
     target->width = w;
     target->height = h;
@@ -380,7 +444,7 @@ void DrawSpriteScreen(vec2 pos, vec2 size, Sprite *texture) {
 
     mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(size.x, size.y, 1.0f));
 
-    mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
+    mat4 projMat = Orthographic(0, Core->graphics.resolutionWidth, 0, Core->graphics.resolutionHeight, -1, 1);
 
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
@@ -490,7 +554,7 @@ void DrawRectScreen(vec2 pos, vec2 scale, vec4 color) {
     
     mat4 model = TRS(V3(pos.x, pos.y, 0), IdentityQuaternion(), V3(scale.x, scale.y, 0.0f));
 
-    mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
+    mat4 projMat = Orthographic(0, Core->graphics.resolutionWidth, 0, Core->graphics.resolutionHeight, -1, 1);
     
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
@@ -511,9 +575,9 @@ void DrawRectScreen(vec2 pos, vec2 scale, vec4 color) {
 }
 
 void DrawRectScreenNorm(vec2 pos, vec2 scale, vec4 color) {
-vec2 pos_ = V2(pos.x * Core->graphics.screenWidth, pos.y * Core->graphics.screenHeight);
+vec2 pos_ = V2(pos.x * Core->graphics.resolutionWidth, pos.y * Core->graphics.resolutionHeight);
 
-vec2 scale_ = V2(scale.x * Core->graphics.screenWidth, scale.y * Core->graphics.screenWidth);
+vec2 scale_ = V2(scale.x * Core->graphics.resolutionWidth, scale.y * Core->graphics.resolutionWidth);
     DrawRectScreen(pos_, scale_, color);
 }
 
@@ -677,11 +741,11 @@ void AllocateSpriteBuffer(int32 capacity, SpriteBuffer *buffer) {
     glBufferData(GL_ARRAY_BUFFER, buffer->bufferSize, buffer->data, GL_STREAM_DRAW);
 }
 
-void DrawInstancedSprite(SpriteBuffer *buffer, int32 depthLayer, vec2 position, vec2 scale, real32 angle, Sprite *texture) {
+void DrawInstancedSprite(SpriteBuffer *buffer, int32 depthLayer, vec2 position, vec2 scale, real32 angle, Sprite *texture, vec4 color) {
     SpriteRenderData data = {};
     data.depthLayer = depthLayer;
     data.textureID = texture->textureID;
-    data.color = V4(1, 1, 1, 1);
+    data.color = color;
     data.model = TRS(V3(position.x, position.y, 0), AxisAngle(V3(0, 0, 1), angle), V3(scale.x, scale.y, 1.0f));
 
     if (buffer->count < buffer->capacity) {
@@ -691,6 +755,10 @@ void DrawInstancedSprite(SpriteBuffer *buffer, int32 depthLayer, vec2 position, 
         ASSERT(false);
         // Ran out of space in the sprite buffer :(
     }
+}
+
+void DrawInstancedSprite(SpriteBuffer *buffer, int32 depthLayer, vec2 position, vec2 scale, real32 angle, Sprite *texture) {
+    DrawInstancedSprite(buffer, depthLayer, position, scale, angle, texture, V4(1, 1, 1, 1));
 }
 
 void DrawInstancedSprite(SpriteBuffer *buffer, int32 depthLayer, vec2 position, vec2 scale, Sprite *texture) {
@@ -1012,9 +1080,9 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     char str[GlyphBufferCapacity];
     vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-    size *= Core->graphics.screenWidth;
+    size *= Core->graphics.resolutionWidth;
 
-    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
+    pos = V2(pos.x * Core->graphics.resolutionWidth, (1 - pos.y) * Core->graphics.resolutionHeight);
 
     DrawText_(font, V2(pos.x, pos.y), size, color, true, str, width, center, NULL);
     
@@ -1028,9 +1096,9 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, bool cen
     char str[GlyphBufferCapacity];
     vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-    size *= Core->graphics.screenWidth;
+    size *= Core->graphics.resolutionWidth;
 
-    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
+    pos = V2(pos.x * Core->graphics.resolutionWidth, (1 - pos.y) * Core->graphics.resolutionHeight);
 
     DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, center, NULL);
     
@@ -1044,9 +1112,9 @@ void DrawTextScreen(vec2 pos, real32 size, vec4 color, bool center, const char *
     char str[GlyphBufferCapacity];
     vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-    size *= Core->graphics.screenWidth;
+    size *= Core->graphics.resolutionWidth;
 
-    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
+    pos = V2(pos.x * Core->graphics.resolutionWidth, (1 - pos.y) * Core->graphics.resolutionHeight);
 
     DrawText_(&Core->graphics.monoFont, V2(pos.x, pos.y), size, color, true, str, INFINITY, center, NULL);
     
@@ -1060,9 +1128,9 @@ void DrawTextScreen(FontTable *font, vec2 pos, real32 size, vec4 color, const ch
     char str[GlyphBufferCapacity];
     vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-    size *= Core->graphics.screenWidth;
+    size *= Core->graphics.resolutionWidth;
 
-    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
+    pos = V2(pos.x * Core->graphics.resolutionWidth, (1 - pos.y) * Core->graphics.resolutionHeight);
 
     DrawText_(font, V2(pos.x, pos.y), size, color, true, str, INFINITY, false, NULL);
     
@@ -1076,9 +1144,9 @@ void DrawTextScreen(vec2 pos, real32 size, vec4 color, const char *fmt, ...) {
     char str[GlyphBufferCapacity];
     vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-    size *= Core->graphics.screenWidth;
+    size *= Core->graphics.resolutionWidth;
 
-    pos = V2(pos.x * Core->graphics.screenWidth, (1 - pos.y) * Core->graphics.screenHeight);
+    pos = V2(pos.x * Core->graphics.resolutionWidth, (1 - pos.y) * Core->graphics.resolutionHeight);
 
     DrawText_(&Core->graphics.monoFont, V2(pos.x, pos.y), size, color, true, str, INFINITY, false, NULL);
     
@@ -1096,7 +1164,7 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, boo
     // @BUG @GACK: this height - pos.y is because we want zero vector to be top left, but
     // our projection matrix is set up so that 0 is the bottom of the screen, and changing
     // that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Core->graphics.screenHeight - pos.y), size, color, true, str, width, center, NULL);
+    DrawText_(font, V2(pos.x, Core->graphics.resolutionHeight - pos.y), size, color, true, str, width, center, NULL);
     
     va_end(args);
 }
@@ -1111,7 +1179,7 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, boo
     // @BUG @GACK: this height - pos.y is because we want zero vector to be top left, but
     // our projection matrix is set up so that 0 is the bottom of the screen, and changing
     // that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Core->graphics.screenHeight - pos.y), size, color, true, str, INFINITY, center, NULL);
+    DrawText_(font, V2(pos.x, Core->graphics.resolutionHeight - pos.y), size, color, true, str, INFINITY, center, NULL);
     
     va_end(args);
 }
@@ -1126,7 +1194,7 @@ void DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, con
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
     // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Core->graphics.screenHeight - pos.y), size, color, true, str, INFINITY, false, NULL);
+    DrawText_(font, V2(pos.x, Core->graphics.resolutionHeight - pos.y), size, color, true, str, INFINITY, false, NULL);
     
     va_end(args);
 }
@@ -1142,7 +1210,7 @@ int32 DrawTextScreenPixel(FontTable *font, vec2 pos, real32 size, vec4 color, bo
     // @BUG
     // @GACK: this height - pos.y is because we want zero vector to be top left, but our projection matrix is set up
     // so that 0 is the bottom of the screen, and changing that seems to flip our glyphs...
-    DrawText_(font, V2(pos.x, Core->graphics.screenHeight - pos.y), size, color, true, str, INFINITY, center, positionsBuffer);
+    DrawText_(font, V2(pos.x, Core->graphics.resolutionHeight - pos.y), size, color, true, str, INFINITY, center, positionsBuffer);
     
     va_end(args);
 
@@ -1171,7 +1239,7 @@ void DrawGlyphs(GlyphBuffer *buffers) {
         glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
 
         if (buffer->screen) {
-    mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
+    mat4 projMat = Orthographic(0, Core->graphics.resolutionWidth, 0, Core->graphics.resolutionHeight, -1, 1);
             glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
         }
         else {
@@ -1249,7 +1317,7 @@ void PushClipRect(vec2 pos, vec2 size) {
     Core->graphics.hasClip = true;
 
     GLint x = (GLint)newMin.x;
-    GLint y = (GLint)((real32)Core->graphics.screenHeight - newMax.y);
+    GLint y = (GLint)((real32)Core->graphics.resolutionHeight - newMax.y);
     GLsizei w = (GLsizei)(newMax.x - newMin.x);
     GLsizei h = (GLsizei)(newMax.y - newMin.y);
     glEnable(GL_SCISSOR_TEST);
@@ -1263,7 +1331,7 @@ void PopClipRect() {
     if (Core->graphics.hasClip) {
         UIClipRegion *region = &Core->graphics.clipStack[Core->graphics.clipTop - 1];
         GLint x = (GLint)region->min.x;
-        GLint y = (GLint)((real32)Core->graphics.screenHeight - region->max.y);
+        GLint y = (GLint)((real32)Core->graphics.resolutionHeight - region->max.y);
         GLsizei w = (GLsizei)(region->max.x - region->min.x);
         GLsizei h = (GLsizei)(region->max.y - region->min.y);
         glScissor(x, y, w, h);
@@ -1325,7 +1393,7 @@ void DrawUIGlyphs() {
         if (cmd->hasClip) {
             glEnable(GL_SCISSOR_TEST);
             GLint x = (GLint)cmd->clip.min.x;
-            GLint y = (GLint)((real32)Core->graphics.screenHeight - cmd->clip.max.y);
+            GLint y = (GLint)((real32)Core->graphics.resolutionHeight - cmd->clip.max.y);
             GLsizei w = (GLsizei)(cmd->clip.max.x - cmd->clip.min.x);
             GLsizei h = (GLsizei)(cmd->clip.max.y - cmd->clip.min.y);
             glScissor(x, y, w, h);
@@ -1334,11 +1402,11 @@ void DrawUIGlyphs() {
         }
 
         // origin is in UI coords (top-left), convert to GL coords (bottom-left)
-        vec2 glOrigin = V2(cmd->origin.x, (real32)Core->graphics.screenHeight - cmd->origin.y);
+        vec2 glOrigin = V2(cmd->origin.x, (real32)Core->graphics.resolutionHeight - cmd->origin.y);
         mat4 model = TRS(V3(glOrigin.x, glOrigin.y, 0), IdentityQuaternion(), V3(1));
         glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
 
-mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
+mat4 projMat = Orthographic(0, Core->graphics.resolutionWidth, 0, Core->graphics.resolutionHeight, -1, 1);
         glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
 
         glActiveTexture(GL_TEXTURE0);
@@ -1429,8 +1497,10 @@ void FlushUICommands() {
 
     DrawUIGlyphs();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, Core->graphics.screenWidth, Core->graphics.screenHeight);
+    // @NOTE: UI gets rendered into the frame target (not the backbuffer) so the
+    // whole frame can be presented scaled to the window size.
+    glBindFramebuffer(GL_FRAMEBUFFER, Core->graphics.frameTarget.fbo);
+    glViewport(0, 0, Core->graphics.resolutionWidth, Core->graphics.resolutionHeight);
 
     Shader *shader = &Core->graphics.blitShader;
     SetShader(shader);
@@ -1439,8 +1509,8 @@ void FlushUICommands() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Mesh *mesh = &Core->graphics.quadTopLeft;
-    mat4 model = TRS(V3(0, 0, 0), IdentityQuaternion(), V3((real32)Core->graphics.screenWidth, (real32)-(real32)Core->graphics.screenHeight, 1.0f));
-    mat4 projMat = Orthographic(0, Core->graphics.screenWidth, 0, Core->graphics.screenHeight, -1, 1);
+    mat4 model = TRS(V3(0, 0, 0), IdentityQuaternion(), V3((real32)Core->graphics.resolutionWidth, (real32)-(real32)Core->graphics.resolutionHeight, 1.0f));
+    mat4 projMat = Orthographic(0, Core->graphics.resolutionWidth, 0, Core->graphics.resolutionHeight, -1, 1);
 
     glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);

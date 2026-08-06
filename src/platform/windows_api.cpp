@@ -52,10 +52,14 @@ void PrintNoLine(const char *fmt, ...) {
 }
 
 
-void WinMoveMouse(HWND window, int32 screenX, int32 screenY, int32 height) {
+void WinMoveMouse(HWND window, int32 resX, int32 resY, int32 height) {
     POINT screenPoint;
-    screenPoint.x = screenX;
-    screenPoint.y = (int32)height - screenY;
+
+    // @NOTE: convert from internal render resolution coords (y-up, origin bottom
+    // left) to window client coords (y-down, origin top left), accounting for the
+    // letterbox scale/offset used when presenting the frame.
+    screenPoint.x = (LONG)(Platform->presentOffsetX + resX * Platform->presentScale);
+    screenPoint.y = (LONG)(Platform->presentOffsetY + (height - resY) * Platform->presentScale);
 
     ClientToScreen(window, &screenPoint);
 
@@ -63,7 +67,7 @@ void WinMoveMouse(HWND window, int32 screenX, int32 screenY, int32 height) {
 }
 
 
-void MoveMouse(int32 screenX, int32 screenY) {
-    WinMoveMouse(*Platform->window, screenX, screenY, Platform->screenHeight);
+void MoveMouse(int32 resX, int32 resY) {
+    WinMoveMouse(*Platform->window, resX, resY, Platform->resolutionHeight);
 }
 

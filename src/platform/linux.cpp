@@ -52,8 +52,16 @@
 struct LinuxPlatform {
     Display *display;
     Window window;
-    int32 screenWidth;
-    int32 screenHeight;
+    int32 resolutionWidth;
+    int32 resolutionHeight;
+
+    // @NOTE: letterbox fit of the internal frame inside the window, mirrored from
+    // Core->graphics by the input layer / main (which run after game.cpp so they
+    // can see Core). Stored here so linux_api.cpp (compiled before game.cpp) can
+    // use it.
+    real32 presentScale;
+    real32 presentOffsetX;
+    real32 presentOffsetY;
 
     Atom wmDeleteWindow;
 };
@@ -97,7 +105,7 @@ struct GamePlatform {
 };
 
 
-void InitOpenGL(Display *display, int32 screenWidth, int32 screenHeight, LinuxPlatform *platform,
+void InitOpenGL(Display *display, int32 resolutionWidth, int32 resolutionHeight, LinuxPlatform *platform,
                 EGLDisplay *eglDisplayOut, EGLSurface *eglSurfaceOut, EGLContext *eglContextOut,
                 OpenGLInfo *glInfo) {
     int screen = DefaultScreen(display);
@@ -169,20 +177,22 @@ void InitOpenGL(Display *display, int32 screenWidth, int32 screenHeight, LinuxPl
                                ButtonReleaseMask | PointerMotionMask | StructureNotifyMask;
 
     Window window = XCreateWindow(display, rootWindow,
-                                  0, 0, screenWidth, screenHeight, 0,
+                                  0, 0, resolutionWidth, resolutionHeight, 0,
                                   visInfo->depth, InputOutput, visInfo->visual,
                                   CWColormap | CWBackPixel | CWBorderPixel | CWEventMask,
                                   &setAttributes);
 
     XStoreName(display, window, "GAME");
 
-    // @NOTE: the windows layer uses a fixed size, non-resizable window, so do the same here.
-    XSizeHints *sizeHints = XAllocSizeHints();
-    sizeHints->flags = PMinSize | PMaxSize;
-    sizeHints->min_width = sizeHints->max_width = screenWidth;
-    sizeHints->min_height = sizeHints->max_height = screenHeight;
-    XSetWMNormalHints(display, window, sizeHints);
-    XFree(sizeHints);
+    // @NOTE: allow the window to be resized; the internal render resolution stays
+    // fixed and the frame is scaled to fit the window.
+    if (Core->graphics.fullscreen) {
+        Atom wmState = XInternAtom(display, "_NET_WM_STATE", False);
+        Atom wmStateFullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
+        XChangeProperty(display, platform->window, wmState, XA_ATOM, 32,
+                        PropModeReplace, (unsigned char *)&wmStateFullscreen, 1);
+        XFlush(display);
+    }
 
     // @NOTE: lets us catch the window close button (like WM_CLOSE on windows).
     platform->wmDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", False);
@@ -380,8 +390,8 @@ int main() {
     bool gotConfigFile = ReadConfigFile("config.m_txt");
 
     if (!gotConfigFile) {
-        Core->graphics.screenWidth = 1600;
-        Core->graphics.screenHeight = 900;
+        Core->graphics.resolutionWidth = 1600;
+        Core->graphics.resolutionHeight = 900;
 
         Core->audioPlayer.volume = 1.0f;
         Core->networkInfo.serverIPString = "192.0.0.1"; // @NOTE: this is just the IP address referring to yourself
@@ -389,8 +399,9 @@ int main() {
         // @TODO: write out a config file if there isnt one already
     }
 
-    plat.screenWidth = gameMem->graphics.screenWidth;
-    plat.screenHeight = gameMem->graphics.screenHeight;
+    plat.resolutionWidth = gameMem->graphics.resolutionWidth;
+    plat.resolutionHeight = gameMem->graphics.resolutionHeight;
+    plat.presentScale = 1.0f;
 
     Display *display = XOpenDisplay(NULL);
     if (display == NULL) {
@@ -403,8 +414,22 @@ int main() {
     EGLDisplay eglDisplay;
     EGLSurface eglSurface;
     EGLContext eglContext;
-    InitOpenGL(display, plat.screenWidth, plat.screenHeight, &plat,
+    InitOpenGL(display, plat.resolutionWidth, plat.resolutionHeight, &plat,
                &eglDisplay, &eglSurface, &eglContext, &glInfo);
+
+    // @NOTE: capture the actual client area size, which may differ from the
+    // internal render resolution, and mirror the letterbox fit onto the platform
+    // struct so linux_api.cpp can use it.
+    {
+        Window root;
+        int x, y;
+        unsigned int width, height, border, depth;
+        XGetGeometry(display, plat.window, &root, &x, &y, &width, &height, &border, &depth);
+        SetWindowSize(width, height);
+        plat.presentScale = Core->graphics.presentScale.x;
+        plat.presentOffsetX = Core->graphics.presentOffset.x;
+        plat.presentOffsetY = Core->graphics.presentOffset.y;
+    }
 
     InitALSA(&platform.audio);
 
@@ -435,7 +460,7 @@ int main() {
     Keyboard = gameMem->keyboard;
     Mouse = gameMem->mouse;
 
-    MoveMouse(Core->graphics.screenWidth / 2.0f, Core->graphics.screenHeight / 2.0f);
+    MoveMouse(Core->graphics.resolutionWidth / 2.0f, Core->graphics.resolutionHeight / 2.0f);
 
     gameMem->systemTime = (real32)startSystemTime;
 
@@ -467,9 +492,13 @@ int main() {
             //usleep(timeUntilRender * 1.0e6);
         }
 
+        glBindFramebuffer(GL_FRAMEBUFFER, gameMem->graphics.frameTarget.fbo);
+        glViewport(0, 0, gameMem->graphics.resolutionWidth, gameMem->graphics.resolutionHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         GameUpdateAndRender(gameMem);
+
+        PresentFrame(gameMem->graphics.windowWidth, gameMem->graphics.windowHeight);
 
         eglSwapBuffers(eglDisplay, eglSurface);
     }

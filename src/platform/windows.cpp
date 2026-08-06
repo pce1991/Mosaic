@@ -1,4 +1,4 @@
-﻿#define WINDOWS 1
+#define WINDOWS 1
 
 #define OPENGL 1
 #define DX12 0
@@ -34,8 +34,15 @@
 
 struct WindowsPlatform {
     HWND *window;
-    int32 screenHeight;
-    int32 screenWidth;
+    int32 resolutionHeight;
+    int32 resolutionWidth;
+
+    // @NOTE: letterbox fit of the internal frame inside the window, mirrored from
+    // Core->graphics by the wndproc (which runs after game.cpp so it can see Core).
+    // Stored here so windows_api.cpp (compiled before game.cpp) can use it.
+    real32 presentScale;
+    real32 presentOffsetX;
+    real32 presentOffsetY;
 
     WSADATA wsaData;
 };
@@ -50,8 +57,6 @@ WindowsPlatform *Platform = NULL;
 #include "../game.cpp"
 
 #include "windows_input.cpp"
-
-
 
 bool PlatformRunning = true;
 
@@ -99,6 +104,15 @@ LRESULT CALLBACK MainWindowCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 
     switch(msg) {
         case WM_SIZE: {
+            int32 clientWidth = LOWORD(lParam);
+            int32 clientHeight = HIWORD(lParam);
+
+            if (clientWidth > 0 && clientHeight > 0) {
+                SetWindowSize(clientWidth, clientHeight);
+                Platform->presentScale = Core->graphics.presentScale.x;
+                Platform->presentOffsetX = Core->graphics.presentOffset.x;
+                Platform->presentOffsetY = Core->graphics.presentOffset.y;
+            }
         } break;
 
         case WM_DESTROY: {
@@ -388,8 +402,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     bool gotConfigFile = ReadConfigFile("config.m_txt");
 
     if (!gotConfigFile) {
-        Core->graphics.screenWidth = 1600;
-        Core->graphics.screenHeight = 900;
+        Core->graphics.resolutionWidth = 1600;
+        Core->graphics.resolutionHeight = 900;
 
         Core->audioPlayer.volume = 1.0f;
         Core->networkInfo.serverIPString = "192.0.0.1"; // @NOTE: this is just the IP address referring to yourself
@@ -397,8 +411,11 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
         // @TODO: write out a config file if there isnt one already
     }
 
-    plat.screenWidth = gameMem->graphics.screenWidth;
-    plat.screenHeight = gameMem->graphics.screenHeight;
+    // @NOTE: resolutionWidth/resolutionHeight on the platform are the internal render
+    // resolution (used by windows_api.cpp for cursor placement), not the window size.
+    plat.resolutionWidth = gameMem->graphics.resolutionWidth;
+    plat.resolutionHeight = gameMem->graphics.resolutionHeight;
+    plat.presentScale = 1.0f;
 
 
     WNDCLASS windowClass;
@@ -418,35 +435,66 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     }
 
     
-    DWORD dwExStyle = 0; WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-    DWORD dwStyle = WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX & ~WS_MAXIMIZEBOX;
+    // @NOTE: DPI aware so the window client area is measured in physical pixels.
+    // Without this Windows virtualizes coordinates on high-dpi monitors (like a
+    // 4k monitor) and a fullscreen window would report half the real resolution.
+    SetProcessDPIAware();
+
+    DWORD dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
 
     RECT windowRect;
     windowRect.left = 0;
-    windowRect.right = Core->graphics.screenWidth;
     windowRect.top = 0;
-    windowRect.bottom = Core->graphics.screenHeight; 
-    
+
+    DWORD dwStyle;
+    if (Core->graphics.fullscreen) {
+        dwStyle = WS_POPUP;
+        windowRect.right = GetSystemMetrics(SM_CXSCREEN);
+        windowRect.bottom = GetSystemMetrics(SM_CYSCREEN);
+    }
+    else {
+        dwStyle = WS_OVERLAPPEDWINDOW;
+        windowRect.right = Core->graphics.windowWidth > 0 ? Core->graphics.windowWidth : Core->graphics.resolutionWidth;
+        windowRect.bottom = Core->graphics.windowHeight > 0 ? Core->graphics.windowHeight : Core->graphics.resolutionHeight;
+
+        // @NOTE: windowRect is the client area, so expand it to the outer window
+        // size before passing it to CreateWindowEx.
+        AdjustWindowRectEx(&windowRect, dwStyle, false, dwExStyle);
+    }
+
     HWND window = CreateWindowEx(dwExStyle, windowClass.lpszClassName, "GAME",
                                  WS_CLIPSIBLINGS | WS_CLIPCHILDREN | dwStyle,
                                  CW_USEDEFAULT,
                                  CW_USEDEFAULT,
-                                 0, 0,
+                                 windowRect.right - windowRect.left,
+                                 windowRect.bottom - windowRect.top,
                                  NULL, NULL,
                                  hInstance, NULL);
 
     plat.window = &window;
 
-    // @NOTE: the reason we do right - left, and bottom - top, is because AdjustWindowRect may change the
-    // left/right/top/bottom coordinates of the rect, so the proper size is the difference between coordinates
-    AdjustWindowRectEx(&windowRect, dwStyle, false, dwExStyle);
-    
-    SetWindowPos(window, HWND_NOTOPMOST,
-                 0, 0,
-                 windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
-                 SWP_NOZORDER);
+    if (Core->graphics.fullscreen) {
+        SetWindowPos(window, HWND_NOTOPMOST, 0, 0,
+                     GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
+                     SWP_NOZORDER);
+    }
+
     ShowWindow(window, SW_SHOW);
     UpdateWindow(window);
+
+    // @NOTE: capture the actual client area size, which may differ from the
+    // internal render resolution, and mirror the letterbox fit onto the platform
+    // struct so windows_api.cpp can use it.
+    {
+        RECT clientRect;
+        GetClientRect(window, &clientRect);
+        int32 clientWidth = clientRect.right - clientRect.left;
+        int32 clientHeight = clientRect.bottom - clientRect.top;
+        SetWindowSize(clientWidth, clientHeight);
+        Platform->presentScale = Core->graphics.presentScale.x;
+        Platform->presentOffsetX = Core->graphics.presentOffset.x;
+        Platform->presentOffsetY = Core->graphics.presentOffset.y;
+    }
 
     {
       //AllocConsole(); // Allocate a new console if none exists
@@ -500,15 +548,15 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183376(v=vs.85).aspx
     BITMAPINFO bitmapInfo;
     bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
-    bitmapInfo.bmiHeader.biWidth = Core->graphics.screenWidth;
-    bitmapInfo.bmiHeader.biHeight = -Core->graphics.screenHeight;
+    bitmapInfo.bmiHeader.biWidth = Core->graphics.resolutionWidth;
+    bitmapInfo.bmiHeader.biHeight = -Core->graphics.resolutionHeight;
     bitmapInfo.bmiHeader.biPlanes = 1;
     bitmapInfo.bmiHeader.biBitCount = 32;
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
     // ALLOCATION/POINTERS
-    int bitmapWidth = Core->graphics.screenWidth;
-    int bitmapHeight = Core->graphics.screenHeight;
+    int bitmapWidth = Core->graphics.resolutionWidth;
+    int bitmapHeight = Core->graphics.resolutionHeight;
     int pixelCount = (bitmapWidth * bitmapHeight);
     int bytesPerPixel = 4; // one byte for each color
     int bitmapMemorySize = bytesPerPixel * pixelCount;
@@ -521,7 +569,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
     HCURSOR cursor = LoadCursor(NULL, IDC_ARROW);
     SetCursor(cursor);
     //ShowCursor(false);
-    WinMoveMouse(window, Core->graphics.screenWidth / 2.0f, Core->graphics.screenHeight / 2.0f, Core->graphics.screenHeight);
+    WinMoveMouse(window, Core->graphics.resolutionWidth / 2.0f, Core->graphics.resolutionHeight / 2.0f, Core->graphics.resolutionHeight);
 
     
     gameMem->systemTime = (real32)systemTime.QuadPart;
@@ -553,10 +601,16 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmndL
         }
 
 #if OPENGL
+        glBindFramebuffer(GL_FRAMEBUFFER, gameMem->graphics.frameTarget.fbo);
+        glViewport(0, 0, gameMem->graphics.resolutionWidth, gameMem->graphics.resolutionHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
         
         GameUpdateAndRender(gameMem);
+
+#if OPENGL
+        PresentFrame(gameMem->graphics.windowWidth, gameMem->graphics.windowHeight);
+#endif
 
         SwapBuffers(hdc);
     }

@@ -11,7 +11,7 @@ void MyGameInit() {
     
   Mosaic = (MosaicMem *)Core->myData;
 
-  MoveMouse(Core->graphics.screenWidth / 2.0f, Core->graphics.screenHeight / 2.0f);
+  MoveMouse(Core->graphics.resolutionWidth / 2.0f, Core->graphics.resolutionHeight / 2.0f);
 
   Mosaic->padding = 1.0f;
 
@@ -341,6 +341,88 @@ inline void SetTileColor(vec2 position, vec4 color) {
   }
 }
 
+inline void SetTileSprite(int32 x, int32 y, Sprite *sprite) {
+  MTile*t = GetTile(x, y);
+  if (t) {
+    t->sprite = sprite;
+  }
+}
+
+inline void SetTileTint(int32 x, int32 y, vec4 tint) {
+  MTile*t = GetTile(x, y);
+  if (t) {
+    t->tint = tint;
+  }
+}
+
+inline void SetTileTint(int32 x, int32 y, vec3 tint) {
+  MTile*t = GetTile(x, y);
+  if (t) {
+    t->tint = V4(tint, 1.0f);
+  }
+}
+
+inline void SetTileTint(int32 x, int32 y, float32 r, float32 g, float32 b) {
+  MTile*t = GetTile(x, y);
+  if (t) {
+    t->tint = RGB(r, g, b);
+  }
+}
+
+inline void SetTileTint(vec2 position, vec4 tint) {
+  MTile*t = GetTile(position);
+  if (t) {
+    t->tint = tint;
+  }
+}
+
+inline void SetTileTint(vec2 position, vec3 tint) {
+  MTile*t = GetTile(position);
+  if (t) {
+    t->tint = V4(tint, 1.0f);
+  }
+}
+
+inline void SetTileTint(vec2 position, float32 r, float32 g, float32 b) {
+  MTile*t = GetTile(position);
+  if (t) {
+    t->tint = RGB(r, g, b);
+  }
+}
+
+inline void SetTileRotation(int32 x, int32 y, float32 ang) {
+  MTile*t = GetTile(x, y);
+  if (t) {
+    t->rotation = ang;
+  }
+}
+
+inline void SetTileRotation(vec2 position, float32 ang) {
+  SetTileRotation(position.x, position.y, ang);
+}
+
+inline void SetTileScale(int32 x, int32 y, float32 scale) {
+  MTile*t = GetTile(x, y);
+  if (t) {
+    t->scale = scale;
+  }
+}
+
+inline void SetTileScale(vec2 position, float32 scale) {
+  SetTileScale(position.x, position.y, scale);
+}
+
+inline void SetTileLayer(int32 x, int32 y, int32 layer) {
+  MTile*t = GetTile(x, y);
+  if (t) {
+    t->layer = layer;
+  }
+}
+
+inline void SetTileLayer(vec2 position, int32 layer) {
+  SetTileLayer(position.x, position.y, layer);
+}
+
 inline void DrawSprite(vec2 position, Sprite *sprite) {
   for (int y = 0; y < sprite->height; y++) {
     for (int x = 0; x < sprite->width; x++) {
@@ -422,8 +504,8 @@ void DrawTextTop(vec4 color, const char *fmt, ...) {
   char str[GlyphBufferCapacity];
   vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-  vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.1f);
-  DrawText(&Core->graphics.monoFont, position, 0.35f, color, true, str);
+  vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.25f);
+  DrawText(&Core->graphics.monoFont, position, Mosaic->tileSize, color, true, str);
 
   va_end(args);
 }
@@ -510,6 +592,13 @@ void MosaicRender() {
     MTile*tile = &tiles[i];
 
     DrawTile(tile->position, tile->color);
+
+    if (tile->sprite) {
+      vec2 worldPos = GridPositionToWorldPosition(tile->position);
+      DrawInstancedSprite(&Core->graphics.spriteBuffer, tile->layer, worldPos,
+                          V2(Mosaic->tileSize * 0.5f) * tile->scale,
+                          tile->rotation, tile->sprite, tile->tint);
+    }
   }
 
   if (Mosaic->drawGrid) {
@@ -529,6 +618,16 @@ void MosaicUpdateInternal() {
   Mosaic->hoveredTilePrev = Mosaic->hoveredTile;
   Mosaic->hoveredTile= GetHoveredTile();
   ClearTiles(V4(0));
+
+  for (int i = 0; i < Mosaic->tileCapacity; i++) {
+    MTile *tile = &Mosaic->tiles[i];
+
+    tile->sprite = NULL;
+    tile->tint = WHITE;
+    tile->rotation = 0;
+    tile->scale = 1;
+    tile->layer = 0;
+  }
 }
 
 // This function gets called by our game engine every frame.

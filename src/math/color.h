@@ -86,8 +86,14 @@ vec3 RGBToHSV(vec3 rgb) {
 
 // H: [0, 360], S, V: [0, 1]
 vec3 HSVToRGB(vec3 hsv) {
+    // Wrap the hue so any value (negative or > 360) still gives a color.
+    real32 hue = fmodf(hsv.h, 360.0f);
+    if (hue < 0.0f) {
+        hue += 360.0f;
+    }
+
     real32 chroma = hsv.v * hsv.s;
-    real32 hPrime = hsv.h / 60.0f;
+    real32 hPrime = hue / 60.0f;
     real32 x = chroma * (1.0f - Absf(fmodf(hPrime, 2.0f) - 1.0f));
 
     vec3 rgb = {};

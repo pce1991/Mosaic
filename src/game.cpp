@@ -1,4 +1,4 @@
-﻿
+
 #define GAME_SERVER 0
 
 #include "game.h"
@@ -83,21 +83,48 @@ bool ReadConfigFile(char *path) {
             continue;
         }
 
-        if (StringEquals(t.start, "screenWidth", t.length)) {
+        if (StringEquals(t.start, "resolutionWidth", t.length)) {
             tokenIndex++;
             if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
                 tokenIndex++;
                 if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
-                    Core->graphics.screenWidth = atoi(tokens[tokenIndex].start);
+                    Core->graphics.resolutionWidth = atoi(tokens[tokenIndex].start);
                 }
             }
         }
-        else if (StringEquals(t.start, "screenHeight", t.length)) {
+        else if (StringEquals(t.start, "resolutionHeight", t.length)) {
             tokenIndex++;
             if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
                 tokenIndex++;
                 if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
-                    Core->graphics.screenHeight = atoi(tokens[tokenIndex].start);
+                    Core->graphics.resolutionHeight = atoi(tokens[tokenIndex].start);
+                }
+            }
+        }
+        else if (StringEquals(t.start, "windowWidth", t.length)) {
+            tokenIndex++;
+            if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
+                tokenIndex++;
+                if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
+                    Core->graphics.windowWidth = atoi(tokens[tokenIndex].start);
+                }
+            }
+        }
+        else if (StringEquals(t.start, "windowHeight", t.length)) {
+            tokenIndex++;
+            if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
+                tokenIndex++;
+                if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
+                    Core->graphics.windowHeight = atoi(tokens[tokenIndex].start);
+                }
+            }
+        }
+        else if (StringEquals(t.start, "fullscreen", t.length)) {
+            tokenIndex++;
+            if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Colon) {
+                tokenIndex++;
+                if (tokenIndex < tokens.count && tokens[tokenIndex].configType == ConfigTokenType_Int) {
+                    Core->graphics.fullscreen = atoi(tokens[tokenIndex].start) != 0;
                 }
             }
         }
@@ -253,7 +280,8 @@ void GameInit(CoreMemory *coreMem) {
     AllocateSpriteBuffer(256 * 256, &Core->graphics.spriteBuffer);
 
     Core->graphics.uiCommands = MakeDynamicArray<UICommand>(&Core->permanentArena, 64);
-    SetupUIRenderTarget(&Core->graphics.uiTarget, coreMem->graphics.screenWidth, coreMem->graphics.screenHeight);
+    SetupUIRenderTarget(&Core->graphics.uiTarget, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
+    SetupUIRenderTarget(&Core->graphics.frameTarget, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
 
 #if WINDOWS || LINUX
     {

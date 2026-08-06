@@ -4,6 +4,12 @@ struct MTile{
     // and know where it is than pass it's position around. 
     vec2i position;
     vec4 color;
+
+    Sprite *sprite;
+    vec4 tint; // used with sprite
+    float32 rotation;
+    float32 scale;
+    int32 layer; // sprites on higher layers draw on top
 };
 
 struct MosaicText {
@@ -66,6 +72,24 @@ void SetTileColor(vec2 position, vec4 color);
 
 void SetTileColor(vec2i position, float32 r, float32 g, float32 b);
 void SetTileColor(vec2i position, vec4 color);
+
+void SetTileSprite(int32 x, int32 y, Sprite *sprite);
+
+void SetTileTint(int32 x, int32 y, vec4 tint);
+void SetTileTint(int32 x, int32 y, vec3 tint);
+void SetTileTint(int32 x, int32 y, float32 r, float32 g, float32 b);
+void SetTileTint(vec2 position, vec4 tint);
+void SetTileTint(vec2 position, vec3 tint);
+void SetTileTint(vec2 position, float32 r, float32 g, float32 b);
+
+void SetTileRotation(int32 x, int32 y, float32 ang);
+void SetTileRotation(vec2 position, float32 ang);
+
+void SetTileScale(int32 x, int32 y, float32 scale);
+void SetTileScale(vec2 position, float32 scale);
+
+void SetTileLayer(int32 x, int32 y, int32 layer);
+void SetTileLayer(vec2 position, int32 layer);
 
 void SetBlockColor(int32 x, int32 y, int32 width, int32 height, vec4 color);
 void SetBlockColor(vec2 pos, int32 width, int32 height, vec4 color);

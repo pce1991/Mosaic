@@ -125,8 +125,26 @@ void LinuxGetInput(InputManager *input) {
             } break;
 
             case MotionNotify: {
-                input->mousePos.x = event.xmotion.x;
-                input->mousePos.y = Platform->screenHeight - event.xmotion.y;
+                int32 posX = event.xmotion.x;
+                int32 posY = event.xmotion.y;
+
+                // @NOTE: convert window client coords back into internal render
+                // resolution coords (the frame may be letterboxed and scaled).
+                real32 scale = Core->graphics.presentScale.x;
+                vec2 offset = Core->graphics.presentOffset;
+
+                int32 ix = (int32)((posX - offset.x) / scale);
+                int32 iy = (int32)((posY - offset.y) / scale);
+
+                int32 maxX = (int32)Core->graphics.resolutionWidth - 1;
+                int32 maxY = (int32)Core->graphics.resolutionHeight - 1;
+                if (ix < 0) ix = 0;
+                if (iy < 0) iy = 0;
+                if (ix > maxX) ix = maxX;
+                if (iy > maxY) iy = maxY;
+
+                input->mousePos.x = ix;
+                input->mousePos.y = Core->graphics.resolutionHeight - iy;
             } break;
 
             case ButtonPress: {
@@ -164,6 +182,18 @@ void LinuxGetInput(InputManager *input) {
             case ClientMessage: {
                 if ((Atom)event.xclient.data.l[0] == Platform->wmDeleteWindow) {
                     PlatformRunning = false;
+                }
+            } break;
+
+            case ConfigureNotify: {
+                int32 clientWidth = event.xconfigure.width;
+                int32 clientHeight = event.xconfigure.height;
+
+                if (clientWidth > 0 && clientHeight > 0) {
+                    SetWindowSize(clientWidth, clientHeight);
+                    Platform->presentScale = Core->graphics.presentScale.x;
+                    Platform->presentOffsetX = Core->graphics.presentOffset.x;
+                    Platform->presentOffsetY = Core->graphics.presentOffset.y;
                 }
             } break;
         }

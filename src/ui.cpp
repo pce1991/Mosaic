@@ -85,7 +85,7 @@ static real32 FontLineCenter(FontTable *font, real32 size) {
 }
 
 static vec2 UIScreenPos(vec2 pos, vec2 size) {
-    return V2(pos.x, (real32)Core->graphics.screenHeight - pos.y);
+    return V2(pos.x, (real32)Core->graphics.resolutionHeight - pos.y);
 }
 
 void UIRectScreen(vec2 pos, vec2 size, vec4 color) {
@@ -180,7 +180,7 @@ void UIBegin() {
     UI->hasPlacedWidget = false;
     UI->hoveredID = 0;
     UI->pressedID = 0;
-    UI->mousePos = V2(Input->mousePos.x, (real32)Core->graphics.screenHeight - Input->mousePos.y);
+    UI->mousePos = V2(Input->mousePos.x, (real32)Core->graphics.resolutionHeight - Input->mousePos.y);
 
     UI->windowTop = 0;
 

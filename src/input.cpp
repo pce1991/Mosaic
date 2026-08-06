@@ -71,8 +71,8 @@ void ClearInputManager(InputManager *input) {
 }
 
 void UpdateInput(InputManager *input) {
-input->mousePosNorm.x = input->mousePos.x / (Core->graphics.screenWidth * 1.0f);
-input->mousePosNorm.y = input->mousePos.y / (Core->graphics.screenHeight * 1.0f);
+input->mousePosNorm.x = input->mousePos.x / (Core->graphics.resolutionWidth * 1.0f);
+input->mousePosNorm.y = input->mousePos.y / (Core->graphics.resolutionHeight * 1.0f);
 
   // @DESIGN: this is exactly the type of equation its very useful to know!
   input->mousePosNormSigned.x = (input->mousePosNorm.x - 0.5f) * 2;

@@ -1,4 +1,4 @@
-﻿#ifndef RENDER_H
+#ifndef RENDER_H
 #define RENDER_H
 
 // @NOTE: Constants for render.h that are defined in game.h to avoid circular dependencies
@@ -37,6 +37,9 @@ struct Shader {
 
 void SetShader(Shader *shader);
 void ClearScreen(vec4 color);
+
+void SetWindowSize(uint32 windowWidth, uint32 windowHeight);
+void PresentFrame(uint32 windowWidth, uint32 windowHeight);
 
 typedef enum {
     ColorChannel_Red,
@@ -226,10 +229,24 @@ void AllocateSprite(Sprite *sprite, uint32 w, uint32 h) {
 }
 
 struct CoreGraphics {
-    // Screen dimensions
-    uint32 screenWidth;
-    uint32 screenHeight;
+    // Logical render resolution (internal framebuffer size)
+    uint32 resolutionWidth;
+    uint32 resolutionHeight;
     uint32 pitch;
+
+    // Actual window client area size in pixels (may differ from resolutionWidth/Height)
+    uint32 windowWidth;
+    uint32 windowHeight;
+
+    // Launch the window fullscreen (borderless) at startup
+    bool fullscreen;
+
+    // Letterbox fit for presenting the internal frame to the window
+    vec2 presentScale;
+    vec2 presentOffset;
+
+    // Offscreen target the whole frame is rendered into before presenting
+    RenderTarget frameTarget;
 
     // Shaders
     Shader texturedQuadShader;

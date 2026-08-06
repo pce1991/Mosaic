@@ -1,7 +1,8 @@
 
 
 // Pick which example runs by uncommenting the include you want.
-#include "../examples/synth_test.cpp"
+//#include "../examples/synth_test.cpp"
+#include "../examples/mosaic_pretty_tiles.cpp"
 //#include "examples/resolution.cpp"
 
 // The original UI demo code that used to live here, kept around in case you

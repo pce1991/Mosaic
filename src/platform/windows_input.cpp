@@ -274,8 +274,23 @@ void WindowsGetInput(InputManager *input) {
                 int posX = GET_X_LPARAM(msg.lParam);
                 int posY = GET_Y_LPARAM(msg.lParam);
 
-                input->mousePos.x = posX;
-                input->mousePos.y = Core->graphics.screenHeight - posY;
+                // @NOTE: convert window client coords back into internal render
+                // resolution coords (the frame may be letterboxed and scaled).
+                real32 scale = Core->graphics.presentScale.x;
+                vec2 offset = Core->graphics.presentOffset;
+
+                int32 ix = (int32)((posX - offset.x) / scale);
+                int32 iy = (int32)((posY - offset.y) / scale);
+
+                int32 maxX = (int32)Core->graphics.resolutionWidth - 1;
+                int32 maxY = (int32)Core->graphics.resolutionHeight - 1;
+                if (ix < 0) ix = 0;
+                if (iy < 0) iy = 0;
+                if (ix > maxX) ix = maxX;
+                if (iy > maxY) iy = maxY;
+
+                input->mousePos.x = ix;
+                input->mousePos.y = Core->graphics.resolutionHeight - iy;
             } break;
 
                     
