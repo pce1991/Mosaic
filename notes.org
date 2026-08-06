@@ -217,3 +217,15 @@ Sprites: I don't like how sprites can occupy one tile because it kinda lies abou
   - unicode
   - REALLY NEED TO FIGURE OUT EMSIZE STUFF. We cant actually draw text at a reasonable size. Saying 64 pixels doesnt mean anything
 
+
+@TODO: rendering idea to use textures for the tiles
+- depth to determine the order
+- with heavy blending the edges are always going to have different traits/feels than the body of the image. 
+- possible we allow two images per-tile. But why not more? layers of grids
+- wonder about giving a cluster of tiles a single image to draw. Fits the idea of layered grids.
+
+
+@TODO: image editor where you specify color/sprite per cell
+- need to save file to disk
+
+@TODO: audio sequencer

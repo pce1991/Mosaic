@@ -22,6 +22,7 @@
 
 
 #include "audio.h"
+#include "synth.h"
 #include "input.h"
 #include "collections.h"
 

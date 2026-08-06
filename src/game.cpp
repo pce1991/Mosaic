@@ -10,6 +10,7 @@
 
 #include "render.cpp"
 #include "audio.cpp"
+#include "synth.cpp"
 
 #include "network.cpp"
 

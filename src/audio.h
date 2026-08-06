@@ -1,4 +1,7 @@
 
+#ifndef AUDIO_H
+#define AUDIO_H
+
 #define HZ 48000
 
 struct SoundClip {
@@ -33,11 +36,15 @@ struct Sound {
     int32 generation;
 };
 
+struct SynthPlayer;
+
 struct AudioPlayer {
     real32 volume;
     
     DynamicArray<Sound> sounds;
     DynamicArray<int32> freeList;
+
+    SynthPlayer *synth;
 };
 
 struct SoundHandle {
@@ -90,3 +97,5 @@ real32 CalculateAmplitude(ADSREnvelope env, real32 time) {
 
     return amp;
 }
+
+#endif // AUDIO_H

@@ -1,4 +1,6 @@
 
+#include "synth.h"
+
 #define WAV_RIFF_VALUE 0x46464952
 #define WAV_WAVE_VALUE 0x45564157
 #define WAV_FMT_VALUE 0x20746d66
@@ -197,6 +199,23 @@ Sound *GetSound(AudioPlayer *player, SoundHandle handle) {
 void AudioPlayerInit(AudioPlayer *player, MemoryArena *arena) {
     player->sounds = MakeDynamicArray<Sound>(arena, 128);
     player->freeList = MakeDynamicArray<int32>(arena, 128);
+
+    player->synth = PushArray(arena, SynthPlayer, 1);
+    SynthPlayerInit(player->synth);
+}
+
+// Smooth master limiter for the master bus: near-transparent below ~0.5,
+// compresses gently as the mix approaches 1.0, and saturates smoothly at
+// +/- 6/7. The 7th-order curve has a continuous derivative at the
+// saturation point, so stacked voices fold gently instead of hard-clipping
+// into flat-topped crackle.
+static real32 SoftClip(real32 x) {
+    real32 ax = fabsf(x);
+    if (ax < 1.0f) {
+        real32 x3 = x * x * x;
+        return x - (x3 * x3 * x) / 7.0f;
+    }
+    return (x > 0.0f) ? (6.0f / 7.0f) : -(6.0f / 7.0f);
 }
 
 void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
@@ -240,5 +259,11 @@ void PlayAudio(AudioPlayer *player, int32 samplesToRender, real32 *output) {
                 PushBack(&player->freeList, i);
             }
         }
+    }
+
+    MixSynthNotes(player->synth, samplesToRender, output);
+
+    for (int32 i = 0; i < samplesToRender * 2; i++) {
+        output[i] = SoftClip(output[i]);
     }
 }
