@@ -747,23 +747,18 @@ void RenderSpriteBuffer(SpriteBuffer *buffer) {
     int model = glGetAttribLocation(shader->programID, "instance_model");
 
     glEnableVertexAttribArray(color);
-    glVertexAttribPointer(color, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32));
     glVertexAttribDivisor(color, 1);
 
     glEnableVertexAttribArray(model);
-    glVertexAttribPointer(model, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32) + sizeof(vec4));
     glVertexAttribDivisor(model, 1);
 
     glEnableVertexAttribArray(model + 1);
-    glVertexAttribPointer(model + 1, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32) + sizeof(vec4) * 2);
     glVertexAttribDivisor(model + 1, 1);
 
     glEnableVertexAttribArray(model + 2);
-    glVertexAttribPointer(model + 2, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32) + sizeof(vec4) * 3);
     glVertexAttribDivisor(model + 2, 1);
 
     glEnableVertexAttribArray(model + 3);
-    glVertexAttribPointer(model + 3, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32) + sizeof(vec4) * 4);
     glVertexAttribDivisor(model + 3, 1);
 
     int32 index = 0;
@@ -777,6 +772,14 @@ void RenderSpriteBuffer(SpriteBuffer *buffer) {
         }
 
         int32 instanceCount = index - start;
+
+        uint8 *instanceBase = (uint8 *)0 + (start * stride);
+
+        glVertexAttribPointer(color, 4, GL_FLOAT, GL_FALSE, stride, instanceBase + sizeof(int32) + sizeof(uint32));
+        glVertexAttribPointer(model, 4, GL_FLOAT, GL_FALSE, stride, instanceBase + sizeof(int32) + sizeof(uint32) + sizeof(vec4));
+        glVertexAttribPointer(model + 1, 4, GL_FLOAT, GL_FALSE, stride, instanceBase + sizeof(int32) + sizeof(uint32) + sizeof(vec4) * 2);
+        glVertexAttribPointer(model + 2, 4, GL_FLOAT, GL_FALSE, stride, instanceBase + sizeof(int32) + sizeof(uint32) + sizeof(vec4) * 3);
+        glVertexAttribPointer(model + 3, 4, GL_FLOAT, GL_FALSE, stride, instanceBase + sizeof(int32) + sizeof(uint32) + sizeof(vec4) * 4);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureID);
