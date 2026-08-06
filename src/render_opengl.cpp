@@ -664,6 +664,144 @@ void RenderRectBuffer(RectBuffer *buffer) {
     glVertexAttribDivisor(model + 3, 0);
 }
 
+void AllocateSpriteBuffer(int32 capacity, SpriteBuffer *buffer) {
+    buffer->count = 0;
+    buffer->capacity = capacity;
+    buffer->bufferSize = sizeof(SpriteRenderData) * buffer->capacity;
+
+    buffer->data = (SpriteRenderData *)malloc(buffer->bufferSize);
+    memset(buffer->data, 0, buffer->bufferSize);
+
+    glGenBuffers(1, &buffer->bufferID);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
+    glBufferData(GL_ARRAY_BUFFER, buffer->bufferSize, buffer->data, GL_STREAM_DRAW);
+}
+
+void DrawInstancedSprite(SpriteBuffer *buffer, int32 depthLayer, vec2 position, vec2 scale, real32 angle, Sprite *texture) {
+    SpriteRenderData data = {};
+    data.depthLayer = depthLayer;
+    data.textureID = texture->textureID;
+    data.color = V4(1, 1, 1, 1);
+    data.model = TRS(V3(position.x, position.y, 0), AxisAngle(V3(0, 0, 1), angle), V3(scale.x, scale.y, 1.0f));
+
+    if (buffer->count < buffer->capacity) {
+        buffer->data[buffer->count++] = data;
+    }
+    else {
+        ASSERT(false);
+        // Ran out of space in the sprite buffer :(
+    }
+}
+
+void DrawInstancedSprite(SpriteBuffer *buffer, int32 depthLayer, vec2 position, vec2 scale, Sprite *texture) {
+    DrawInstancedSprite(buffer, depthLayer, position, scale, 0.0f, texture);
+}
+
+int32 SpriteRenderDataSort(const void *a, const void *b) {
+    SpriteRenderData *sa = (SpriteRenderData *)a;
+    SpriteRenderData *sb = (SpriteRenderData *)b;
+
+    if (sa->depthLayer != sb->depthLayer) {
+        return sa->depthLayer - sb->depthLayer;
+    }
+
+    return (int32)sa->textureID - (int32)sb->textureID;
+}
+
+void RenderSpriteBuffer(SpriteBuffer *buffer) {
+    Mesh *mesh = &Core->graphics.quad;
+
+    Shader *shader = &Core->graphics.instancedTextureQuadShader;
+    SetShader(shader);
+
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, Core->camera.viewProjection.data);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    if (buffer->count <= 0) {
+        return;
+    }
+
+    qsort(buffer->data, buffer->count, sizeof(SpriteRenderData), SpriteRenderDataSort);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+    // Position
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (uint8 *)0);
+
+    // Texcoord
+    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
+    glEnableVertexAttribArray(texcoord);
+    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (uint8 *)(sizeof(vec3) * mesh->vertCount));
+
+    int32 stride = sizeof(SpriteRenderData);
+
+    glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
+    glBufferData(GL_ARRAY_BUFFER, buffer->bufferSize, buffer->data, GL_STREAM_DRAW);
+
+    int color = glGetAttribLocation(shader->programID, "instance_color");
+    int model = glGetAttribLocation(shader->programID, "instance_model");
+
+    glEnableVertexAttribArray(color);
+    glVertexAttribPointer(color, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32));
+    glVertexAttribDivisor(color, 1);
+
+    glEnableVertexAttribArray(model);
+    glVertexAttribPointer(model, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32) + sizeof(vec4));
+    glVertexAttribDivisor(model, 1);
+
+    glEnableVertexAttribArray(model + 1);
+    glVertexAttribPointer(model + 1, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32) + sizeof(vec4) * 2);
+    glVertexAttribDivisor(model + 1, 1);
+
+    glEnableVertexAttribArray(model + 2);
+    glVertexAttribPointer(model + 2, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32) + sizeof(vec4) * 3);
+    glVertexAttribDivisor(model + 2, 1);
+
+    glEnableVertexAttribArray(model + 3);
+    glVertexAttribPointer(model + 3, 4, GL_FLOAT, GL_FALSE, stride, (uint8 *)0 + sizeof(int32) + sizeof(uint32) + sizeof(vec4) * 4);
+    glVertexAttribDivisor(model + 3, 1);
+
+    int32 index = 0;
+    while (index < buffer->count) {
+        int32 start = index;
+        uint32 textureID = buffer->data[index].textureID;
+
+        while (index < buffer->count && buffer->data[index].depthLayer == buffer->data[start].depthLayer &&
+               buffer->data[index].textureID == textureID) {
+            index++;
+        }
+
+        int32 instanceCount = index - start;
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glUniform1i(shader->uniforms[1].id, 0);
+
+        glDrawElementsInstanced(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (uint8 *)NULL + 0, instanceCount);
+    }
+
+    glDisableVertexAttribArray(vert);
+    glDisableVertexAttribArray(texcoord);
+    glDisableVertexAttribArray(color);
+    glDisableVertexAttribArray(model);
+    glDisableVertexAttribArray(model + 1);
+    glDisableVertexAttribArray(model + 2);
+    glDisableVertexAttribArray(model + 3);
+
+    glVertexAttribDivisor(vert, 0);
+    glVertexAttribDivisor(texcoord, 0);
+    glVertexAttribDivisor(color, 0);
+    glVertexAttribDivisor(model, 0);
+    glVertexAttribDivisor(model + 1, 0);
+    glVertexAttribDivisor(model + 2, 0);
+    glVertexAttribDivisor(model + 3, 0);
+}
+
 
 
 void DrawMesh(Mesh *mesh, vec3 pos, quaternion rotation, vec3 scale, vec4 color) {

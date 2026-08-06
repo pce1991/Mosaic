@@ -217,6 +217,15 @@ void GameInit(CoreMemory *coreMem) {
     }
 
     {
+        LoadShader("shaders/instanced_texture_quad_shader.vert", "shaders/instanced_texture_quad_shader.frag", &coreMem->graphics.instancedTextureQuadShader);
+        const char *uniforms[] = {
+            "viewProjection",
+            "texture0",
+        };
+        CompileShader(&coreMem->graphics.instancedTextureQuadShader, ARRAY_LENGTH(char *, uniforms), uniforms);
+    }
+
+    {
         LoadShader("shaders/textured_quad.vert", "shaders/textured_quad.frag", &coreMem->graphics.texturedQuadShader);
         const char *uniforms[] = {
             "model",
@@ -241,6 +250,7 @@ void GameInit(CoreMemory *coreMem) {
     AudioPlayerInit(&Core->audioPlayer, &Core->permanentArena);
 
     AllocateRectBuffer(256 * 256, &Core->graphics.rectBuffer);
+    AllocateSpriteBuffer(256 * 256, &Core->graphics.spriteBuffer);
 
     Core->graphics.uiCommands = MakeDynamicArray<UICommand>(&Core->permanentArena, 64);
     SetupUIRenderTarget(&Core->graphics.uiTarget, coreMem->graphics.screenWidth, coreMem->graphics.screenHeight);
@@ -313,6 +323,9 @@ void GameUpdateAndRender(CoreMemory *core) {
 
     RenderRectBuffer(&Core->graphics.rectBuffer);
     Core->graphics.rectBuffer.count = 0;
+
+    RenderSpriteBuffer(&Core->graphics.spriteBuffer);
+    Core->graphics.spriteBuffer.count = 0;
     
     DrawGlyphs(Core->graphics.glyphBuffers);
     FlushUICommands();

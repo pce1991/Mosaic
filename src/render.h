@@ -67,6 +67,22 @@ struct RectBuffer {
     uint32 bufferSize;
 };
 
+struct SpriteRenderData {
+    int32 depthLayer;
+    uint32 textureID;
+    vec4 color;
+    mat4 model;
+};
+
+struct SpriteBuffer {
+    int32 count;
+    int32 capacity;
+    SpriteRenderData *data;
+
+    uint32 bufferID;
+    uint32 bufferSize;
+};
+
 
 Color MultColor(Color c, real32 n) {
     c.r *= n;
@@ -218,6 +234,7 @@ struct CoreGraphics {
     // Shaders
     Shader texturedQuadShader;
     Shader instancedQuadShader;
+    Shader instancedTextureQuadShader;
     Shader shader;
     Shader singleLight;
     Shader coolShader;
@@ -240,6 +257,7 @@ struct CoreGraphics {
 
     // UI/Rendering
     RectBuffer rectBuffer;
+    SpriteBuffer spriteBuffer;
     UIClipRegion clipStack[UIClipStackMax];
     int32 clipTop;
     bool hasClip;

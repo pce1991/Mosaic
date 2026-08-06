@@ -25,7 +25,7 @@ void MyInit() {
 
 void MyGameUpdate() {
     // version that doesnt take an angle.
-    DrawSprite(V2(0), V2(4, 4), &Data->sprite2);
+    DrawInstancedSprite(&Core->graphics.spriteBuffer, 0, V2(0), V2(4, 4), &Data->sprite2);
 
-    DrawSprite(V2(0), V2(1, 1), Game->time, &Data->sprite);
+    DrawInstancedSprite(&Core->graphics.spriteBuffer, 1, V2(0), V2(1, 1), Game->time, &Data->sprite);
 }
