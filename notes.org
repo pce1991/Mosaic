@@ -229,3 +229,6 @@ Sprites: I don't like how sprites can occupy one tile because it kinda lies abou
 - need to save file to disk
 
 @TODO: audio sequencer
+- write in text file? 
+- editor piano roll. N voices. Click a voice to bring up piano roll, input.
+  - horz scroll regions. 

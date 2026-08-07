@@ -31,7 +31,7 @@ void MyMosaicUpdate() {
     
     vec2 textCursor = Mosaic->gridOrigin;
     textCursor.x += Mosaic->gridSize.x;
-    textCursor.y -= 1;
+    textCursor.y += Mosaic->gridSize.y - 1;
 
     DrawText(&Game->monoFont, textCursor, textSize, V4(1), false, "Abc");
     textCursor.y -= 1.0f;

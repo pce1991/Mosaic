@@ -81,7 +81,7 @@ void SetMosaicGridSize(uint32 newWidth, uint32 newHeight) {
   Mosaic->gridSize.x = Mosaic->tileSize * Mosaic->gridWidth;
   Mosaic->gridSize.y = Mosaic->tileSize * Mosaic->gridHeight;
     
-  Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
+  Mosaic->gridOrigin = V2(0) + V2(-Mosaic->gridSize.x * 0.5f, -Mosaic->gridSize.y * 0.5f);
 
   //AllocateRectBuffer(Mosaic->gridWidth * Mosaic->gridHeight, &Mosaic->rectBuffer);
 
@@ -135,7 +135,7 @@ vec2 GridPositionToWorldPosition(vec2i gridPosition) {
   vec2 worldPos = Mosaic->gridOrigin;
   float32 size = Mosaic->tileSize;
   worldPos.x += (size * gridPosition.x) + (size * 0.5f);
-  worldPos.y += (-size * gridPosition.y) + (-size * 0.5f);
+  worldPos.y += (size * gridPosition.y) + (size * 0.5f);
   return worldPos;
 }
 
@@ -147,11 +147,11 @@ void DrawTile(vec2i position, vec4 color) {
 }
 
 void DrawBorder() {
-  vec2 leftCenter = Mosaic->gridOrigin + V2(-Mosaic->lineThickness, (-Mosaic->gridSize.y * 0.5f));
-  vec2 rightCenter = Mosaic->gridOrigin + V2(Mosaic->lineThickness, (-Mosaic->gridSize.y * 0.5f)) + V2(Mosaic->gridWidth * Mosaic->tileSize, 0);
+  vec2 leftCenter = Mosaic->gridOrigin + V2(-Mosaic->lineThickness, (Mosaic->gridSize.y * 0.5f));
+  vec2 rightCenter = Mosaic->gridOrigin + V2(Mosaic->lineThickness, (Mosaic->gridSize.y * 0.5f)) + V2(Mosaic->gridWidth * Mosaic->tileSize, 0);
 
-  vec2 topCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), Mosaic->lineThickness);
-  vec2 bottomCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), -Mosaic->lineThickness) + V2(0, -Mosaic->gridHeight * Mosaic->tileSize);
+  vec2 bottomCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), Mosaic->lineThickness);
+  vec2 topCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), -Mosaic->lineThickness) + V2(0, Mosaic->gridHeight * Mosaic->tileSize);
 
   DrawRect(leftCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f + (Mosaic->lineThickness * 2)), Mosaic->gridColor);
   DrawRect(rightCenter, V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f + (Mosaic->lineThickness * 2)), Mosaic->gridColor);
@@ -163,7 +163,7 @@ void DrawGrid() {
     
   for (int y = 0; y < Mosaic->gridHeight + 1; y++) {
 
-    vec2 rowLineCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), 0) + V2(0, -y * Mosaic->tileSize);
+    vec2 rowLineCenter = Mosaic->gridOrigin + V2((Mosaic->gridSize.x * 0.5f), 0) + V2(0, y * Mosaic->tileSize);
 
     vec2 scale = V2(Mosaic->gridSize.x * 0.5f, Mosaic->lineThickness);
     if (y == 0 || y == Mosaic->gridHeight) {
@@ -175,7 +175,7 @@ void DrawGrid() {
   }
 
   for (int x = 0; x < Mosaic->gridWidth + 1; x++) {
-    vec2 colLineCenter = Mosaic->gridOrigin + V2(0, (-Mosaic->gridSize.y * 0.5f)) + V2(x * Mosaic->tileSize, 0);
+    vec2 colLineCenter = Mosaic->gridOrigin + V2(0, (Mosaic->gridSize.y * 0.5f)) + V2(x * Mosaic->tileSize, 0);
 
     vec2 scale = V2(Mosaic->lineThickness, Mosaic->gridSize.y * 0.5f);
     if (x == 0 || x == Mosaic->gridWidth) {
@@ -194,7 +194,7 @@ MTile* GetHoveredTile() {
   mousePos.y *= cam->height * 0.5f;
 
   float32 xDistFromOrig = mousePos.x - Mosaic->gridOrigin.x;
-  float32 yDistFromOrig = Mosaic->gridOrigin.y - mousePos.y;
+  float32 yDistFromOrig = mousePos.y - Mosaic->gridOrigin.y;
 
   if (xDistFromOrig < 0 || yDistFromOrig < 0) { return NULL; }
 
@@ -504,7 +504,7 @@ void DrawTextTop(vec4 color, const char *fmt, ...) {
   char str[GlyphBufferCapacity];
   vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-  vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.25f);
+  vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y + 0.25f);
   DrawText(&Core->graphics.monoFont, position, Mosaic->tileSize, color, true, str);
 
   va_end(args);
@@ -517,7 +517,7 @@ void DrawTextTop(vec4 color, float32 scale, const char *fmt, ...) {
   char str[GlyphBufferCapacity];
   vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-  vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, 0.1f);
+  vec2 position = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y + 0.1f);
   DrawText(&Core->graphics.monoFont, position, 0.35f * scale, color, true, str);
 
   va_end(args);
@@ -530,9 +530,9 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, const char *fmt, ...) {
   char str[GlyphBufferCapacity];
   vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-  vec2 floorPos = V2(floorf(pos.x), -floorf(pos.y));
-    
-  vec2 position = Mosaic->gridOrigin + floorPos + V2(0.0f, -1.0f);
+  vec2 floorPos = V2(floorf(pos.x), floorf(pos.y));
+
+  vec2 position = Mosaic->gridOrigin + floorPos;
   DrawText(&Core->graphics.monoFont, position, size, color, false, str);
 
   va_end(args);
@@ -545,9 +545,9 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, bool center, const char *f
   char str[GlyphBufferCapacity];
   vsnprintf(str, GlyphBufferCapacity, fmt, args);
 
-  vec2 floorPos = V2(floorf(pos.x), -floorf(pos.y));
-    
-  vec2 position = Mosaic->gridOrigin + floorPos + V2(0.0f, -1.0f);
+  vec2 floorPos = V2(floorf(pos.x), floorf(pos.y));
+
+  vec2 position = Mosaic->gridOrigin + floorPos;
   DrawText(&Core->graphics.monoFont, position, size, color, center, str);
 
   va_end(args);
@@ -584,7 +584,7 @@ void MosaicRender() {
 
   Mosaic->rectBuffer.count = 0;
   {
-    vec2 pos = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, -Mosaic->gridSize.y * 0.5f);
+    vec2 pos = Mosaic->gridOrigin + V2(Mosaic->gridSize.x * 0.5f, Mosaic->gridSize.y * 0.5f);
     DrawRect(pos, Mosaic->gridSize * 0.5f, V4(0, 0, 0, 1));
   }
 

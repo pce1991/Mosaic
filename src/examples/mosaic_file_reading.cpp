@@ -108,7 +108,7 @@ void MyMosaicUpdate() {
     ClearTiles(0, 0, 0);
 
     for (int i = 0; i < spotCapacity; i++) {
-        SetTileColor(spots[i].position.x, spots[i].position.y, spots[i].color);
+        SetTileColor(spots[i].position.x, Mosaic->gridHeight - 1 - spots[i].position.y, spots[i].color);
     }
 
     SetTileColor(9, 9, 1, 0, 0);
@@ -230,16 +230,16 @@ void MyMosaicUpdate() {
     for (int i = 0; i < levelCurr->wallCount; i++) {
         Wall *wall = &levelCurr->walls[i];
 
-        SetTileColor(wall->position.x, wall->position.y, 0.6f, 0.3f, 0.1f);
+        SetTileColor(wall->position.x, Mosaic->gridHeight - 1 - wall->position.y, 0.6f, 0.3f, 0.1f);
     }
 
     for (int i = 0; i < levelCurr->boxCount; i++) {
         Box *box = &levelCurr->boxs[i];
 
-        SetTileColor(box->position.x, box->position.y, 0.7f, 0.5f, 0.1f);
+        SetTileColor(box->position.x, Mosaic->gridHeight - 1 - box->position.y, 0.7f, 0.5f, 0.1f);
     }
 
     Player *player = &levelCurr->player;
-    SetTileColor(player->position.x, player->position.y, 0.0f, 0.7f, 0.9f);
+    SetTileColor(player->position.x, Mosaic->gridHeight - 1 - player->position.y, 0.0f, 0.7f, 0.9f);
 }
 #endif

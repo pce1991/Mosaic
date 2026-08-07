@@ -88,7 +88,7 @@ void MyMosaicUpdate() {
   for (int y = 0; y < picture.height; y++) {
     for (int x = 0; x < picture.width; x++) {
       int32 index = x + (y * picture.width);
-      SetTileColor(x, y, picture.colors[index]);
+      SetTileColor(x, picture.height - 1 - y, picture.colors[index]);
     }
   }
 }

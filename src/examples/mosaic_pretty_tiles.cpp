@@ -13,6 +13,7 @@ Sprite bokehSprite = {};
 
 void MyMosaicInit() {
     SetMosaicGridSize(32, 32);
+    SetMosaicScreenColor(0.0, 0.0, 0.0); 
 
     LoadSprite("data/textures/bokeh_paint1.png", &bokehSprite);
 }
@@ -52,7 +53,7 @@ void MyMosaicUpdate() {
 
             // Keep the blob about one tile big so overlapping translucent
             // sprites don't blend together and wash out to grey.
-            float32 scale = 1.24f + glow * 0.3f + 0.05f * sinf(Time * 2.0f);
+            float32 scale = 1.5f + glow * 0.3f + 0.05f * sinf(Time * 2.0f);
             SetTileScale(x, y, scale);
 
             // Sprites on a higher layer draw on top, so the tiles around the

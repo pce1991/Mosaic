@@ -3,7 +3,7 @@ void MyMosaicInit() {
     SetMosaicGridSize(32, 16);
 }
 
-vec2 pos = V2(4, 15);
+vec2 pos = V2(4, 0);
 vec2 posObstacle = V2(6, 6);
 
 enum State {
@@ -51,7 +51,7 @@ void MyMosaicUpdate() {
                 state = State_Falling;
             }
             else if (InputHeld(Input, Input_Space)) {
-                pos.y -= jumpSpeed * DeltaTime;
+                pos.y += jumpSpeed * DeltaTime;
             }
 
             secondsJumpHeld += DeltaTime;
@@ -72,10 +72,10 @@ void MyMosaicUpdate() {
         } break;
 
         case State_Falling : {
-            pos.y += gravity * DeltaTime;
+            pos.y -= gravity * DeltaTime;
 
-            if (pos.y >= Mosaic->gridHeight - 1) {
-                pos.y = GetTileCenter(Mosaic->gridHeight - 1);
+            if (pos.y <= 0) {
+                pos.y = GetTileCenter(0);
 
                 state = State_Normal;
             }

@@ -105,10 +105,10 @@ void MyMosaicUpdate() {
         pos.x += speed * DeltaTime;
     }
     if (InputHeld(Input, Input_Down)) {
-        pos.y += speed * DeltaTime;
+        pos.y += -speed * DeltaTime;
     }
     if (InputHeld(Input, Input_Up)) {
-        pos.y += -speed * DeltaTime;
+        pos.y += speed * DeltaTime;
     }
 
     vec2i grassPosition = GetTilePosition(1, 0);

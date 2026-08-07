@@ -53,10 +53,10 @@ void UpdatePlayer() {
         player.velocity.x = -speed;
     }
     else if (InputHeld(Keyboard, Input_UpArrow)) {
-        player.velocity.y = -speed;
+        player.velocity.y = speed;
     }
     else if (InputHeld(Keyboard, Input_DownArrow)) {
-        player.velocity.y = speed;
+        player.velocity.y = -speed;
     }
 
     player.position = player.position + player.velocity * DeltaTime;
