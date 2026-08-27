@@ -35,17 +35,17 @@ void MyGameUpdate() {
     ClearColor(RGB(0.0f, 0.0f, 0.0f));
 
     if (InputHeld(Keyboard, Input_UpArrow)) {
-        position.y += 2 * Game->deltaTime;
+        position.y += 2 * Core->deltaTime;
     }
 
     //Game->camera.position = V3(0, 0, 3) + V3(sinf(Time), 0, 0);
-    Game->camera.size = 1 + (((1 + sinf(Time)) * 0.5f) * 0.5f);
+    Core->camera.size = 1 + (((1 + sinf(Time)) * 0.5f) * 0.5f);
 
     // Always make sure you call UpdateCamera so it can recompute the projection matrix
-    UpdateCamera(&Game->camera);
+    UpdateCamera(&Core->camera);
     
     if (InputPressed(Keyboard, Input_Space)) {
-        PlaySound(&Game->audioPlayer, Data.sound, 1.0f, true);
+        PlaySound(&Core->audioPlayer, Data.sound, 1.0f, true);
     }
     
     DrawSprite(V2(0), V2(4, 4), &Data.sprite2);

@@ -1,4 +1,8 @@
 
+@TODO: showcase UI and audio
+- get UI scroll regions
+- get UI labels
+
 - @TODO: showcase metaprogramming by generating a struct for global variables.
   will need to make directory and file
   Will need to do that step _before_ compiling yikes! 
@@ -8,7 +12,7 @@
 - What are the major pain-points
   No UI system
   Text size not uniform. No good layout for text. 
-
+ 
 * Pass in file to compile
   Much easier to check out different files if they don't have to mess with mosaic.cpp
 * FontSize
