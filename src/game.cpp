@@ -180,7 +180,8 @@ void GameInit(CoreMemory *coreMem) {
     cam->size = 1;
     cam->type = CameraType_Orthographic;
     cam->width = 16;
-    cam->height = 9;
+    cam->aspect = (real32)coreMem->graphics.resolutionWidth / (real32)coreMem->graphics.resolutionHeight;
+    cam->height = cam->width / cam->aspect;
     cam->projection = Orthographic(cam->width * -0.5f * cam->size, cam->width * 0.5f * cam->size,
                                    cam->height * -0.5f * cam->size, cam->height * 0.5f * cam->size,
                                    0.0, 100.0f);

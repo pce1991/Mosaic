@@ -19,12 +19,17 @@ struct Camera {
     // Orthographic
     real32 width;
     real32 height;
+    real32 aspect;
 
     real32 size;
 };
 
 void UpdateCamera(Camera *camera, vec3 position, quaternion rotation) {
     mat4 camWorld = TRS(position, rotation, V3(1));
+
+    if (camera->aspect > 0.0f) {
+        camera->height = camera->width / camera->aspect;
+    }
 
     camera->projection = Orthographic(camera->width * -0.5f * camera->size, camera->width * 0.5f * camera->size,
                                       camera->height * -0.5f * camera->size, camera->height * 0.5f * camera->size,
@@ -36,6 +41,10 @@ void UpdateCamera(Camera *camera, vec3 position, quaternion rotation) {
 
 void UpdateCamera(Camera *camera) {
     mat4 camWorld = TRS(camera->position, camera->rotation, V3(1));
+
+    if (camera->aspect > 0.0f) {
+        camera->height = camera->width / camera->aspect;
+    }
 
     camera->projection = Orthographic(camera->width * -0.5f * camera->size, camera->width * 0.5f * camera->size,
                                       camera->height * -0.5f * camera->size, camera->height * 0.5f * camera->size,

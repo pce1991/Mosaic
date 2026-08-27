@@ -1,8 +1,8 @@
-resolutionWidth: 1920
-resolutionHeight: 1080
-windowWidth: 1600
-windowHeight: 900
-fullscreen: 1
+resolutionWidth: 1600
+resolutionHeight: 900
+windowWidth: 1920
+windowHeight: 1080
+fullscreen: 0
 volume: 1.0
 server_ip: "192.0.0.1"
 socket_port: 30001
