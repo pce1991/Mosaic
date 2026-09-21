@@ -1,3 +1,4 @@
+@TODO: need to yank out the notes.org and some other stuff 
 
 @TODO: showcase UI and audio
 - get UI scroll regions
@@ -103,3 +104,4 @@
 
   Maybe just start using SDL? It does make things trickier when we get to platform land.
 * Audio
+

@@ -553,28 +553,6 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, bool center, const char *f
   va_end(args);
 }
 
-void PushText(const char *fmt, ...) {
-  va_list args;
-  va_start (args, fmt);
-
-  char str[GlyphBufferCapacity];
-  vsnprintf(str, GlyphBufferCapacity, fmt, args);
-
-  MosaicText *text = &Mosaic->text;
-
-  DrawTextScreen(&Core->graphics.monoFont, text->cursor, text->size, text->color, false, str);
-
-  FontTable *font = &Core->graphics.monoFont;
-
-  text->cursor.y += font->lineHeight * text->size;
-}
-
-void SetTextCursor(float32 x, float32 y) {
-  MosaicText *text = &Mosaic->text;
-  text->cursor.x = x;
-  text->cursor.y = y;
-}
-
 void MosaicRender() {
   MTile*tiles = Mosaic->tiles;
 
