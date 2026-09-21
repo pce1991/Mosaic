@@ -1,6 +1,6 @@
 
-#define MOSAIC 0
-#define MY_GAME 0
+#define MOSAIC 1
+#define MY_GAME 1
 #define UI_TEST 0
 #define UI_TEST2 0
 #define NETWORK_SIMPLE 0
