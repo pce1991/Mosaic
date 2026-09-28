@@ -1,6 +1,5 @@
 
 void MyMosaicInit() {
-
 }
 
 void MyMosaicUpdate() {

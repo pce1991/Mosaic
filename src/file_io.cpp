@@ -233,7 +233,7 @@ uint64 WriteBytes(FileHandle *file, u8 *bytes, u64 count) {
 
     end = Min(end, file->size);
 
-    u64 toWrite = file->offset - end;
+    u64 toWrite = end - file->offset;
 
     memcpy(file->data + file->offset, bytes, toWrite);
     
