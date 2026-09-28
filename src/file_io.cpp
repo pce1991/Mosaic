@@ -228,18 +228,17 @@ void WriteChar(FileHandle *file, char c) {
 
 
 uint64 WriteBytes(FileHandle *file, u8 *bytes, u64 count) {
-    u32 wrote = 0;
-    u64 end = file->offset + count;
+  if (file->data == NULL || file->offset >= file->size) {
+    return 0;
+  }
 
-    end = Min(end, file->size);
+  uint64 available = file->size - file->offset;
+  uint64 toWrite = Min(count, available);
 
-    u64 toWrite = end - file->offset;
+  memcpy(file->data + file->offset, bytes, toWrite);
+  file->offset += toWrite;
 
-    memcpy(file->data + file->offset, bytes, toWrite);
-    
-    file->offset += toWrite;
-
-    return toWrite;
+  return toWrite;
 }
 
 inline void WriteInt32(FileHandle *file, int32 value) {
