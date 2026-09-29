@@ -105,24 +105,27 @@ char PeekChar(FileHandle *file) {
 }
 
 uint64 ReadBytes(FileHandle *file, u64 count, void *ptr) {
-  u32 read = 0;
-  u64 end = file->offset + count;
-  end = Min(end, file->size);
+  if (file->data == NULL || file->offset >= file->size) {
+    return 0;
+  }
 
-  u64 bytesToRead = end - file->offset;
+  u64 available = file->size - file->offset;
+  u64 toCopy = (count < available) ? count : available;
 
-  memcpy(ptr, file->data + file->offset, bytesToRead);
-  file->offset += bytesToRead;
-    
-  return bytesToRead;
+  if (toCopy > 0 && ptr != NULL) {
+    memcpy(ptr, file->data + file->offset, toCopy);
+  }
+  file->offset += toCopy;
+
+  return toCopy;
 }
 
-void ReadInt32(FileHandle *file, int32 *ptr) {
-  u32 read = ReadBytes(file, 4, ptr);
+bool ReadInt32(FileHandle *file, int32 *ptr) {
+  return ReadBytes(file, 4, ptr) == 4;
 }
 
-void ReadReal32(FileHandle *file, real32 *ptr) {
-  u32 read = ReadBytes(file, 4, ptr);
+bool ReadReal32(FileHandle *file, real32 *ptr) {
+  return ReadBytes(file, 4, ptr) == 4;
 }
 
 
@@ -227,15 +230,17 @@ void WriteChar(FileHandle *file, char c) {
 }
 
 
-uint64 WriteBytes(FileHandle *file, u8 *bytes, u64 count) {
+uint64 WriteBytes(FileHandle *file, const u8 *bytes, u64 count) {
   if (file->data == NULL || file->offset >= file->size) {
     return 0;
   }
 
-  uint64 available = file->size - file->offset;
-  uint64 toWrite = Min(count, available);
+  u64 available = file->size - file->offset;
+  u64 toWrite = (count < available) ? count : available;
 
-  memcpy(file->data + file->offset, bytes, toWrite);
+  if (toWrite > 0 && bytes != NULL) {
+    memcpy(file->data + file->offset, bytes, toWrite);
+  }
   file->offset += toWrite;
 
   return toWrite;
@@ -267,8 +272,8 @@ inline void WriteFloat32(FileHandle *file, float32 value) {
   }
 }
 
-inline void WriteString(FileHandle *handle, char *str, uint32 len) {
-  WriteBytes(handle, (u8 *)str, len);
+inline void WriteString(FileHandle *handle, const char *str, uint32 len) {
+  WriteBytes(handle, (const u8 *)str, len);
 }
 
 inline bool ConsumeIntLiteral(FileHandle *file, char **start, int32 *len) {
