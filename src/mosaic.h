@@ -36,6 +36,7 @@ struct MosaicMem {
 
     bool drawBorder;
     bool drawGrid;
+    bool bloomActive;
     
     uint8 gridWidth;
     uint8 gridHeight;
@@ -115,6 +116,13 @@ void SetMosaicScreenColor(float32 r, float32 g, float32 b);
 // Turn this into a "ShowGrid(true/false)"
 void ShowGrid();
 void HideGrid();
+
+void EnableBloom();
+void DisableBloom();
+void ToggleBloom();
+
+// Composites the tile layer onto the screen, applying the bloom post process if it's active.
+void RenderTileLayer();
 
 void SetGridColor(vec4 color);
 void SetGridColor(float32 r, float32 g, float32 b);

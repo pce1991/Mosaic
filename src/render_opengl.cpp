@@ -386,6 +386,145 @@ void SetupUIRenderTarget(RenderTarget *target, int32 w, int32 h) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void SetRenderTarget(RenderTarget *target) {
+    glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+    glViewport(0, 0, target->width, target->height);
+}
+
+void DrawFullScreenQuad(Shader *shader, uint32 textureID, int32 width, int32 height) {
+    SetShader(shader);
+
+    Mesh *mesh = &Core->graphics.quadTopLeft;
+    mat4 model = TRS(V3(0, 0, 0), IdentityQuaternion(), V3((real32)width, -(real32)height, 1.0f));
+    mat4 projMat = Orthographic(0, (real32)width, 0, (real32)height, -1, 1);
+
+    glUniformMatrix4fv(shader->uniforms[0].id, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(shader->uniforms[1].id, 1, GL_FALSE, projMat.data);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glUniform1i(shader->uniforms[2].id, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexBufferID);
+
+    int vert = glGetAttribLocation(shader->programID, "vertexPosition_modelspace");
+    glEnableVertexAttribArray(vert);
+    glVertexAttribPointer(vert, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    int texcoord = glGetAttribLocation(shader->programID, "in_texcoord");
+    glEnableVertexAttribArray(texcoord);
+    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 0, (void *)((sizeof(vec3) * mesh->vertCount)));
+
+    glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (GLvoid *)0);
+
+    glDisableVertexAttribArray(vert);
+    glDisableVertexAttribArray(texcoord);
+}
+
+// Draws the tile layer over frameTarget. The layer is stored premultiplied (it was
+// blended over transparent black), so we blend with GL_ONE, GL_ONE_MINUS_SRC_ALPHA to
+// reproduce the exact math of drawing the tiles directly onto the background.
+void CompositeTileLayer() {
+    CoreGraphics *g = &Core->graphics;
+
+    SetRenderTarget(&g->frameTarget);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    DrawFullScreenQuad(&g->blitShader, g->tileTarget.texture, g->frameTarget.width, g->frameTarget.height);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void RenderBloom() {
+    CoreGraphics *g = &Core->graphics;
+
+    glDisable(GL_BLEND);
+
+    // Melt: blur the premultiplied layer before anything else. tileTarget stays
+    // sharp for the crossfade; the chain ping-pongs between the two melt targets
+    // and always lands in meltTargetB (each iteration = H then V).
+    bool meltActive = (g->bloomMeltRadius > 0.0f) && (g->bloomMeltIterations > 0);
+    if (meltActive) {
+        uint32 meltSrc = g->tileTarget.texture;
+        for (int32 i = 0; i < g->bloomMeltIterations; i++) {
+            SetRenderTarget(&g->meltTargetA);
+            SetShader(&g->bloomBlurShader);
+            glUniform2f(g->bloomBlurShader.uniforms[3].id, g->bloomMeltRadius / (real32)g->meltTargetA.width, 0.0f);
+            DrawFullScreenQuad(&g->bloomBlurShader, meltSrc, g->meltTargetA.width, g->meltTargetA.height);
+
+            SetRenderTarget(&g->meltTargetB);
+            SetShader(&g->bloomBlurShader);
+            glUniform2f(g->bloomBlurShader.uniforms[3].id, 0.0f, g->bloomMeltRadius / (real32)g->meltTargetB.height);
+            DrawFullScreenQuad(&g->bloomBlurShader, g->meltTargetA.texture, g->meltTargetB.width, g->meltTargetB.height);
+
+            meltSrc = g->meltTargetB.texture;
+        }
+    }
+    uint32 meltTex = meltActive ? g->meltTargetB.texture : g->tileTarget.texture;
+
+    // Bright pass -> A. The glow originates from the melted image.
+    SetRenderTarget(&g->bloomTargetA);
+    SetShader(&g->bloomBrightShader);
+    glUniform1f(g->bloomBrightShader.uniforms[3].id, g->bloomThreshold);
+    DrawFullScreenQuad(&g->bloomBrightShader, meltTex, g->bloomTargetA.width, g->bloomTargetA.height);
+
+    for (int32 i = 0; i < g->bloomBlurIterations; i++) {
+        SetRenderTarget(&g->bloomTargetB);
+        SetShader(&g->bloomBlurShader);
+        glUniform2f(g->bloomBlurShader.uniforms[3].id, g->bloomBlurRadius / (real32)g->bloomTargetA.width, 0.0f);
+        DrawFullScreenQuad(&g->bloomBlurShader, g->bloomTargetA.texture, g->bloomTargetA.width, g->bloomTargetA.height);
+
+        SetRenderTarget(&g->bloomTargetA);
+        SetShader(&g->bloomBlurShader);
+        glUniform2f(g->bloomBlurShader.uniforms[3].id, 0.0f, g->bloomBlurRadius / (real32)g->bloomTargetA.height);
+        DrawFullScreenQuad(&g->bloomBlurShader, g->bloomTargetB.texture, g->bloomTargetA.width, g->bloomTargetA.height);
+    }
+
+    // Downsample the narrow band into the quarter res wide band. A zero blur
+    // direction samples every tap at the same point, so the pass is a plain
+    // copy and the smaller target's bilinear filter boxes down the 2x2 block.
+    SetRenderTarget(&g->bloomTargetC);
+    SetShader(&g->bloomBlurShader);
+    glUniform2f(g->bloomBlurShader.uniforms[3].id, 0.0f, 0.0f);
+    DrawFullScreenQuad(&g->bloomBlurShader, g->bloomTargetA.texture, g->bloomTargetC.width, g->bloomTargetC.height);
+
+    // Same blur at quarter res: each iteration covers twice the screen distance
+    // for the same cost, so this band carries the glow further out.
+    for (int32 i = 0; i < g->bloomWideIterations; i++) {
+        SetRenderTarget(&g->bloomTargetD);
+        SetShader(&g->bloomBlurShader);
+        glUniform2f(g->bloomBlurShader.uniforms[3].id, g->bloomBlurRadius / (real32)g->bloomTargetC.width, 0.0f);
+        DrawFullScreenQuad(&g->bloomBlurShader, g->bloomTargetC.texture, g->bloomTargetC.width, g->bloomTargetC.height);
+
+        SetRenderTarget(&g->bloomTargetC);
+        SetShader(&g->bloomBlurShader);
+        glUniform2f(g->bloomBlurShader.uniforms[3].id, 0.0f, g->bloomBlurRadius / (real32)g->bloomTargetC.height);
+        DrawFullScreenQuad(&g->bloomBlurShader, g->bloomTargetD.texture, g->bloomTargetC.width, g->bloomTargetC.height);
+    }
+
+    // One premultiplied pass: softness crossfade of the layer plus both glow bands.
+    SetRenderTarget(&g->frameTarget);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    SetShader(&g->bloomCompositeShader);
+    glUniform1f(g->bloomCompositeShader.uniforms[6].id, g->bloomSoftness);
+    glUniform1f(g->bloomCompositeShader.uniforms[7].id, g->bloomWideMix);
+    glUniform1f(g->bloomCompositeShader.uniforms[8].id, g->bloomStrength);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, meltTex);
+    glUniform1i(g->bloomCompositeShader.uniforms[3].id, 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, g->bloomTargetA.texture);
+    glUniform1i(g->bloomCompositeShader.uniforms[4].id, 2);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, g->bloomTargetC.texture);
+    glUniform1i(g->bloomCompositeShader.uniforms[5].id, 3);
+    DrawFullScreenQuad(&g->bloomCompositeShader, g->tileTarget.texture, g->frameTarget.width, g->frameTarget.height);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
 void DrawSprite(vec2 position, vec2 scale, real32 angle, Sprite *texture) {
     Shader *shader = &Core->graphics.texturedQuadShader;
     SetShader(shader);

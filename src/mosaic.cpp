@@ -20,6 +20,8 @@ void MyGameInit() {
   Mosaic->screenColor = RGB(0.1f, 0.1f, 0.1f);
   Mosaic->gridColor = RGB(0.8f, 0.8f, 0.8f);
 
+  Mosaic->bloomActive = false;
+
   MyMosaicInit();
 }
 
@@ -126,6 +128,18 @@ void HideGrid() {
   Mosaic->drawGrid = false;
 }
 
+void EnableBloom() {
+  Mosaic->bloomActive = true;
+}
+
+void DisableBloom() {
+  Mosaic->bloomActive = false;
+}
+
+void ToggleBloom() {
+  Mosaic->bloomActive = !Mosaic->bloomActive;
+}
+
 
 int32 CellIndex(int32 x, int32 y) {
   return x + (y * Mosaic->gridWidth);
@@ -143,7 +157,7 @@ void DrawTile(vec2i position, vec4 color) {
   vec2 worldPos = GridPositionToWorldPosition(position);
   //DrawRect(worldPos, V2(Mosaic->tileSize * 0.5f), color);
   // Instancing
-  DrawRect(&Core->graphics.rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
+  DrawRect(&Core->graphics.rectBuffer, worldPos, V2(Mosaic->tileSize * 0.4f), color);
 }
 
 void DrawBorder() {
@@ -553,6 +567,23 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, bool center, const char *f
   va_end(args);
 }
 
+void RenderTileLayer() {
+  if (Mosaic->bloomActive) {
+    RenderBloom();
+  }
+  else {
+    CompositeTileLayer();
+  }
+
+  // The grid and border go on top of the composited tile layer, outside the bloom.
+  if (Mosaic->drawGrid) {
+    DrawGrid();
+  }
+  else if (Mosaic->drawBorder) {
+    DrawBorder();
+  }
+}
+
 void MosaicRender() {
   MTile*tiles = Mosaic->tiles;
 
@@ -579,12 +610,12 @@ void MosaicRender() {
     }
   }
 
-  if (Mosaic->drawGrid) {
-    DrawGrid();        
-  }
-  else if (Mosaic->drawBorder) {
-    DrawBorder();
-  }
+  // Switch targets so the queued tiles and sprites get flushed into the tile layer
+  // by the engine instead of straight to the screen. The backing rect above already
+  // hit the screen, and the grid/border get drawn on top of the tile layer by
+  // RenderTileLayer, so none of it gets bloomed.
+  SetRenderTarget(&Core->graphics.tileTarget);
+  ClearScreen(V4(0, 0, 0, 0));
 }
 
 // @NOTE: this is here so code can be inserted into MosaicUpdate in any order you want without

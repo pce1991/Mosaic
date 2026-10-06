@@ -283,8 +283,43 @@ void GameInit(CoreMemory *coreMem) {
     Core->graphics.uiCommands = MakeDynamicArray<UICommand>(&Core->permanentArena, 64);
     SetupUIRenderTarget(&Core->graphics.uiTarget, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
     SetupUIRenderTarget(&Core->graphics.frameTarget, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
+    SetupUIRenderTarget(&Core->graphics.tileTarget, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
+    SetupUIRenderTarget(&Core->graphics.bloomTargetA, (coreMem->graphics.resolutionWidth + 1) / 2, (coreMem->graphics.resolutionHeight + 1) / 2);
+    SetupUIRenderTarget(&Core->graphics.bloomTargetB, (coreMem->graphics.resolutionWidth + 1) / 2, (coreMem->graphics.resolutionHeight + 1) / 2);
+    SetupUIRenderTarget(&Core->graphics.bloomTargetC, (coreMem->graphics.resolutionWidth + 3) / 4, (coreMem->graphics.resolutionHeight + 3) / 4);
+    SetupUIRenderTarget(&Core->graphics.bloomTargetD, (coreMem->graphics.resolutionWidth + 3) / 4, (coreMem->graphics.resolutionHeight + 3) / 4);
+    SetupUIRenderTarget(&Core->graphics.meltTargetA, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
+    SetupUIRenderTarget(&Core->graphics.meltTargetB, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
 
 #if WINDOWS || LINUX
+    {
+        LoadShader("shaders/blit.vert", "shaders/bloom_bright.frag", &coreMem->graphics.bloomBrightShader);
+        const char *bloomBrightUniforms[] = { "model", "viewProjection", "sourceTexture", "threshold" };
+        CompileShader(&coreMem->graphics.bloomBrightShader, 4, bloomBrightUniforms);
+    }
+
+    {
+        LoadShader("shaders/blit.vert", "shaders/bloom_blur.frag", &coreMem->graphics.bloomBlurShader);
+        const char *bloomBlurUniforms[] = { "model", "viewProjection", "sourceTexture", "direction" };
+        CompileShader(&coreMem->graphics.bloomBlurShader, 4, bloomBlurUniforms);
+    }
+
+    {
+        LoadShader("shaders/blit.vert", "shaders/bloom_composite.frag", &coreMem->graphics.bloomCompositeShader);
+        const char *bloomCompositeUniforms[] = { "model", "viewProjection", "baseTexture", "meltTexture", "narrowTexture", "wideTexture", "softness", "wideMix", "strength" };
+        CompileShader(&coreMem->graphics.bloomCompositeShader, 9, bloomCompositeUniforms);
+    }
+
+    coreMem->graphics.bloomThreshold = 0.0f;
+    coreMem->graphics.bloomStrength = 0.6f;
+    coreMem->graphics.bloomBlurRadius = 1.0f;
+    coreMem->graphics.bloomBlurIterations = 4;
+    coreMem->graphics.bloomSoftness = 0.5f;
+    coreMem->graphics.bloomWideMix = 0.5f;
+    coreMem->graphics.bloomWideIterations = 3;
+    coreMem->graphics.bloomMeltRadius = 1.5f;
+    coreMem->graphics.bloomMeltIterations = 2;
+
     {
         LoadShader("shaders/blit.vert", "shaders/blit.frag", &coreMem->graphics.blitShader);
         const char *blitUniforms[] = { "model", "viewProjection", "uiTexture" };
@@ -355,7 +390,11 @@ void GameUpdateAndRender(CoreMemory *core) {
 
     RenderSpriteBuffer(&Core->graphics.spriteBuffer);
     Core->graphics.spriteBuffer.count = 0;
-    
+
+#if MOSAIC
+    RenderTileLayer();
+#endif
+
     DrawGlyphs(Core->graphics.glyphBuffers);
     FlushUICommands();
     

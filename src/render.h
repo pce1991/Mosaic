@@ -248,6 +248,22 @@ struct CoreGraphics {
     // Offscreen target the whole frame is rendered into before presenting
     RenderTarget frameTarget;
 
+    // Tiles and sprites render into this layer, then it gets composited onto frameTarget
+    RenderTarget tileTarget;
+
+    // Half resolution targets the bloom blur ping-pongs between
+    RenderTarget bloomTargetA;
+    RenderTarget bloomTargetB;
+
+    // Quarter resolution targets for the wide bloom band
+    RenderTarget bloomTargetC;
+    RenderTarget bloomTargetD;
+
+    // Full resolution targets the pre-bloom melt ping-pongs between.
+    // tileTarget stays sharp so the composite can crossfade into the melt.
+    RenderTarget meltTargetA;
+    RenderTarget meltTargetB;
+
     // Shaders
     Shader texturedQuadShader;
     Shader instancedQuadShader;
@@ -256,6 +272,9 @@ struct CoreGraphics {
     Shader singleLight;
     Shader coolShader;
     Shader textShader;
+    Shader bloomBrightShader;
+    Shader bloomBlurShader;
+    Shader bloomCompositeShader;
 
     // Meshes
     Mesh tri;
@@ -284,7 +303,22 @@ struct CoreGraphics {
     RenderTarget uiTarget;
     Shader blitShader;
     UIManager uiManager;
+
+    // Bloom post processing tunables
+    real32 bloomThreshold;
+    real32 bloomStrength;
+    real32 bloomBlurRadius;
+    int32 bloomBlurIterations;
+    real32 bloomSoftness;
+    real32 bloomWideMix;
+    int32 bloomWideIterations;
+    real32 bloomMeltRadius;
+    int32 bloomMeltIterations;
 };
+
+void SetRenderTarget(RenderTarget *target);
+void CompositeTileLayer();
+void RenderBloom();
 
 #endif // RENDER_H
 

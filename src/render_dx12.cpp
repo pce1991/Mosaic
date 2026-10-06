@@ -57,6 +57,18 @@ void PopClipRect() {
 
 }
 
+void SetRenderTarget(RenderTarget *target) {
+
+}
+
+void CompositeTileLayer() {
+
+}
+
+void RenderBloom() {
+
+}
+
 void DrawUIText(FontTable *font, vec2 pos, real32 size, vec4 color, bool center, const char *str) {
 
 }
