@@ -9,6 +9,7 @@ uniform sampler2D wideTexture;
 uniform float softness;
 uniform float wideMix;
 uniform float strength;
+uniform float spill;
 
 out vec4 fragColor;
 
@@ -26,5 +27,11 @@ void main() {
     // equal to one blur while the wide band carries part of it further out.
     vec3 glow = mix(narrow, wide, wideMix);
 
-    fragColor = vec4(layer.rgb + glow * strength, layer.a);
+    // strength lights up lit destinations (bloom within tiles); spill adds
+    // glow weighted by darkness, so it only bleeds into dark surroundings
+    // and cannot wash out tiles that are already bright.
+    float brightness = max(layer.r, max(layer.g, layer.b));
+    vec3 glowTerm = glow * (strength + spill * (1.0 - brightness));
+
+    fragColor = vec4(layer.rgb + glowTerm, layer.a);
 }

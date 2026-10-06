@@ -511,6 +511,7 @@ void RenderBloom() {
     glUniform1f(g->bloomCompositeShader.uniforms[6].id, g->bloomSoftness);
     glUniform1f(g->bloomCompositeShader.uniforms[7].id, g->bloomWideMix);
     glUniform1f(g->bloomCompositeShader.uniforms[8].id, g->bloomStrength);
+    glUniform1f(g->bloomCompositeShader.uniforms[9].id, g->bloomSpill);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, meltTex);
     glUniform1i(g->bloomCompositeShader.uniforms[3].id, 1);

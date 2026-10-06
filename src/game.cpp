@@ -306,19 +306,20 @@ void GameInit(CoreMemory *coreMem) {
 
     {
         LoadShader("shaders/blit.vert", "shaders/bloom_composite.frag", &coreMem->graphics.bloomCompositeShader);
-        const char *bloomCompositeUniforms[] = { "model", "viewProjection", "baseTexture", "meltTexture", "narrowTexture", "wideTexture", "softness", "wideMix", "strength" };
-        CompileShader(&coreMem->graphics.bloomCompositeShader, 9, bloomCompositeUniforms);
+        const char *bloomCompositeUniforms[] = { "model", "viewProjection", "baseTexture", "meltTexture", "narrowTexture", "wideTexture", "softness", "wideMix", "strength", "spill" };
+        CompileShader(&coreMem->graphics.bloomCompositeShader, 10, bloomCompositeUniforms);
     }
 
-    coreMem->graphics.bloomThreshold = 0.0f;
+    coreMem->graphics.bloomThreshold = 0.45f;
     coreMem->graphics.bloomStrength = 0.6f;
     coreMem->graphics.bloomBlurRadius = 1.0f;
     coreMem->graphics.bloomBlurIterations = 4;
-    coreMem->graphics.bloomSoftness = 0.5f;
+    coreMem->graphics.bloomSoftness = 0.7f;
     coreMem->graphics.bloomWideMix = 0.5f;
     coreMem->graphics.bloomWideIterations = 3;
     coreMem->graphics.bloomMeltRadius = 1.5f;
-    coreMem->graphics.bloomMeltIterations = 2;
+    coreMem->graphics.bloomMeltIterations = 4;
+    coreMem->graphics.bloomSpill = 1.0f;
 
     {
         LoadShader("shaders/blit.vert", "shaders/blit.frag", &coreMem->graphics.blitShader);

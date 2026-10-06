@@ -314,6 +314,7 @@ struct CoreGraphics {
     int32 bloomWideIterations;
     real32 bloomMeltRadius;
     int32 bloomMeltIterations;
+    real32 bloomSpill;
 };
 
 void SetRenderTarget(RenderTarget *target);

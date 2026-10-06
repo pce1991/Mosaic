@@ -157,7 +157,7 @@ void DrawTile(vec2i position, vec4 color) {
   vec2 worldPos = GridPositionToWorldPosition(position);
   //DrawRect(worldPos, V2(Mosaic->tileSize * 0.5f), color);
   // Instancing
-  DrawRect(&Core->graphics.rectBuffer, worldPos, V2(Mosaic->tileSize * 0.4f), color);
+  DrawRect(&Core->graphics.rectBuffer, worldPos, V2(Mosaic->tileSize * 0.5f), color);
 }
 
 void DrawBorder() {

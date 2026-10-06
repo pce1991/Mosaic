@@ -9,6 +9,6 @@ out vec4 fragColor;
 void main() {
     vec4 color = texture(sourceTexture, texcoord);
     float brightness = max(color.r, max(color.g, color.b));
-    float mask = smoothstep(threshold, threshold + 0.05, brightness);
+    float mask = smoothstep(threshold, threshold + 0.25, brightness);
     fragColor = vec4(color.rgb * mask, 1.0);
 }
