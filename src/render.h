@@ -251,6 +251,12 @@ struct CoreGraphics {
     // Tiles and sprites render into this layer, then it gets composited onto frameTarget
     RenderTarget tileTarget;
 
+    // Large "background" sprites render here as a mask, then get mixed into the tile layer
+    RenderTarget backgroundTarget;
+
+    // Result of mixing the tile layer with backgroundTarget, used as the bloom source
+    RenderTarget bloomSourceTarget;
+
     // Half resolution targets the bloom blur ping-pongs between
     RenderTarget bloomTargetA;
     RenderTarget bloomTargetB;
@@ -275,6 +281,7 @@ struct CoreGraphics {
     Shader bloomBrightShader;
     Shader bloomBlurShader;
     Shader bloomCompositeShader;
+    Shader backgroundMixShader;
 
     // Meshes
     Mesh tri;
@@ -294,6 +301,7 @@ struct CoreGraphics {
     // UI/Rendering
     RectBuffer rectBuffer;
     SpriteBuffer spriteBuffer;
+    SpriteBuffer backgroundSpriteBuffer;
     UIClipRegion clipStack[UIClipStackMax];
     int32 clipTop;
     bool hasClip;
@@ -318,8 +326,10 @@ struct CoreGraphics {
 };
 
 void SetRenderTarget(RenderTarget *target);
-void CompositeTileLayer();
-void RenderBloom();
+void CompositeTileLayer(RenderTarget *source);
+void RenderBloom(RenderTarget *source);
+void RenderBackgroundSprites();
+void ApplyBackground(RenderTarget *source, uint32 noiseTexture, real32 mixStrength, real32 noiseScale, vec2 noiseOffset, bool afterBloom);
 
 #endif // RENDER_H
 

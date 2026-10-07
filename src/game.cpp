@@ -279,6 +279,7 @@ void GameInit(CoreMemory *coreMem) {
 
     AllocateRectBuffer(256 * 256, &Core->graphics.rectBuffer);
     AllocateSpriteBuffer(256 * 256, &Core->graphics.spriteBuffer);
+    AllocateSpriteBuffer(256 * 256, &Core->graphics.backgroundSpriteBuffer);
 
     Core->graphics.uiCommands = MakeDynamicArray<UICommand>(&Core->permanentArena, 64);
     SetupUIRenderTarget(&Core->graphics.uiTarget, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
@@ -290,6 +291,8 @@ void GameInit(CoreMemory *coreMem) {
     SetupUIRenderTarget(&Core->graphics.bloomTargetD, (coreMem->graphics.resolutionWidth + 3) / 4, (coreMem->graphics.resolutionHeight + 3) / 4);
     SetupUIRenderTarget(&Core->graphics.meltTargetA, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
     SetupUIRenderTarget(&Core->graphics.meltTargetB, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
+    SetupUIRenderTarget(&Core->graphics.backgroundTarget, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
+    SetupUIRenderTarget(&Core->graphics.bloomSourceTarget, coreMem->graphics.resolutionWidth, coreMem->graphics.resolutionHeight);
 
 #if WINDOWS || LINUX
     {
@@ -308,6 +311,12 @@ void GameInit(CoreMemory *coreMem) {
         LoadShader("shaders/blit.vert", "shaders/bloom_composite.frag", &coreMem->graphics.bloomCompositeShader);
         const char *bloomCompositeUniforms[] = { "model", "viewProjection", "baseTexture", "meltTexture", "narrowTexture", "wideTexture", "softness", "wideMix", "strength", "spill" };
         CompileShader(&coreMem->graphics.bloomCompositeShader, 10, bloomCompositeUniforms);
+    }
+
+    {
+        LoadShader("shaders/blit.vert", "shaders/background_mix.frag", &coreMem->graphics.backgroundMixShader);
+        const char *backgroundMixUniforms[] = { "model", "viewProjection", "sourceTexture", "backgroundTexture", "noiseTexture", "mixStrength", "noiseScale", "noiseOffset" };
+        CompileShader(&coreMem->graphics.backgroundMixShader, 8, backgroundMixUniforms);
     }
 
     coreMem->graphics.bloomThreshold = 0.45f;

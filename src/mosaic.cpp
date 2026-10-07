@@ -17,6 +17,8 @@ void MyGameInit() {
 
   SetMosaicGridSize(16, 16);
 
+  InitBackgroundLayer();
+
   Mosaic->screenColor = RGB(0.1f, 0.1f, 0.1f);
   Mosaic->gridColor = RGB(0.8f, 0.8f, 0.8f);
 
@@ -138,6 +140,95 @@ void DisableBloom() {
 
 void ToggleBloom() {
   Mosaic->bloomActive = !Mosaic->bloomActive;
+}
+
+// Fallback used when the Perlin noise texture is missing: white noise smoothed into
+// tileable clumps so the mix still has some structure.
+static void GenerateNoiseSprite(Sprite *sprite, int32 size) {
+  AllocateSprite(sprite, size, size);
+
+  float32 *values = (float32 *)malloc(sizeof(float32) * size * size);
+  for (int32 i = 0; i < size * size; i++) {
+    values[i] = Randf();
+  }
+
+  for (int32 pass = 0; pass < 3; pass++) {
+    for (int32 y = 0; y < size; y++) {
+      for (int32 x = 0; x < size; x++) {
+        float32 sum = 0.0f;
+        for (int32 dy = -1; dy <= 1; dy++) {
+          for (int32 dx = -1; dx <= 1; dx++) {
+            int32 sx = (x + dx + size) % size;
+            int32 sy = (y + dy + size) % size;
+            sum += values[sy * size + sx];
+          }
+        }
+        values[y * size + x] = sum / 9.0f;
+      }
+    }
+  }
+
+  for (int32 i = 0; i < size * size; i++) {
+    uint8 v = (uint8)(Clamp01(values[i]) * 255.0f);
+    sprite->data[i * 4 + 0] = v;
+    sprite->data[i * 4 + 1] = v;
+    sprite->data[i * 4 + 2] = v;
+    sprite->data[i * 4 + 3] = 255;
+  }
+
+  free(values);
+
+  OpenGL_InitTexture(sprite);
+}
+
+void InitBackgroundLayer() {
+  static bool initialized = false;
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+
+  LoadSprite("data/textures/perlin_noise_2.png", &Mosaic->backgroundNoise);
+  if (Mosaic->backgroundNoise.textureID == 0) {
+    Print("Background noise texture missing, generating a fallback");
+    GenerateNoiseSprite(&Mosaic->backgroundNoise, 256);
+  }
+
+  Mosaic->backgroundActive = false;
+  Mosaic->backgroundAfterBloom = false;
+  Mosaic->backgroundMixStrength = 0.5f;
+  Mosaic->backgroundNoiseScale = 2.0f;
+  Mosaic->backgroundNoiseSpeed = 0.05f;
+}
+
+void EnableBackgroundLayer() {
+  InitBackgroundLayer();
+  Mosaic->backgroundActive = true;
+}
+
+void DisableBackgroundLayer() {
+  Mosaic->backgroundActive = false;
+}
+
+void ToggleBackgroundLayer() {
+  if (Mosaic->backgroundActive) {
+    DisableBackgroundLayer();
+  }
+  else {
+    EnableBackgroundLayer();
+  }
+}
+
+void DrawBackgroundSprite(vec2 position, vec2 scale, Sprite *sprite) {
+  DrawInstancedSprite(&Core->graphics.backgroundSpriteBuffer, 0, position, scale, 0.0f, sprite, V4(1, 1, 1, 1));
+}
+
+void DrawBackgroundSprite(vec2 position, vec2 scale, real32 angle, Sprite *sprite) {
+  DrawInstancedSprite(&Core->graphics.backgroundSpriteBuffer, 0, position, scale, angle, sprite, V4(1, 1, 1, 1));
+}
+
+void DrawBackgroundSprite(vec2 position, vec2 scale, real32 angle, Sprite *sprite, vec4 color) {
+  DrawInstancedSprite(&Core->graphics.backgroundSpriteBuffer, 0, position, scale, angle, sprite, color);
 }
 
 
@@ -568,11 +659,34 @@ void DrawTextTile(vec2 pos, float32 size, vec4 color, bool center, const char *f
 }
 
 void RenderTileLayer() {
+  bool backgroundActive = Mosaic->backgroundActive;
+  bool backgroundBeforeBloom = backgroundActive && !Mosaic->backgroundAfterBloom;
+
+  // Drift the noise so the mix pattern animates over time. The noise texture wraps,
+  // so the offsets can grow forever.
+  vec2 noiseOffset = V2(Time * Mosaic->backgroundNoiseSpeed, Time * Mosaic->backgroundNoiseSpeed * 0.5f);
+
+  if (backgroundActive) {
+    RenderBackgroundSprites();
+    if (backgroundBeforeBloom) {
+      ApplyBackground(&Core->graphics.tileTarget, Mosaic->backgroundNoise.textureID,
+                      Mosaic->backgroundMixStrength, Mosaic->backgroundNoiseScale, noiseOffset, false);
+    }
+  }
+
+  RenderTarget *source = backgroundBeforeBloom ? &Core->graphics.bloomSourceTarget
+                                               : &Core->graphics.tileTarget;
+
   if (Mosaic->bloomActive) {
-    RenderBloom();
+    RenderBloom(source);
   }
   else {
-    CompositeTileLayer();
+    CompositeTileLayer(source);
+  }
+
+  if (backgroundActive && Mosaic->backgroundAfterBloom) {
+    ApplyBackground(&Core->graphics.frameTarget, Mosaic->backgroundNoise.textureID,
+                    Mosaic->backgroundMixStrength, Mosaic->backgroundNoiseScale, noiseOffset, true);
   }
 
   // The grid and border go on top of the composited tile layer, outside the bloom.

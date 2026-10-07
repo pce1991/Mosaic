@@ -54,11 +54,15 @@ void MyMosaicInit() {
     Core->graphics.bloomStrength = 0.3f;
     Core->graphics.bloomBlurRadius = 2.0f;
 
+    EnableBackgroundLayer();
+    Mosaic->backgroundMixStrength = 0.6f;
+    Mosaic->backgroundNoiseScale = 2.0f;
+
     // Precompute a random dark-green shade for every tile in the grid.
     pongTileColors = (vec4 *)malloc(sizeof(vec4) * Mosaic->gridWidth * Mosaic->gridHeight);
     for (int32 y = 0; y < Mosaic->gridHeight; y++) {
         for (int32 x = 0; x < Mosaic->gridWidth; x++) {
-            vec3 hsv = V3(RandfRange(95.0f, 120.0f), RandfRange(0.8f, 0.95f), RandfRange(0.2f, 0.3f));
+            vec3 hsv = V3(RandfRange(95.0f, 100.0f), RandfRange(0.8f, 0.95f), RandfRange(0.2f, 0.3f));
             pongTileColors[x + y * Mosaic->gridWidth] = V4(HSVToRGB(hsv), 1.0f);
         }
     }
@@ -128,6 +132,31 @@ void MyMosaicUpdate() {
     }
     if (InputPressed(Keyboard, Input_Equal)) {
       Core->graphics.bloomSpill += 0.1f;
+    }
+
+    if (InputPressed(Keyboard, Input_B)) {
+      ToggleBackgroundLayer();
+    }
+    if (InputPressed(Keyboard, Input_N)) {
+      Mosaic->backgroundAfterBloom = !Mosaic->backgroundAfterBloom;
+    }
+    if (InputPressed(Keyboard, Input_T)) {
+      Mosaic->backgroundMixStrength -= 0.1f;
+    }
+    if (InputPressed(Keyboard, Input_Y)) {
+      Mosaic->backgroundMixStrength += 0.1f;
+    }
+    if (InputPressed(Keyboard, Input_G)) {
+      Mosaic->backgroundNoiseScale -= 0.25f;
+    }
+    if (InputPressed(Keyboard, Input_H)) {
+      Mosaic->backgroundNoiseScale += 0.25f;
+    }
+    if (InputPressed(Keyboard, Input_J)) {
+      Mosaic->backgroundNoiseSpeed -= 0.01f;
+    }
+    if (InputPressed(Keyboard, Input_K)) {
+      Mosaic->backgroundNoiseSpeed += 0.01f;
     }
 
     float32 dt = 0.0f;
@@ -228,6 +257,10 @@ void MyMosaicUpdate() {
     int32 ballX = (int32)floorf(pongBallPos.x);
     int32 ballY = (int32)floorf(pongBallPos.y);
     SetBlockColor(ballX - 1, ballY - 1, 3, 3, PongForeground);
+
+    // Test background sprite: flower_photo.png stretched across a 10x10 region at
+    // screen center (world origin is the center of the grid).
+    DrawBackgroundSprite(V2(0.0f, 0.0f), V2(24.0f), &bokehSprites[0]);
 }
 
 #else

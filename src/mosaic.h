@@ -37,6 +37,14 @@ struct MosaicMem {
     bool drawBorder;
     bool drawGrid;
     bool bloomActive;
+
+    // Background layer: large sprites rendered into a mask and mixed into the tiles.
+    bool backgroundActive;
+    bool backgroundAfterBloom;
+    float32 backgroundMixStrength;
+    float32 backgroundNoiseScale;
+    float32 backgroundNoiseSpeed;
+    Sprite backgroundNoise;
     
     uint8 gridWidth;
     uint8 gridHeight;
@@ -120,6 +128,18 @@ void HideGrid();
 void EnableBloom();
 void DisableBloom();
 void ToggleBloom();
+
+// Background layer: draws sprites large (scale is a half-extent, so V2(5,5) spans
+// 10x10 tiles) into a separate mask target that gets mixed into the tile layer using
+// a noise texture.
+void InitBackgroundLayer();
+void EnableBackgroundLayer();
+void DisableBackgroundLayer();
+void ToggleBackgroundLayer();
+
+void DrawBackgroundSprite(vec2 position, vec2 scale, Sprite *sprite);
+void DrawBackgroundSprite(vec2 position, vec2 scale, real32 angle, Sprite *sprite);
+void DrawBackgroundSprite(vec2 position, vec2 scale, real32 angle, Sprite *sprite, vec4 color);
 
 // Composites the tile layer onto the screen, applying the bloom post process if it's active.
 void RenderTileLayer();

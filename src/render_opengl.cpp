@@ -222,6 +222,7 @@ void InitMesh(Mesh *mesh) {
 }
 
 void OpenGL_InitTexture(Sprite *texture);
+void RenderSpriteBuffer(SpriteBuffer *buffer);
     
 void LoadSprite(char *path, Sprite *sprite) {
     int32 x, y, n;
@@ -425,28 +426,28 @@ void DrawFullScreenQuad(Shader *shader, uint32 textureID, int32 width, int32 hei
 // Draws the tile layer over frameTarget. The layer is stored premultiplied (it was
 // blended over transparent black), so we blend with GL_ONE, GL_ONE_MINUS_SRC_ALPHA to
 // reproduce the exact math of drawing the tiles directly onto the background.
-void CompositeTileLayer() {
+void CompositeTileLayer(RenderTarget *source) {
     CoreGraphics *g = &Core->graphics;
 
     SetRenderTarget(&g->frameTarget);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    DrawFullScreenQuad(&g->blitShader, g->tileTarget.texture, g->frameTarget.width, g->frameTarget.height);
+    DrawFullScreenQuad(&g->blitShader, source->texture, g->frameTarget.width, g->frameTarget.height);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void RenderBloom() {
+void RenderBloom(RenderTarget *source) {
     CoreGraphics *g = &Core->graphics;
 
     glDisable(GL_BLEND);
 
-    // Melt: blur the premultiplied layer before anything else. tileTarget stays
+    // Melt: blur the premultiplied layer before anything else. source stays
     // sharp for the crossfade; the chain ping-pongs between the two melt targets
     // and always lands in meltTargetB (each iteration = H then V).
     bool meltActive = (g->bloomMeltRadius > 0.0f) && (g->bloomMeltIterations > 0);
     if (meltActive) {
-        uint32 meltSrc = g->tileTarget.texture;
+        uint32 meltSrc = source->texture;
         for (int32 i = 0; i < g->bloomMeltIterations; i++) {
             SetRenderTarget(&g->meltTargetA);
             SetShader(&g->bloomBlurShader);
@@ -461,7 +462,7 @@ void RenderBloom() {
             meltSrc = g->meltTargetB.texture;
         }
     }
-    uint32 meltTex = meltActive ? g->meltTargetB.texture : g->tileTarget.texture;
+    uint32 meltTex = meltActive ? g->meltTargetB.texture : source->texture;
 
     // Bright pass -> A. The glow originates from the melted image.
     SetRenderTarget(&g->bloomTargetA);
@@ -521,9 +522,52 @@ void RenderBloom() {
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, g->bloomTargetC.texture);
     glUniform1i(g->bloomCompositeShader.uniforms[5].id, 3);
-    DrawFullScreenQuad(&g->bloomCompositeShader, g->tileTarget.texture, g->frameTarget.width, g->frameTarget.height);
+    DrawFullScreenQuad(&g->bloomCompositeShader, source->texture, g->frameTarget.width, g->frameTarget.height);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+// Renders the queued background sprites into backgroundTarget. Sprites drawn with the
+// standard alpha blend onto a cleared-transparent target end up premultiplied, which is
+// what the background_mix composite expects.
+void RenderBackgroundSprites() {
+    CoreGraphics *g = &Core->graphics;
+
+    SetRenderTarget(&g->backgroundTarget);
+    ClearScreen(V4(0, 0, 0, 0));
+    RenderSpriteBuffer(&g->backgroundSpriteBuffer);
+    g->backgroundSpriteBuffer.count = 0;
+}
+
+// Mixes backgroundTarget into source using the noise texture to modulate the strength.
+// The result lands in bloomSourceTarget (premultiplied).
+void ApplyBackground(RenderTarget *source, uint32 noiseTexture, real32 mixStrength, real32 noiseScale, vec2 noiseOffset, bool afterBloom) {
+    CoreGraphics *g = &Core->graphics;
+
+    SetRenderTarget(&g->bloomSourceTarget);
+    glDisable(GL_BLEND);
+
+    Shader *shader = &g->backgroundMixShader;
+    SetShader(shader);
+    glUniform1f(shader->uniforms[5].id, mixStrength);
+    glUniform1f(shader->uniforms[6].id, noiseScale);
+    glUniform2f(shader->uniforms[7].id, noiseOffset.x, noiseOffset.y);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, g->backgroundTarget.texture);
+    glUniform1i(shader->uniforms[3].id, 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, noiseTexture);
+    glUniform1i(shader->uniforms[4].id, 2);
+
+    DrawFullScreenQuad(shader, source->texture, g->bloomSourceTarget.width, g->bloomSourceTarget.height);
+
+    // After bloom the frame is already composited, so copy the mixed result back over it.
+    if (afterBloom) {
+        SetRenderTarget(&g->frameTarget);
+        glDisable(GL_BLEND);
+        DrawFullScreenQuad(&g->blitShader, g->bloomSourceTarget.texture, g->frameTarget.width, g->frameTarget.height);
+    }
 }
 
 void DrawSprite(vec2 position, vec2 scale, real32 angle, Sprite *texture) {
