@@ -1,6 +1,12 @@
 
 enum EntityType {
                  EntityType_Entity,
+                 EntityType_Jugador,
+                 EntityType_Ball,
+                 EntityType_Team,
+                 EntityType_Player,
+                 EntityType_WordTest,
+                 EntityType_TypingField,
                  EntityType_Count,
 };
 

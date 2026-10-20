@@ -1,6 +1,12 @@
 
 int32 EntitySizeTable[] = {
                            sizeof(Entity),
+                           sizeof(Jugador),
+                           sizeof(Ball),
+                           sizeof(Team),
+                           sizeof(Player),
+                           sizeof(WordTest),
+                           sizeof(TypingField),
                            0,
 };
 
@@ -110,7 +116,7 @@ EntityHandle AddEntity_(EntityManager *manager, EntityType type, void *data) {
         info = &manager->entityInfo[handle.id];
         uint32 generation = info->generation;
         *info = {};
-        info->generation = info->generation;
+        info->generation = generation;
     }
     else {
         handle.id = manager->entityInfo.count;
