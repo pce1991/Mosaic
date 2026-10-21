@@ -1,14 +1,5 @@
 
-int32 EntitySizeTable[] = {
-                           sizeof(Entity),
-                           sizeof(Jugador),
-                           sizeof(Ball),
-                           sizeof(Team),
-                           sizeof(Player),
-                           sizeof(WordTest),
-                           sizeof(TypingField),
-                           0,
-};
+// EntitySizeTable is defined by the game (see soccer_entity.cpp).
 
 struct EntityTypeStorage {
     EntityType type;

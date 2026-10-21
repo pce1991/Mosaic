@@ -44,6 +44,8 @@ struct MosaicMem {
     float32 backgroundMixStrength;
     float32 backgroundNoiseScale;
     float32 backgroundNoiseSpeed;
+    float32 backgroundNoiseThreshold;
+    float32 backgroundNoiseEdge;
     Sprite backgroundNoise;
     
     uint8 gridWidth;

@@ -541,7 +541,7 @@ void RenderBackgroundSprites() {
 
 // Mixes backgroundTarget into source using the noise texture to modulate the strength.
 // The result lands in bloomSourceTarget (premultiplied).
-void ApplyBackground(RenderTarget *source, uint32 noiseTexture, real32 mixStrength, real32 noiseScale, vec2 noiseOffset, bool afterBloom) {
+void ApplyBackground(RenderTarget *source, BackgroundMixParams params, bool afterBloom) {
     CoreGraphics *g = &Core->graphics;
 
     SetRenderTarget(&g->bloomSourceTarget);
@@ -549,15 +549,17 @@ void ApplyBackground(RenderTarget *source, uint32 noiseTexture, real32 mixStreng
 
     Shader *shader = &g->backgroundMixShader;
     SetShader(shader);
-    glUniform1f(shader->uniforms[5].id, mixStrength);
-    glUniform1f(shader->uniforms[6].id, noiseScale);
-    glUniform2f(shader->uniforms[7].id, noiseOffset.x, noiseOffset.y);
+    glUniform1f(shader->uniforms[5].id, params.mixStrength);
+    glUniform1f(shader->uniforms[6].id, params.noiseScale);
+    glUniform2f(shader->uniforms[7].id, params.noiseOffset.x, params.noiseOffset.y);
+    glUniform1f(shader->uniforms[8].id, params.noiseThreshold);
+    glUniform1f(shader->uniforms[9].id, params.noiseEdge);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, g->backgroundTarget.texture);
     glUniform1i(shader->uniforms[3].id, 1);
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, noiseTexture);
+    glBindTexture(GL_TEXTURE_2D, params.noiseTexture);
     glUniform1i(shader->uniforms[4].id, 2);
 
     DrawFullScreenQuad(shader, source->texture, g->bloomSourceTarget.width, g->bloomSourceTarget.height);

@@ -1,14 +1,6 @@
 
-enum EntityType {
-                 EntityType_Entity,
-                 EntityType_Jugador,
-                 EntityType_Ball,
-                 EntityType_Team,
-                 EntityType_Player,
-                 EntityType_WordTest,
-                 EntityType_TypingField,
-                 EntityType_Count,
-};
+// Generic entity system. The entity type enum is provided by the game (e.g. soccer_entity.h).
+enum EntityType : int;
 
 struct EntityHandle {
     EntityType type;
@@ -22,4 +14,7 @@ struct Entity {
     EntityHandle handle;
     
     vec2 position;
+
+    // Smoothed position used for rendering (physics interpolates this).
+    vec2 renderPosition;
 };

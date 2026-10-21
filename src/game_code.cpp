@@ -1,11 +1,12 @@
 
-#define MOSAIC 1
-#define MY_GAME 1
+#define MOSAIC 0
+#define MY_GAME 0
+#define TYPING_SOCCER 1
 #define UI_TEST 0
 #define UI_TEST2 0
 #define NETWORK_SIMPLE 0
 #define EDITOR_SIMPLE 0
-#define MULTITHREAD_TESTA 1
+#define MULTITHREAD_TESTA 0
 #define MULTITHREAD_TESTB 0
 
 
@@ -15,6 +16,9 @@
 
 #elif MY_GAME
 #include "game/my_game.cpp"
+
+#elif TYPING_SOCCER
+#include "game/typing_soccer.cpp"
 
 #elif UI_TEST
 #include "examples/ui_test.cpp"

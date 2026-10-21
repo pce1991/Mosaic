@@ -315,8 +315,8 @@ void GameInit(CoreMemory *coreMem) {
 
     {
         LoadShader("shaders/blit.vert", "shaders/background_mix.frag", &coreMem->graphics.backgroundMixShader);
-        const char *backgroundMixUniforms[] = { "model", "viewProjection", "sourceTexture", "backgroundTexture", "noiseTexture", "mixStrength", "noiseScale", "noiseOffset" };
-        CompileShader(&coreMem->graphics.backgroundMixShader, 8, backgroundMixUniforms);
+        const char *backgroundMixUniforms[] = { "model", "viewProjection", "sourceTexture", "backgroundTexture", "noiseTexture", "mixStrength", "noiseScale", "noiseOffset", "noiseThreshold", "noiseEdge" };
+        CompileShader(&coreMem->graphics.backgroundMixShader, 10, backgroundMixUniforms);
     }
 
     coreMem->graphics.bloomThreshold = 0.45f;

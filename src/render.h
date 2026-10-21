@@ -325,11 +325,20 @@ struct CoreGraphics {
     real32 bloomSpill;
 };
 
+struct BackgroundMixParams {
+    uint32 noiseTexture;
+    real32 mixStrength;
+    real32 noiseScale;
+    vec2 noiseOffset;
+    real32 noiseThreshold;
+    real32 noiseEdge;
+};
+
 void SetRenderTarget(RenderTarget *target);
 void CompositeTileLayer(RenderTarget *source);
 void RenderBloom(RenderTarget *source);
 void RenderBackgroundSprites();
-void ApplyBackground(RenderTarget *source, uint32 noiseTexture, real32 mixStrength, real32 noiseScale, vec2 noiseOffset, bool afterBloom);
+void ApplyBackground(RenderTarget *source, BackgroundMixParams params, bool afterBloom);
 
 #endif // RENDER_H
 

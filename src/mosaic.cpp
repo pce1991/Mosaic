@@ -197,8 +197,10 @@ void InitBackgroundLayer() {
   Mosaic->backgroundActive = false;
   Mosaic->backgroundAfterBloom = false;
   Mosaic->backgroundMixStrength = 0.5f;
-  Mosaic->backgroundNoiseScale = 2.0f;
+  Mosaic->backgroundNoiseScale = 1.0f;
   Mosaic->backgroundNoiseSpeed = 0.05f;
+  Mosaic->backgroundNoiseThreshold = 0.5f;
+  Mosaic->backgroundNoiseEdge = 0.25f;
 }
 
 void EnableBackgroundLayer() {
@@ -666,11 +668,18 @@ void RenderTileLayer() {
   // so the offsets can grow forever.
   vec2 noiseOffset = V2(Time * Mosaic->backgroundNoiseSpeed, Time * Mosaic->backgroundNoiseSpeed * 0.5f);
 
+  BackgroundMixParams mix = {};
+  mix.noiseTexture = Mosaic->backgroundNoise.textureID;
+  mix.mixStrength = Mosaic->backgroundMixStrength;
+  mix.noiseScale = Mosaic->backgroundNoiseScale;
+  mix.noiseOffset = noiseOffset;
+  mix.noiseThreshold = Mosaic->backgroundNoiseThreshold;
+  mix.noiseEdge = Mosaic->backgroundNoiseEdge;
+
   if (backgroundActive) {
     RenderBackgroundSprites();
     if (backgroundBeforeBloom) {
-      ApplyBackground(&Core->graphics.tileTarget, Mosaic->backgroundNoise.textureID,
-                      Mosaic->backgroundMixStrength, Mosaic->backgroundNoiseScale, noiseOffset, false);
+      ApplyBackground(&Core->graphics.tileTarget, mix, false);
     }
   }
 
@@ -685,8 +694,7 @@ void RenderTileLayer() {
   }
 
   if (backgroundActive && Mosaic->backgroundAfterBloom) {
-    ApplyBackground(&Core->graphics.frameTarget, Mosaic->backgroundNoise.textureID,
-                    Mosaic->backgroundMixStrength, Mosaic->backgroundNoiseScale, noiseOffset, true);
+    ApplyBackground(&Core->graphics.frameTarget, mix, true);
   }
 
   // The grid and border go on top of the composited tile layer, outside the bloom.

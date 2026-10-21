@@ -56,7 +56,7 @@ void MyMosaicInit() {
 
     EnableBackgroundLayer();
     Mosaic->backgroundMixStrength = 0.6f;
-    Mosaic->backgroundNoiseScale = 2.0f;
+    Mosaic->backgroundNoiseScale = 1.0f;
 
     // Precompute a random dark-green shade for every tile in the grid.
     pongTileColors = (vec4 *)malloc(sizeof(vec4) * Mosaic->gridWidth * Mosaic->gridHeight);
@@ -157,6 +157,18 @@ void MyMosaicUpdate() {
     }
     if (InputPressed(Keyboard, Input_K)) {
       Mosaic->backgroundNoiseSpeed += 0.01f;
+    }
+    if (InputPressed(Keyboard, Input_O)) {
+      Mosaic->backgroundNoiseThreshold -= 0.05f;
+    }
+    if (InputPressed(Keyboard, Input_P)) {
+      Mosaic->backgroundNoiseThreshold += 0.05f;
+    }
+    if (InputPressed(Keyboard, Input_U)) {
+      Mosaic->backgroundNoiseEdge -= 0.05f;
+    }
+    if (InputPressed(Keyboard, Input_I)) {
+      Mosaic->backgroundNoiseEdge += 0.05f;
     }
 
     float32 dt = 0.0f;
