@@ -18,7 +18,7 @@
 #include "game/my_game.cpp"
 
 #elif TYPING_SOCCER
-#include "game/typing_soccer.cpp"
+#include "examples/typing_soccer.cpp"
 
 #elif UI_TEST
 #include "examples/ui_test.cpp"

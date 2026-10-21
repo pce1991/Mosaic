@@ -1,6 +1,8 @@
 
-// Generic entity system. The entity type enum is provided by the game (e.g. soccer_entity.h).
-enum EntityType : int;
+enum EntityType {
+                 EntityType_Entity,
+                 EntityType_Count,
+};
 
 struct EntityHandle {
     EntityType type;
