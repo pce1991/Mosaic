@@ -1,5 +1,5 @@
 
-#define MOSAIC 0
+#define MOSAIC 1
 #define MY_GAME 0
 #define TYPING_SOCCER 1
 #define UI_TEST 0
@@ -18,7 +18,7 @@
 #include "game/my_game.cpp"
 
 #elif TYPING_SOCCER
-#include "examples/typing_soccer.cpp"
+#include "examples/typing_soccer/typing_soccer.cpp"
 
 #elif UI_TEST
 #include "examples/ui_test.cpp"
