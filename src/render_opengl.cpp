@@ -1121,15 +1121,19 @@ void LayoutGlyphs(FontTable *font, const char *string, int32 count, real32 size,
 
         // @NOTE: see if we can fit the rest of the word on within the width.
         real32 tempX = x;
-        int32 tempI = i;
-        char tempC = string[tempI];
-        while (tempC != ' ') {
-            int32 tempCodepoint = tempC - 25;
+        for (int32 tempI = i; tempI < count; tempI++) {
+            char tempC = string[tempI];
+            if (tempC == ' ' || tempC == '\n') {
+                break;
+            }
+
+            int32 tempCodepoint = tempC - 32;
+            if (tempCodepoint < 0 || tempCodepoint >= font->glyphCount) {
+                continue;
+            }
 
             tempX += font->glyphs[tempCodepoint].lowerLeft.x * size;
             tempX += font->glyphs[tempCodepoint].xAdvance * size;
-
-            tempC = string[++tempI];
         }
 
         if (tempX > width) {
